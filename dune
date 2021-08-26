@@ -1,0 +1,7 @@
+(env
+  (dev
+    (flags (:standard -warn-error -A)))
+  (release
+    (ocamlopt_flags (:standard -inline 1000 -O3))
+    )
+  )

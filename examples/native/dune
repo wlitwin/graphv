@@ -1,0 +1,11 @@
+(executable
+ (ocamlopt_flags (:standard -inline 10000 -O3 -unboxed-types))
+ (name main)
+ (libraries 
+    memtrace
+    tgls
+    tgls.tgles2
+    graphv.gles2-native
+    stb_image
+    glfw-ocaml
+ ))

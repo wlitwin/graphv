@@ -1,0 +1,268 @@
+{0 Graphv}
+Graphv is a real time 2D rendering library for OCaml, supporting both native and web targets. It is based on the {{:https://github.com/memononen/nanovg}NanoVG} C library. A live demo can be viewed {{:https://wlitwin.github.io/demos/graphv} here}. If the fonts don't load, try refreshing the page.
+
+{1 Overview}
+Graphv is a performant pure OCaml 2D vector graphics renderer.
+
+Provides:
+
+- {b Performance}: Graphv is about 10% slower than the pure C implementation. It also matches the web performance when comparing against a WASM version of the C library. 
+- {b Advanced Shapes}: Support for the even-odd rule and bezier curves allows complicated 2D shapes with holes to be rendered in a performant manner.
+- {b Advanced Painting}: Linear, radial, and box gradients are supported as well as image patterns. This allows shapes to be rendered with complicated patterns and subtle effects.
+- {b OpenGL interoperation}: Raw OpenGL calls can be used in addition to Graphv. Graphv uses minimal OpenGL state and can be composed with existing drawing.
+- {b Minimal dependencies}: Graphv does not depend on anything other than the Stdlib that ships with OCaml. Full implementations depend on minimal libraries for their platform. For example GLES2 native depends only on [conf-gles2] and the web on [js_of_ocaml].
+
+{1 Modules}
+
+Ready to use modules:
+
+- {!module:Graphv_gles2_native}: Native GLES2 implementation.
+- {!module:Graphv_webgl}: WebGL implementation.
+
+Modules for creating a new backend:
+- {!module:Graphv_core}: Functor for making a new Graphv library.
+- {!module:Graphv_gles2}: Functor for creating a new OpenGL ES 2 based library.
+- {!module:Graphv_font.Fontstash}: Functor for creating a new Graphv font backend.
+
+{1 Getting Started}
+
+{2 Installing with opam }
+
+Pick a platform implementation:
+- [opam install graphv.gles2-native] for a native GLES2 implementation.
+
+- [opam install graphv.webgl] for a WebGL implementation, for use with Js_of_ocaml.
+
+This library does not provide context creation or GUI library support. That will be application depedent. For native contexts [glfw] is recommended and can be installed with:
+[opam install glfw-ocaml]
+
+For the web {{:https://ocsigen.org/js_of_ocaml/latest/manual/overview}Js_of_ocaml} should be installed with:
+[opam install js_of_ocaml]
+
+{2 NOTE}
+Graphv requires a stencil buffer for the OpenGL (and WebGL) backends. Make sure a stencil buffer is present when creating the OpenGL context.
+
+{1 Creating your first application}
+
+The boilerplate needed depends on the platform you are developing for. In the source code repository there are two examples, one for native and one for web that show sample implementations. These can be found {{:https://github.com/wlitwin/graphv/tree/main/examples}here}.
+
+{2 Native }
+
+A minimal native application can be made using two extra libraries, [tgles2] and [glfw-ocaml]. Install these through opam.
+
+{4 dune}
+{[
+(executable
+  (name main)
+  (libraries
+      graphv.gles2-native
+      glfw-ocaml
+      tgls.tgles2
+  )
+)
+]}
+
+{4 main.ml}
+{[
+open Tgles2
+
+module NVG = Graphv_gles2_native
+
+let _ =
+    GLFW.init();
+    at_exit GLFW.terminate;
+    GLFW.windowHint ~hint:GLFW.ClientApi ~value:GLFW.OpenGLESApi;
+    GLFW.windowHint ~hint:GLFW.ContextVersionMajor ~value:2;
+    GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:0;
+
+    let window = 
+        GLFW.createWindow ~width:400 ~height:400 ~title:"window" () 
+    in
+
+    GLFW.makeContextCurrent ~window:(Some window);
+    GLFW.swapInterval ~interval:1;
+
+    Gl.clear_color 0.3 0.3 0.32 1.;
+
+    let vg = NVG.create
+        ~flags:NVG.CreateFlags.(antialias lor stencil_strokes) 
+        () 
+    in
+
+    while not GLFW.(windowShouldClose ~window) do
+        let win_w, win_h = GLFW.getWindowSize ~window in
+        Gl.viewport 0 0 win_w win_h;
+        Gl.clear (
+            Gl.color_buffer_bit
+            lor Gl.depth_buffer_bit
+            lor Gl.stencil_buffer_bit
+        );
+
+        NVG.begin_frame vg
+            ~width:(float win_w)
+            ~height:(float win_h)
+            ~device_ratio:1.
+            ;
+
+        NVG.Path.begin_ vg;
+        NVG.Path.rect vg ~x:40. ~y:40. ~w:320. ~h:320.;
+        NVG.set_fill_color vg 
+            ~color:NVG.Color.(rgba ~r:154 ~g:203 ~b:255 ~a:200);
+        NVG.fill vg;
+
+        NVG.end_frame vg;
+
+        GLFW.swapBuffers ~window;
+        GLFW.pollEvents();
+    done;
+;;
+]}
+
+{2 Web}
+
+Once compiled the web demo should look like {{:https://wlitwin.github.io/demos/graphv_web_example}this}.
+
+{4 dune}
+{[
+(executable
+  (name main) 
+  (modes byte js)
+  (preprocess (pps js_of_ocaml-ppx))
+  (libraries
+      graphv.webgl
+      js_of_ocaml
+  )
+)
+]}
+
+{4 main.ml}
+{[
+open Js_of_ocaml
+module NVG = Graphv_webgl
+
+(* This scales the canvas to match the DPI of the window,
+   it prevents blurriness when rendering to the canvas *)
+let scale_canvas (canvas : Dom_html.canvasElement Js.t) =
+    let dpr = Dom_html.window##.devicePixelRatio in
+    let rect = canvas##getBoundingClientRect in
+    let width = rect##.right -. rect##.left in
+    let height = rect##.bottom -. rect##.top in
+    canvas##.width := width *. dpr |> int_of_float;
+    canvas##.height := height *. dpr |> int_of_float;
+    let width = Printf.sprintf "%dpx" (int_of_float width) |> Js.string in
+    let height = Printf.sprintf "%dpx" (int_of_float height) |> Js.string in
+    canvas##.style##.width := width;
+    canvas##.style##.height := height;
+;;
+
+let _ =
+    let canvas = Js.Unsafe.coerce (Dom_html.getElementById_exn "canvas") in
+    scale_canvas canvas;
+
+    let webgl_ctx = 
+        (* Graphv requires a stencil buffer to work properly *)
+        let attrs = WebGL.defaultContextAttributes in
+        attrs##.stencil := Js._true;
+        match WebGL.getContextWithAttributes canvas attrs 
+              |> Js.Opt.to_option 
+        with
+        | None -> 
+            print_endline "Sorry your browser does not support WebGL";
+            raise Exit
+        | Some ctx -> ctx
+    in
+
+    let open NVG in
+
+    let vg = create 
+        ~flags:CreateFlags.(antialias lor stencil_strokes) 
+        webgl_ctx 
+    in 
+
+    (* File in this case is actually the CSS font name *)
+    Text.create vg ~name:"sans" ~file:"sans" |> ignore;
+
+    webgl_ctx##clearColor 0.3 0.3 0.32 1.;
+
+    let rec render (time : float) =
+        webgl_ctx##clear (
+            webgl_ctx##._COLOR_BUFFER_BIT_ 
+            lor webgl_ctx##._DEPTH_BUFFER_BIT_ 
+            lor webgl_ctx##._STENCIL_BUFFER_BIT_
+        );
+
+        let device_ratio = Dom_html.window##.devicePixelRatio in
+        begin_frame vg 
+            ~width:(canvas##.width) 
+            ~height:(canvas##.height) 
+            ~device_ratio
+            ;
+        Transform.scale vg ~x:device_ratio ~y:device_ratio;
+
+        Path.begin_ vg;
+        Path.rect vg ~x:40. ~y:40. ~w:320. ~h:320.;
+        set_fill_color vg ~color:Color.(rgba ~r:154 ~g:203 ~b:255 ~a:200);
+        fill vg;
+
+        Transform.translate vg ~x:200. ~y:200.;
+        Transform.rotate vg ~angle:(time *. 0.0005);
+
+        Text.set_font_face vg ~name:"sans";
+        Text.set_size vg ~size:48.;
+        Text.set_align vg ~align:Align.(center lor middle);
+        set_fill_color vg ~color:Color.white;
+        Text.text vg ~x:0. ~y:0. "Hello World!";
+
+        NVG.end_frame vg;
+
+        Dom_html.window##requestAnimationFrame (Js.wrap_callback render) 
+        |> ignore;
+    in
+
+    Dom_html.window##requestAnimationFrame (Js.wrap_callback render) 
+    |> ignore;
+;;
+]}
+
+{4 index.html}
+
+Don't forget to change the script path to match wherever you are building this project from.
+
+{v
+<!DOCTYPE>
+<html>
+  <head>
+    <style>
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+canvas {
+    width: 400px;
+    height: 400px;
+}
+    </style>
+  </head>
+  <body>
+      <div>
+          <canvas id='canvas'></canvas>
+      </div>
+  </body>
+  <script 
+    type='text/javascript' 
+    defer 
+    src='../../_build/default/examples/web_doc/main.bc.js'>
+  </script>
+</html>
+v}
+

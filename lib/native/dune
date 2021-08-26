@@ -1,0 +1,12 @@
+(library
+  (name graphv_gles2_native)
+  (public_name graphv.gles2-native)
+  (ocamlopt_flags (:standard -O3 -inline 10000))
+  (libraries
+   graphv_font
+   graphv_font_stb_truetype
+   graphv_gles2_native_impl
+   graphv_gles2
+   graphv_core
+ )
+)

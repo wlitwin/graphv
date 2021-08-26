@@ -1,0 +1,12 @@
+(library
+ (name graphv_gles2_native_impl)
+ (public_name graphv-gles2.native-impl)
+ (preprocess (pps ppx_jane -allow-unannotated-ignores))
+ (foreign_stubs (language c) 
+    (names gles2_stubs)
+    (flags :standard -O2)
+  )
+ (libraries
+   graphv_core_lib
+  )
+ )

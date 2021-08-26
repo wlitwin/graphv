@@ -1,0 +1,9 @@
+(executable
+  (name main) 
+  (modes byte js)
+  (preprocess (pps js_of_ocaml-ppx))
+  (libraries
+      graphv.webgl
+      js_of_ocaml
+  )
+)

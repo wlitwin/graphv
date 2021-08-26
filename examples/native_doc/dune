@@ -1,0 +1,8 @@
+(executable
+  (name main)
+  (libraries
+      graphv.gles2-native
+      glfw-ocaml
+      tgls.tgles2
+  )
+)

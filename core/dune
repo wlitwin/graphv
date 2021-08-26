@@ -1,0 +1,4 @@
+(library
+ (name graphv_core_lib)
+ (public_name graphv-core-lib)
+)

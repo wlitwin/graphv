@@ -1,0 +1,8 @@
+(library
+ (name graphv_tests)
+ (inline_tests)
+ (libraries 
+    graphv_core_lib 
+    )
+ (preprocess (pps ppx_expect))
+ )
