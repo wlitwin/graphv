@@ -10,6 +10,8 @@ doc: "https://wlitwin.github.io/docs/graphv/graphv"
 bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}
+  "ppx_expect" {>= "v0.14.1" & with-test}
+  "graphv_font" {>= "0.1" & with-test}
   "ocaml" {>= "4.08"}
   "odoc" {with-doc}
 ]
