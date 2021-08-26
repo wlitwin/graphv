@@ -4,7 +4,9 @@ version: "0.1.0"
 synopsis: "Functor for generating the Graphv font library"
 maintainer: ["walter@litwinczyk.com"]
 authors: ["Walter Litwinczyk"]
+license: "MIT"
 homepage: "https://github.com/wlitwin/graphv"
+doc: "https://wlitwin.github.io/docs/graphv/graphv"
 bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}

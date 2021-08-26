@@ -8,6 +8,8 @@
 (source (github wlitwin/graphv))
 (authors "Walter Litwinczyk")
 (maintainers "walter@litwinczyk.com")
+(license MIT)
+(documentation https://wlitwin.github.io/docs/graphv/graphv)
 
 (package
   (name graphv-core-lib)
@@ -73,11 +75,6 @@
   )
 
 (package
-  (name graphv)
-  (synopsis "Top-level Graphv package")
-  )
-
-(package
   (name graphv.gles2-native)
   (synopsis "Native version of the Graphv library based on GLES2")
   (depends
@@ -98,5 +95,15 @@
     (graphv_webgl_impl (>= 0.1))
     (graphv_gles2 (>= 0.1))
     (graphv_core (>= 0.1))
+    )
+  )
+
+(package
+  (name graphv)
+  (synopsis "Top-level graphv package")
+  (depends
+    (ocaml (>= 4.08))
+    (graphv.webgl (>= 0.1))
+    (graphv.gles2-native (>= 0.1))
     )
   )

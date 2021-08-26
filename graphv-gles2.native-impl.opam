@@ -5,11 +5,14 @@ synopsis:
   "Native GLES2 implementation of the backend renderer for the Graphv library"
 maintainer: ["walter@litwinczyk.com"]
 authors: ["Walter Litwinczyk"]
+license: "MIT"
 homepage: "https://github.com/wlitwin/graphv"
+doc: "https://wlitwin.github.io/docs/graphv/graphv"
 bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}
   "graphv_core_lib" {>= "0.1"}
+  "conf-gles2" {>= "1"}
   "odoc" {with-doc}
 ]
 build: [
