@@ -61,23 +61,17 @@ module LUT = struct
 
     let hash (v : key) =
         let c = int_of_float v.codepoint in
-        let b = int_of_float (v.blur *. 100.) in
-        let s = int_of_float (v.size *. 100.) in
-        (*
-        ((c land 0xFFFFFFFF) lsl 21) 
-        lor ((s land 0x1FFF) lsl 8)
-        lor (b land 0xFF)
-        *)
+        let b = int_of_float v.blur in
+        let s = int_of_float v.size in
         let h = 17 in
         let h = h * 31 + c in
         let h = h * 31 + s in
         h * 31 + b
 
-
     let equal (a : key) (b : key) : bool =
-        if Float.equal a.codepoint b.codepoint then (
-            if Float.equal a.size b.size then (
-                Float.equal a.blur b.blur
+        if Int.equal (int_of_float a.codepoint) (int_of_float b.codepoint) then (
+            if Int.equal (int_of_float a.size) (int_of_float b.size) then (
+                Int.equal (int_of_float a.blur) (int_of_float b.blur)
             ) else false
         ) else false
 
@@ -87,21 +81,24 @@ module LUT = struct
             let equal = equal
         end) : Hashtbl.S with type key := key)
 
+    let [@inline always] replace t c s b v =
+        let lookup_key = {
+            codepoint = float c;
+            size = s*.10.;
+            blur = b;
+        } in
+        replace t lookup_key v
+    ;;
+
     let lookup_key = {
         codepoint = 0.;
         size = 0.;
         blur = 0.;
     }
 
-    let [@inline always] replace t c s b v =
-        lookup_key.codepoint <- c;
-        lookup_key.size <- s;
-        lookup_key.blur <- b;
-        replace t lookup_key v
-
     let [@inline always] find_opt t c s b =
-        lookup_key.codepoint <- c;
-        lookup_key.size <- s;
+        lookup_key.codepoint <- float c;
+        lookup_key.size <- s*.10.;
         lookup_key.blur <- b;
         find_opt t lookup_key
 end
@@ -531,8 +528,8 @@ let build_glyph (t : t) codepoint (orig_font : Font.t) (font : Font.t) stb_glyph
             t.dirty_rect <- x0, y0, x1, y1;
 
             (* Cache in both the found font and the fallback font *)
-            LUT.replace font.lut (float codepoint) size blur new_glyph;
-            LUT.replace orig_font.lut (float codepoint) size blur new_glyph;
+            LUT.replace font.lut codepoint size blur new_glyph;
+            LUT.replace orig_font.lut codepoint size blur new_glyph;
 
             Some new_glyph
 ;;
@@ -546,7 +543,7 @@ let get_glyph (t : t) (font : Font.t) (codepoint : int) (size : float)
         let blur = if blur > 20. then 20. else Float.floor blur in
 
         (* TUPLE allocation *)
-        let glyph = LUT.find_opt font.lut (float codepoint) size blur in
+        let glyph = LUT.find_opt font.lut codepoint size blur in
         match glyph with
         | Some g as ret when bitmap_option = GlyphBitmap.optional || (g.x0 >= 0. && g.y0 >= 0.) -> ret
         | _ ->
