@@ -16,22 +16,22 @@ Provides:
 
 Ready to use modules:
 
-- {!module:Graphv_gles2_native}: Native GLES2 implementation.
-- {!module:Graphv_webgl}: WebGL implementation.
+- {{:../graphv_gles2_native/Graphv_gles2_native/index.html}Graphv_gles2_native}: Native GLES2 implementation.
+- {{:../graphv_webgl/Graphv_webgl/index.html}Graphv_webgl}: WebGL implementation.
 
 Modules for creating a new backend:
-- {!module:Graphv_core}: Functor for making a new Graphv library.
-- {!module:Graphv_gles2}: Functor for creating a new OpenGL ES 2 based library.
-- {!module:Graphv_font.Fontstash}: Functor for creating a new Graphv font backend.
+- {{:../graphv_core/Graphv_core/index.html}Graphv_core}: Functor for making a new Graphv library.
+- {{:../graphv_gles2/Graphv_gles2/index.html}Graphv_gles2}: Functor for creating a new OpenGL ES 2 based library.
+- {{:../graphv_font/Graphv_font/Fontstash/index.html}Graphv_font.Fontstash}: Functor for creating a new Graphv font backend.
 
 {1 Getting Started}
 
 {2 Installing with opam }
 
 Pick a platform implementation:
-- [opam install graphv.gles2-native] for a native GLES2 implementation.
+- [opam install graphv_gles2_native] for a native GLES2 implementation.
 
-- [opam install graphv.webgl] for a WebGL implementation, for use with Js_of_ocaml.
+- [opam install graphv_webgl] for a WebGL implementation, for use with Js_of_ocaml.
 
 This library does not provide context creation or GUI library support. That will be application depedent. For native contexts [glfw] is recommended and can be installed with:
 [opam install glfw-ocaml]
@@ -55,7 +55,7 @@ A minimal native application can be made using two extra libraries, [tgles2] and
 (executable
   (name main)
   (libraries
-      graphv.gles2-native
+      graphv_gles2_native
       glfw-ocaml
       tgls.tgles2
   )
@@ -129,7 +129,7 @@ Once compiled the web demo should look like {{:https://wlitwin.github.io/demos/g
   (modes byte js)
   (preprocess (pps js_of_ocaml-ppx))
   (libraries
-      graphv.webgl
+      graphv_webgl
       js_of_ocaml
   )
 )

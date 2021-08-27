@@ -5,7 +5,7 @@
     memtrace
     tgls
     tgls.tgles2
-    graphv.gles2-native
+    graphv_gles2_native
     stb_image
     glfw-ocaml
  ))

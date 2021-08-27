@@ -6,5 +6,5 @@
  (preprocess (pps js_of_ocaml-ppx))
  (libraries 
  js_of_ocaml
- graphv.webgl
+ graphv_webgl
  ))

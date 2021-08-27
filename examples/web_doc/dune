@@ -3,7 +3,7 @@
   (modes byte js)
   (preprocess (pps js_of_ocaml-ppx))
   (libraries
-      graphv.webgl
+      graphv_webgl
       js_of_ocaml
   )
 )
