@@ -769,7 +769,7 @@ let iter_next (t : t) (iter : TextIter.t) quad =
                     begin match glyph with
                     | None -> 
                         iter.prev_glyph <- Glyph.empty;
-                        loop (start+1)
+                        loop start
                     | Some (glyph : Glyph.t) ->
                         let next_x = get_quad t iter.font.font iter.prev_glyph glyph 
                             ~scale:iter.scale ~spacing:iter.spacing ~x:iter.next_x ~y:iter.y
