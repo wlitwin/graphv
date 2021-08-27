@@ -21,11 +21,11 @@ Performance varies quite a lot between browsers, Chrome tends to be the fastest.
 
 ## Performance
 
-Below is a table of eye-ball measurements of frame times across platforms compared with the native C implementation of NanoVG. All times are in millseconds (ms). Measurements were taken on a MacBook Pro Late 2013 laptop.
+Below is a table of eye-ball measurements of frame times across platforms compared with the native C implementation of NanoVG. All times are in millseconds (ms). Measurements were taken on a MacBook Pro Late 2013 laptop. The program being tested is the one shown in the screenshots above.
 
 | Platform      | OCaml         | NanoVG (GLES2) | NanoVG JS   |
 | ------------- | ------------- | -------------- | ---------   |
-| Linux Native  | 1.05 +/- 0.5  | 1.00 +/- 0.5   |  N/A        |
+| Linux Native  | 1.05 +/- 0.05 | 1.00 +/- 0.05  |  N/A        |
 | Linux Chrome  | 5.50 +/- 2    | N/A            |  5.50 +/- 2 |
 | Linux Firefox | 12.00 +/ 5    | N/A            |  8.00 +/- 2 |
 
