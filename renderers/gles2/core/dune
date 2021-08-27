@@ -1,6 +1,5 @@
 (library
- (name graphv_gles2)
- (public_name graphv-gles2)
+ (public_name graphv_gles2)
  (libraries
    graphv_core_lib
     )

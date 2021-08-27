@@ -1,6 +1,5 @@
 (library
- (name graphv_font_js)
- (public_name graphv-font.js)
+ (public_name graphv_font_js)
  (preprocess (pps js_of_ocaml-ppx))
  (libraries 
     graphv_core_lib

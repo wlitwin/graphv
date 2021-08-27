@@ -1,6 +1,5 @@
 (library
-  (name graphv_webgl)
-  (public_name graphv.webgl)
+  (public_name graphv_webgl)
   (preprocess (pps js_of_ocaml-ppx))
   (libraries
    graphv_font

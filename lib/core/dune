@@ -1,8 +1,6 @@
 (library
- (name graphv_core)
- (public_name graphv)
+ (public_name graphv_core)
  (ocamlopt_flags (:standard -inline 10000 -O3 -unboxed-types))
- (preprocess (pps ppx_jane -allow-unannotated-ignores))
  (libraries 
     graphv_core_lib
  )

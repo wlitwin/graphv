@@ -1,6 +1,5 @@
 (library
- (name graphv_font)
- (public_name graphv-font.core)
+ (public_name graphv_font)
  (libraries 
     graphv_core_lib
  )
