@@ -11,6 +11,7 @@
  (name graphv_core_lib)
  (synopsis "Primitives for the Graphv vector graphics library")
  (depends
+   (ocaml (>= 4.08))
   ))
 (package
  (name graphv_font_js)
@@ -45,6 +46,7 @@
  (synopsis
   "Native GLES2 implementation of the backend renderer for the Graphv library")
  (depends
+  (conf-gles2 (>= 1))
   (graphv_core_lib (>= 0.1))))
 (package
  (name graphv_webgl_impl)

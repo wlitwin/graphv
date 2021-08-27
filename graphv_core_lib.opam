@@ -10,6 +10,7 @@ doc: "https://wlitwin.github.io/docs/graphv/graphv"
 bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}
+  "ocaml" {>= "4.08"}
   "odoc" {with-doc}
 ]
 build: [

@@ -11,6 +11,7 @@ doc: "https://wlitwin.github.io/docs/graphv/graphv"
 bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}
+  "conf-gles2" {>= "1"}
   "graphv_core_lib" {>= "0.1"}
   "odoc" {with-doc}
 ]
