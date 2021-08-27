@@ -5,4 +5,5 @@
    graphv_font
     )
  (preprocess (pps ppx_expect))
+ (enabled_if (= %{profile} dev)) 
  )
