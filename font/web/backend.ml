@@ -92,7 +92,7 @@ module Impl(P : Params) : Graphv_font.FontBackend.S
         let width = (P.context##measureText glyph.str)##.width in
         let width = int_of_float (width*.1.2) in
         (* pixel units based on font height ? *)
-        let y = ~-.0.85 *. (scale *. g_scale) |> int_of_float in
+        let y = ~-.0.80 *. (scale *. g_scale) |> int_of_float in
         Box.create 1 y width (scale *. g_scale *. 0.22 |> int_of_float)
     ;;
 
