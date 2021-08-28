@@ -1,12 +1,17 @@
 open Graphv_core_lib
 
 module Make(Gl : Ogl_intf.S) : Impl.S
-        with type Buffer.UByte.t = Gl.Buffer.UByte.t
-        and type Buffer.Float.t = Gl.Buffer.Float.t
-        and type gl = Gl.t
+        with type gl = Gl.t
+        and module Buffer = Gl.Buffer
+        and module Dyn = Gl.Dyn
+        and module VertexBuffer = Gl.VertexBuffer
+        and module Path = Gl.Path
 = struct
 
+module Buffer = Gl.Buffer
 module Dyn = Gl.Dyn
+module Path = Gl.Path
+module VertexBuffer = Gl.VertexBuffer
 
 type gl = Gl.t
 
@@ -106,10 +111,6 @@ module ShaderType = struct
     let img = 3.
 end
 
-module VertexBuffer = Gl.VertexBuffer
-
-module Path = Gl.Path
-
 module IPath = struct
     type t = {
         fill_offset : int;
@@ -176,8 +177,6 @@ module Call = struct
         DynArray.clear t.paths;
     ;;
 end
-
-    module Buffer = Gl.Buffer
 
     let check_error _ = ()
         (*Gl.check_error*)

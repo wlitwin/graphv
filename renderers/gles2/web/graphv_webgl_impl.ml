@@ -11,7 +11,7 @@ module Buffer = struct
 
         let set = Typed_array.set
         let get = Typed_array.unsafe_get
-        let [@inline always] length (t : t) : int = (*t##.length*) Js.Unsafe.get t "length"
+        let [@inline always] length (t : t) : int = t##.length
         let [@inline always] sub (t : t) (start : int) (len : int) : t = 
             t##subarray start len
 
@@ -26,7 +26,7 @@ module Buffer = struct
 
         let set : t -> int -> float -> unit = Typed_array.set
         let get : t -> int -> float  = Typed_array.unsafe_get
-        let [@inline always] length (t : t) : int = Js.Unsafe.get t "length"
+        let [@inline always] length (t : t) : int = t##.length
 
         let fill (t : t) (value : float) =
             let len : int = Js.Unsafe.get t "length" - 1 in

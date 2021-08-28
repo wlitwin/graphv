@@ -1,0 +1,11 @@
+(executable
+ (name graphv_gles2_tests)
+ (libraries 
+    graphv_gles2_native
+    glfw-ocaml
+    tgls.tgles2
+    )
+ (preprocess (pps ppx_expect))
+ (enabled_if (= %{profile} dev)) 
+ )
+
