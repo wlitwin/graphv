@@ -1,1 +1,2 @@
-arch: "x86_64"
+available:
+    arch = "x86_64" | arch = "arm64"
