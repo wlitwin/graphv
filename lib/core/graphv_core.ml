@@ -925,8 +925,8 @@ module Make
         let dly0 = ~-.(p0.dx) in
         let dlx1 = p1.dy in
         let dly1 = ~-.(p1.dx) in
+        let inner = PointFlags.has p1.flags ~flag:PointFlags.inner_bevel in
         if PointFlags.has p1.flags ~flag:PointFlags.left then (
-            let inner = PointFlags.has p1.flags ~flag:PointFlags.inner_bevel in
             let lx0, ly0, lx1, ly1 = choose_bevel inner p0 p1 lw in
             set lx0 ly0 lu 1.;
             set (p1.x -. dlx0*.rw) (p1.y -. dly0*.rw) ru 1.;
@@ -954,7 +954,6 @@ module Make
             set lx1 ly1 lu 1.;
             set (p1.x -. dlx1*.rw) (p1.y -. dly1*.rw) ru 1.;
         ) else (
-            let inner = PointFlags.has p1.flags ~flag:PointFlags.inner_bevel in
             let rx0, ry0, rx1, ry1 = choose_bevel inner p0 p1 ~-.rw in
 
             set (p1.x +. dlx0*.lw) (p1.y +. dly0*.lw) lu 1.;
@@ -1053,6 +1052,12 @@ module Make
             path.fill <- VertexBuffer.Sub.sub t.cache.verts !verts nfill;
             verts := !dst;
 
+            let flag =
+                PointFlags.no_flags
+                |> PointFlags.add ~flag:PointFlags.bevel
+                |> PointFlags.add ~flag:PointFlags.inner_bevel
+            in
+
             if fringe then (
                 let lw, lu =
                     if convex then (
@@ -1065,16 +1070,11 @@ module Make
                 let ru = 1. in
                 dst := !verts;
 
-                let p0 = get_pt (path.count -. 1) in
-
                 let p1_off = ref 0 in
+                let p0_off = ref (path.count -. 1) in
                 for _=0 to path.count-.1 do
+                    let p0 = get_pt !p0_off in
                     let p1 = get_pt !p1_off in
-                    let flag = 
-                        PointFlags.no_flags
-                        |> PointFlags.add ~flag:PointFlags.bevel
-                        |> PointFlags.add ~flag:PointFlags.inner_bevel
-                    in
                     if PointFlags.has p1.flags ~flag then (
                         dst := bevel_join t.cache.verts !dst p0 p1 lw rw lu ru
                     ) else (
@@ -1087,7 +1087,7 @@ module Make
                         VertexBuffer.set t.cache.verts !dst x y ru 1.;
                         incr dst;
                     );
-
+                    p0_off := !p1_off;
                     incr p1_off;
                 done;
 
