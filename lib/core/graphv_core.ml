@@ -1050,7 +1050,6 @@ module Make
             );
 
             let nfill = (!dst -. !verts) in
-            assert (nfill >. 0);
             path.fill <- VertexBuffer.Sub.sub t.cache.verts !verts nfill;
             verts := !dst;
 
