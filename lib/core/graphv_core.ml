@@ -1105,7 +1105,7 @@ module Make
                 
                 verts := !dst
             ) else (
-                path.stroke <- VertexBuffer.Sub.create();
+                path.stroke <- VertexBuffer.Sub.empty;
             );
         );
     ;;
@@ -1292,7 +1292,7 @@ module Make
                 DynArray.get t.cache.points (path.first + idx)
             in
 
-            path.fill <- VertexBuffer.Sub.create();
+            path.fill <- VertexBuffer.Sub.empty;
 
             dst := !verts;
 

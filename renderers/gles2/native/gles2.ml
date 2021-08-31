@@ -151,6 +151,8 @@ module VertexBuffer = struct
 
         let create () =
             Dyn.Sub.sub Dyn.(create 1) 0 1
+
+        let empty = create()
     end
 end
 

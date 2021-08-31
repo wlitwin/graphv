@@ -24,6 +24,7 @@ module type S = sig
           sig
             type parent = t
             type t = Dyn.Sub.sub
+            val empty : t
             val sub : parent -> int -> int -> t
             val vertex_offset : t -> int
             val length : t -> int

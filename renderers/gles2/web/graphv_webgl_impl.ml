@@ -230,6 +230,8 @@ module VertexBuffer = struct
 
         let create () =
             Dyn.Sub.sub Dyn.(create 1) 0 1
+
+        let empty = create()
     end
 end
     
@@ -245,7 +247,7 @@ module Path = struct
         mutable convex : bool;
     }
 
-    let empty_sub = VertexBuffer.Sub.create()
+    let empty_sub = VertexBuffer.Sub.empty
 
     let create () = {
         first = 0;
