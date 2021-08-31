@@ -1,7 +1,7 @@
 (lang dune 2.8)
 (name graphv)
 (generate_opam_files true)
-(version 0.1.0)
+(version 0.1.1)
 (source (github wlitwin/graphv))
 (authors "Walter Litwinczyk")
 (maintainers "walter@litwinczyk.com")

@@ -1,3 +1,8 @@
+#### v0.1.1 (2021-08-30)
+
+* Fix stencil path bug when rendering a fill (9ba038d)
+* Remove debug assert
+
 #### v0.1.0 (2021-08-24)
 
 * Initial Release
