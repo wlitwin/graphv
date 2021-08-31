@@ -5,7 +5,7 @@ module Context = Context
 module Make
     (Impl : Graphv_core_lib.Impl.S)
     (Font : Graphv_core_lib.Font_impl.S with type data := Impl.Buffer.UByte.t)
-    : Context.S 
+    : Context.S
         with type Buffer.UByte.t = Impl.Buffer.UByte.t
         and type Buffer.Float.t = Impl.Buffer.Float.t
         and type arg = Impl.gl
@@ -129,7 +129,7 @@ module Make
     let save t =
         let state =
             if DynArray.empty t.states then (
-                State.create() 
+                State.create()
             ) else (
                 State.(copy (get_state t))
             )
@@ -267,7 +267,7 @@ module Make
                 let tex = ex*.(Float.abs p.m0) +. ey*.(Float.abs p.m2) in
                 let tey = ex*.(Float.abs p.m1) +. ey*.(Float.abs p.m3) in
 
-                let x, y, w, h = intersect_rects 
+                let x, y, w, h = intersect_rects
                     (p.m4 -. tex)
                     (p.m5 -. tey)
                     (tex*.2.)
@@ -309,8 +309,8 @@ module Make
         ;;
 
         let set_composite_blend_func t ~src ~dst =
-            set_composite_blend_func_separate t 
-                ~src_rgb:src ~dst_rgb:dst 
+            set_composite_blend_func_separate t
+                ~src_rgb:src ~dst_rgb:dst
                 ~src_alpha:src ~dst_alpha:dst
         ;;
 
@@ -322,7 +322,7 @@ module Make
 
     let last_path t = DynArray.last t.cache.paths
 
-    let add_path t = 
+    let add_path t =
         let npoints = DynArray.length t.cache.points in
         let path = DynArray.steal t.cache.paths IPath.create in
         IPath.reset path;
@@ -352,7 +352,7 @@ module Make
         in
 
         if path.count > 0 && DynArray.length t.cache.points > 0 then (
-            let last = last_point t in    
+            let last = last_point t in
             if Point.equals last.x last.y x y t.dist_tol then (
                 last.flags <- PointFlags.add last.flags ~flag:flags;
             ) else (
@@ -432,7 +432,7 @@ module Make
     ;;
 
     module Path = struct
-        let begin_ t = 
+        let begin_ t =
             DynArray.clear t.commands;
             PathCache.clear t.cache;
         ;;
@@ -441,12 +441,12 @@ module Make
             let open FloatOps in
             let xform = (get_state t).xform in
             match cmd with
-            | Move_to {x;y} -> 
+            | Move_to {x;y} ->
                 (*let x, y = Matrix.transform_point xform x y in*)
                 let xn = x*xform.m0 + y*xform.m2 + xform.m4 in
                 let yn = x*xform.m1 + y*xform.m3 + xform.m5 in
                 Move_to {x=xn;y=yn}
-            | Line_to {x;y} -> 
+            | Line_to {x;y} ->
                 (*let x, y = Matrix.transform_point xform x y in*)
                 let xn = x*xform.m0 + y*xform.m2 + xform.m4 in
                 let yn = x*xform.m1 + y*xform.m3 + xform.m5 in
@@ -467,7 +467,7 @@ module Make
             | Winding _ as w -> w
         ;;
 
-        let add_command t cmd = 
+        let add_command t cmd =
             DynArray.add t.commands (transform_command t cmd)
         ;;
 
@@ -500,7 +500,7 @@ module Make
             add_command t Command.Close
         ;;
 
-        let cross dx0 dy0 dx1 dy1 = 
+        let cross dx0 dy0 dx1 dy1 =
             dx1*.dy0 +. dx0*.dy1
         ;;
 
@@ -508,7 +508,7 @@ module Make
             let open FloatOps in
             let _2_pi = Float.pi*2. in
             match dir with
-            | CW -> 
+            | CW ->
                 if Float.abs da >= _2_pi then (
                     _2_pi
                 ) else (
@@ -545,7 +545,7 @@ module Make
             let ptany = ref 0. in
             let px = ref 0. in
             let py = ref 0. in
-            
+
             for i=0 to ndivs do
                 let a = a0 + da*(float i / float ndivs) in
                 let dx = Float.cos a in
@@ -587,7 +587,7 @@ module Make
             if Point.equals x0 y0 x1 y1 t.dist_tol
                || Point.equals x1 y1 x2 y2 t.dist_tol
                || Point.dist_segment x1 y1 x0 y0 x2 y2 < t.dist_tol*t.dist_tol
-               || radius < t.dist_tol 
+               || radius < t.dist_tol
             then (
                 line_to t ~x:x1 ~y:y1
             ) else (
@@ -661,10 +661,10 @@ module Make
 
                 add_command t (Move_to {x; y=y+ryTL});
                 line_to x (y+h-ryBL);
-                bz_to x (y+h-ryBL*(1.-kappa_90)) (x + rxBL*(1.-kappa_90)) (y+h) (x+rxBL) (y+h);        
+                bz_to x (y+h-ryBL*(1.-kappa_90)) (x + rxBL*(1.-kappa_90)) (y+h) (x+rxBL) (y+h);
                 line_to (x+w-rxBR) (y+h);
                 bz_to (x+w-rxBR*(1.-kappa_90)) (y+h) (x+w) (y+h-ryBR*(1.-kappa_90)) (x+w) (y+h-ryBR);
-                line_to (x+w) (y+ryTR); 
+                line_to (x+w) (y+ryTR);
                 bz_to (x+w) (y+ryTR*(1.-kappa_90)) (x+w-rxTR*(1.-kappa_90)) y (x+w-rxTR) y;
                 line_to (x+rxTL) y;
                 bz_to (x+rxTL*(1.-kappa_90)) y x (y+ryTL*(1.-kappa_90)) x (y+ryTL);
@@ -740,6 +740,7 @@ module Make
                     for _=0 to path.count-1 do
                         let open FloatOps in
                         (* Calc segment directions *)
+                        (* This calc is good *)
                         let p1 = get !p1_off in
                         !p0.dx <- p1.x - !p0.x;
                         !p0.dy <- p1.y - !p0.y;
@@ -844,6 +845,7 @@ module Make
                 let dly1 = ~-.(p1.dx) in
 
                 (* Calculate extrusions *)
+                (* these are right *)
                 p1.dmx <- (dlx0 +. dlx1) *. 0.5;
                 p1.dmy <- (dly0 +. dly1) *. 0.5;
 
@@ -856,10 +858,10 @@ module Make
                 );
 
                 (* Clear flags, keep corner *)
-                p1.flags <- 
-                    if PointFlags.has p1.flags ~flag:PointFlags.corner 
-                    then PointFlags.corner 
-                    else PointFlags.no_flags 
+                p1.flags <-
+                    if PointFlags.has p1.flags ~flag:PointFlags.corner
+                    then PointFlags.corner
+                    else PointFlags.no_flags
                 ;
 
                 (* Keep track of left turns *)
@@ -877,9 +879,9 @@ module Make
 
                 (* Check to see if the corner needs to be beveled *)
                 if PointFlags.has p1.flags ~flag:PointFlags.corner then (
-                    if dmr2*.miter_limit*.miter_limit < 1. 
-                        || line_join = LineJoin.Bevel 
-                        || line_join = LineJoin.Round 
+                    if dmr2*.miter_limit*.miter_limit < 1.
+                        || line_join = LineJoin.Bevel
+                        || line_join = LineJoin.Round
                     then (
                         p1.flags <- PointFlags.add p1.flags ~flag:PointFlags.bevel
                     )
@@ -992,9 +994,9 @@ module Make
 
         calculate_joins t w line_join miter_limit;
 
-        let convex = 
-            DynArray.length t.cache.paths =. 1 
-            && DynArray.(first t.cache.paths).convex 
+        let convex =
+            DynArray.length t.cache.paths =. 1
+            && DynArray.(first t.cache.paths).convex
         in
 
         let woff = 0.5*aa in
@@ -1002,7 +1004,7 @@ module Make
         let dst = ref !verts in
         DynArray.iter t.cache.paths ~f:(fun path ->
             dst := !verts;
-            let get_pt idx = 
+            let get_pt idx =
                 DynArray.get t.cache.points (path.first +. idx)
             in
             if fringe then (
@@ -1032,6 +1034,7 @@ module Make
                             incr dst;
                         )
                     ) else (
+                        (* these are right *)
                         let x = p1.x + p1.dmx*woff in
                         let y = p1.y + p1.dmy*woff in
                         VertexBuffer.set t.cache.verts !dst x y 0.5 1.;
@@ -1102,7 +1105,7 @@ module Make
                 let nstroke = !dst -. !verts in
                 assert (nstroke >. 0);
                 path.stroke <- VertexBuffer.Sub.sub t.cache.verts !verts nstroke;
-                
+
                 verts := !dst
             ) else (
                 path.stroke <- VertexBuffer.Sub.empty;
@@ -1161,7 +1164,7 @@ module Make
             incr dst;
             incr i;
         done;
-        VertexBuffer.set verts !dst (px + dlx*w) (py + dly*w) u0 1.; 
+        VertexBuffer.set verts !dst (px + dlx*w) (py + dly*w) u0 1.;
         incr dst;
         VertexBuffer.set verts !dst (px - dlx*w) (py - dly*w) u1 1.;
         incr dst;
@@ -1174,7 +1177,7 @@ module Make
         let py = p.y in
         let dlx = dy in
         let dly = ~-.dx in
-        VertexBuffer.set verts !dst (px + dlx*w) (py + dly*w) u0 1.; 
+        VertexBuffer.set verts !dst (px + dlx*w) (py + dly*w) u0 1.;
         incr dst;
         VertexBuffer.set verts !dst (px - dlx*w) (py - dly*w) u1 1.;
         incr dst;
@@ -1213,7 +1216,7 @@ module Make
             VertexBuffer.set verts !dst (p1.x -. dlx0*.rw) (p1.y -. dly0*.rw) ru 1.;
             incr dst;
 
-            let n = clamp 
+            let n = clamp
                 Float.(ceil(((a0 -. a1) /. pi) *. float ncap) |> int_of_float)
                 2
                 ncap
@@ -1245,7 +1248,7 @@ module Make
             VertexBuffer.set verts !dst rx0 ry0 ru 1.;
             incr dst;
 
-            let n = clamp 
+            let n = clamp
                 Float.(ceil(((a1 -. a0) /. pi) *. float ncap) |> int_of_float)
                 2
                 ncap
@@ -1272,9 +1275,9 @@ module Make
         let aa = fringe in
 
         let ncap = curve_divs w Float.pi t.tess_tol in
-        
+
         let w = w +. aa *. 0.5 in
-        
+
         let u0, u1 =
             if aa = 0. then (
                 0.5, 0.5
@@ -1299,7 +1302,7 @@ module Make
             let s = ref 0 in
             let e = ref path.count in
             let p0_off = ref (path.count-1) in
-            let p1_off = ref 0 in 
+            let p1_off = ref 0 in
 
             if not path.closed then (
                 p0_off := 0;
@@ -1336,7 +1339,7 @@ module Make
                     VertexBuffer.set t.cache.verts !dst (p1.x -. (p1.dmx*.w)) (p1.y -. (p1.dmy*.w)) u1 1.;
                     incr dst;
                 );
-                
+
                 p0_off := !p1_off;
                 incr p1_off;
                 incr j
@@ -1379,11 +1382,11 @@ module Make
         if !stroke_width < t.fringe_width then (
             let alpha = clamp (!stroke_width /. t.fringe_width) 0. 1. in
             let alpha = alpha*.alpha in
-            stroke_paint.inner_color <- Color.{ 
+            stroke_paint.inner_color <- Color.{
                 stroke_paint.inner_color with
                 a = stroke_paint.inner_color.a*.alpha;
             };
-            stroke_paint.outer_color <- Color.{ 
+            stroke_paint.outer_color <- Color.{
                 stroke_paint.outer_color with
                 a = stroke_paint.outer_color.a*.alpha;
             };
@@ -1391,11 +1394,11 @@ module Make
         );
 
         (* Apply global alpha *)
-        stroke_paint.inner_color <- Color.{ 
+        stroke_paint.inner_color <- Color.{
             stroke_paint.inner_color with
             a = stroke_paint.inner_color.a*.state.alpha
         };
-        stroke_paint.outer_color <- Color.{ 
+        stroke_paint.outer_color <- Color.{
             stroke_paint.outer_color with
             a = stroke_paint.outer_color.a*.state.alpha;
         };
@@ -1409,7 +1412,7 @@ module Make
             expand_stroke t (stroke_width*.0.5) 0.0 state.line_cap state.line_join state.miter_limit
         );
 
-        Impl.stroke t.impl 
+        Impl.stroke t.impl
             ~paint:stroke_paint
             ~composite_op:state.composite_operation
             ~scissor:state.scissor
@@ -1446,8 +1449,8 @@ module Make
             a = fill_paint.outer_color.a *. state.alpha;
         };
 
-        Impl.fill t.impl 
-            ~paint:fill_paint 
+        Impl.fill t.impl
+            ~paint:fill_paint
             ~composite_op:state.composite_operation
             ~scissor:state.scissor
             ~fringe:t.fringe_width
@@ -1484,7 +1487,7 @@ module Make
             let dx = ex - sx in
             let dy = ey - sy in
             let d = Float.sqrt (dx*dx + dy*dy) in
-            let dx, dy = 
+            let dx, dy =
                 if d > 0.0001 then (
                     dx / d, dy / d
                 ) else (
@@ -1535,7 +1538,7 @@ module Make
 
             let r = (in_radius + out_radius)*0.5 in
             let f = (out_radius - in_radius) in
-            
+
             paint.extent <- r, r;
             paint.radius <- r;
             paint.feather <- Float.max 1. f;
@@ -1547,7 +1550,7 @@ module Make
         let image_pattern (_t : ctx) ~cx ~cy ~w ~h ~angle ~image ~alpha : t =
             let paint = Paint.create() in
             Matrix.rotate paint.xform ~angle;
-            
+
             let xform = paint.xform in
             xform.m4 <- cx;
             xform.m5 <- cy;
@@ -1611,10 +1614,10 @@ module Make
         };
 
         let len = VertexBuffer.num_verts verts - off in
-        Impl.triangles t.impl 
-            ~paint 
-            ~composite_op:state.composite_operation 
-            ~scissor:state.scissor 
+        Impl.triangles t.impl
+            ~paint
+            ~composite_op:state.composite_operation
+            ~scissor:state.scissor
             ~fringe:t.fringe_width
             ~vertices:(VertexBuffer.Sub.sub verts off len)
             ;
@@ -1702,13 +1705,13 @@ module Make
             set_font_attributes t state scale;
 
             let verts = VertexBuffer.num_verts t.cache.verts in
-            let iter = FontContext.iter_init t.fs 
-                (x*scale) 
-                (y*scale) 
+            let iter = FontContext.iter_init t.fs
+                (x*scale)
+                (y*scale)
                 ~start
                 ~end_
-                str 
-                FontContext.GlyphBitmap.required 
+                str
+                FontContext.GlyphBitmap.required
             in
             let rec loop iter =
                 let q = FontContext.iter_next t.fs iter quad in
@@ -1725,7 +1728,7 @@ module Make
                         quad.t1 <- t0;
                     );
                     transform_points t.cache.verts state.xform quad inv_scale;
-                    loop iter 
+                    loop iter
             in
             let iter = loop iter in
 
@@ -1775,7 +1778,7 @@ module Make
             next = 0;
         }
 
-        let make_empty_rows count = 
+        let make_empty_rows count =
             Array.make count empty_row
 
         type codepoint_type = Space
@@ -1788,7 +1791,7 @@ module Make
             | 0x85 | 10 -> Newline
             | ch ->
                 if (ch >= 0x4E00 && ch <= 0x9FFFF)
-                    || (ch >= 0x3000 && ch <= 0x30FF) 
+                    || (ch >= 0x3000 && ch <= 0x30FF)
                     || (ch >= 0xFF00 && ch <= 0xFFEF)
                     || (ch >= 0x1100 && ch <= 0x11FF)
                     || (ch >= 0x3130 && ch <= 0x318F)
@@ -1876,13 +1879,13 @@ module Make
                                     break_end := !row_start;
                                     break_width := 0.;
                                     break_max_x := 0.;
-                                ) 
+                                )
                             ) else (
                                 let next_width = FI.next_x iter - !row_start_x in
 
                                 (* Track last beginning of word *)
-                                if Stdlib.((ptype = Space && (type_ = Char || type_ = CJK_char)) 
-                                    || type_ = CJK_char) then 
+                                if Stdlib.((ptype = Space && (type_ = Char || type_ = CJK_char))
+                                    || type_ = CJK_char) then
                                 (
                                     word_start := FI.start iter;
                                     word_start_x := FI.x iter;
@@ -1898,7 +1901,7 @@ module Make
 
                                 (* Track last end of word *)
                                 if Stdlib.(((ptype = Char || ptype = CJK_char) && type_ = Space)
-                                    || (type_ = CJK_char)) then 
+                                    || (type_ = CJK_char)) then
                                 (
                                     break_end := FI.next iter;
                                     word_start := FI.next iter;
@@ -1974,7 +1977,7 @@ module Make
                          | Some e -> e
                 in
 
-                let row_start = 
+                let row_start =
                     if !row_start =. end_ then ~-1
                     else !row_start
                 in
@@ -1993,7 +1996,7 @@ module Make
                 );
 
                 !nrows
-            with Exit -> 
+            with Exit ->
                 !nrows
             end;
         ;;
@@ -2129,7 +2132,7 @@ module Make
         ;;
 
         let create t ~name ~file =
-            FontContext.add_font t.fs name file 
+            FontContext.add_font t.fs name file
         ;;
 
         let set_size t ~size =
@@ -2152,7 +2155,7 @@ module Make
             let state = get_state t in
             state.line_height <- height;
         ;;
-        
+
         let find_font t ~name =
             FontContext.find_font t.fs name
 
@@ -2227,7 +2230,7 @@ module Make
 
     end
 
-    let create ~flags arg = 
+    let create ~flags arg =
         let t = {
             impl = Impl.create ~flags arg |> opt_exn;
             commands = DynArray.create 128 Command.Close;
@@ -2250,7 +2253,7 @@ module Make
         let data, w, h = FontContext.get_texture_data t.fs in
         let value = Impl.create_texture t.impl ~type_:`Alpha ~w ~h ~flags:ImageFlags.no_flags ~data in
         begin match value with
-        | Some image -> 
+        | Some image ->
             DynArray.add t.font_images image;
         | None -> failwith "Couldn't create font texture"
         end;
