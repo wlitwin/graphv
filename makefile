@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all release server test perf
 
 all:
 	dune build
@@ -10,6 +10,10 @@ release:
 
 server:
 	python3 -m http.server 8080
+
+test:
+	dune build test/gles2/graphv_gles2_tests.exe --profile release
+	./_build/default/test/gles2/graphv_gles2_tests.exe
 
 perf:
 	dune build --profile release
