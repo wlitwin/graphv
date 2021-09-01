@@ -19,6 +19,8 @@ module CreateFlags : sig
   val stencil_strokes : t
 
   val debug : t
+
+  val tesselate_afd : t
 end
 
 type t

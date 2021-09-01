@@ -59,6 +59,7 @@ module Make
         commands : Command.t DynArray.t;
         mutable command_x : float;
         mutable command_y : float;
+        tesselate_afd : bool;
         states : State.t DynArray.t;
         cache : PathCache.t;
         mutable tess_tol : float;
@@ -399,6 +400,78 @@ module Make
         )
     ;;
 
+    let tesselate_bezier_afd t x1 y1 x2 y2 x3 y3 x4 y4 typ =
+        (* Code adapted from
+            https://github.com/memononen/nanovg/pull/420
+            https://dl.acm.org/doi/10.1145/37401.37416
+         *)
+        let open FloatOps in
+
+        (* Power basis *)
+        let ax = ~-.x1 + 3.*x2 - 3.*x3 + x4 in
+        let ay = ~-.y1 + 3.*y2 - 3.*y3 + y4 in
+        let bx = 3.*x1 - 6.*x2 + 3.*x3 in
+        let by = 3.*y1 - 6.*y2 + 3.*y3 in
+        let cx = ~-.3.*x1 + 3.*x2 in
+        let cy = ~-.3.*y1 + 3.*y2 in
+
+        let px = ref x1 in
+        let py = ref y1 in
+        let dx = ref (ax + bx + cx) in
+        let dy = ref (ay + by + cy) in
+        let ddx = ref (6.*ax + 2.*bx) in
+        let ddy = ref (6.*ay + 2.*by) in
+        let dddx = ref (6.*ax) in
+        let dddy = ref (6.*ay) in
+
+        let afd_one = 1 lsl 10 in
+        let i = ref 0 in
+        let dt = ref afd_one in
+        let tol = t.tess_tol*12. in
+
+        while !i <. afd_one do
+            (* flatness measure *)
+            let d = ref (!ddx * !ddx + !ddy * !ddy + !dddx * !dddx + !dddy * !dddy) in
+
+            while (!d > tol && !dt >. 1) || (!i +. !dt >. afd_one) do
+                dx := 0.5 * !dx - (1./8.) * !ddx + (1./16.) * !dddx;
+                dy := 0.5 * !dy - (1./8.) * !ddy + (1./16.) * !dddy;
+                ddx := (1./4.) * !ddx - (1./8.) * !dddx;
+                ddy := (1./4.) * !ddy - (1./8.) * !dddy;
+                dddx := (1./8.) * !dddx;
+                dddy := (1./8.) * !dddy;
+
+                dt := !dt lsr 1;
+
+                d := (!ddx * !ddx + !ddy * !ddy + !dddx * !dddx + !dddy * !dddy);
+            done;
+
+            while (!d > 0. && !d < tol/10. && !dt <. afd_one) && (!i+.2*. !dt <=. afd_one) do
+                dx := 2. * !dx + !ddx;
+                dy := 2. * !dy + !ddy;
+                ddx := 4. * !ddx + 4. * !dddx;
+                ddy := 4. * !ddy + 4. * !dddy;
+                dddx := 8. * !dddx;
+                dddy := 8. * !dddy;
+
+                dt := !dt lsl 1;
+
+                d := !ddx * !ddx + !ddy * !ddy + !dddx * !dddx + !dddy * !dddy;
+            done;
+
+            px := !px + !dx;
+            py := !py + !dy;
+            dx := !dx + !ddx;
+            dy := !dy + !ddy;
+            ddx := !ddx + !dddx;
+            ddy := !ddy + !dddy;
+
+            add_point t !px !py (if !i >. 0 then typ else PointFlags.no_flags);
+
+            i := !i +. !dt;
+        done;
+    ;;
+
     let triarea2 ax ay bx by cx cy =
         let open FloatOps in
         let abx = bx - ax in
@@ -697,7 +770,11 @@ module Make
                         add_point t x y PointFlags.corner;
                     | Bezier_to {c1x; c1y; c2x; c2y; x; y} ->
                         let last = last_point t in
-                        tesselate_bezier t last.x last.y c1x c1y c2x c2y x y 0 PointFlags.corner
+                        if t.tesselate_afd then (
+                            tesselate_bezier_afd t last.x last.y c1x c1y c2x c2y x y PointFlags.corner
+                        ) else (
+                            tesselate_bezier t last.x last.y c1x c1y c2x c2y x y 0 PointFlags.corner
+                        )
                     | Close -> close_path t
                     | Winding w -> path_winding t w
                 );
@@ -1431,7 +1508,6 @@ module Make
 
     let fill (t : t) =
         let state = get_state t in
-        let fill_paint = Paint.copy state.fill in
         Path.flatten t;
         (* TODO - finish *)
         if Impl.edge_antialias t.impl && state.shape_anti_alias then (
@@ -1440,6 +1516,7 @@ module Make
             expand_fill t 0. LineJoin.Miter 2.4
         );
 
+        let fill_paint = Paint.copy state.fill in
         fill_paint.inner_color <- Color.{
             fill_paint.inner_color with
             a = fill_paint.inner_color.a *. state.alpha;
@@ -2236,6 +2313,7 @@ module Make
             commands = DynArray.create 128 Command.Close;
             command_x = 0.;
             command_y = 0.;
+            tesselate_afd = CreateFlags.has ~flag:CreateFlags.tesselate_afd flags;
             states = DynArray.create 10 State.(create());
             cache = PathCache.create();
             tess_tol = 0.;
