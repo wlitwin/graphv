@@ -657,6 +657,11 @@ let text_bounds t x y str start end_ =
             | Some (glyph : Glyph.t) ->
                 let xn = get_quad t font.font !prev_glyph_index glyph ~scale ~spacing:state.spacing ~x:!x ~y tb_quad in
                 x := xn;
+                (* TODO - spaces have weird behavior here, because the
+                          advance is much wider than the glyph it causes
+                          jumping in the UI when using things like text
+                          boxes. Maybe include that spacing in the glyph?
+                 *)
                 if tb_quad.x0 < !minx then (minx := tb_quad.x0);
                 if tb_quad.x1 > !maxx then (maxx := tb_quad.x1);
                 if tb_quad.y0 < !miny then (miny := tb_quad.y0);
