@@ -1,2 +1,2 @@
 available:
-    arch = "x86_64" | arch = "arm64"
+    (arch = "x86_64" | arch = "arm64" | arch = "ppc64" | arch = "s390x") & (os != "macos")

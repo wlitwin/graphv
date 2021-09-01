@@ -30,4 +30,4 @@ build: [
 ]
 dev-repo: "git+https://github.com/wlitwin/graphv.git"
 available:
-    arch = "x86_64" | arch = "arm64"
+    (arch = "x86_64" | arch = "arm64" | arch = "ppc64" | arch = "s390x") & (os != "macos")
