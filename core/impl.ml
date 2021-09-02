@@ -4,6 +4,7 @@ module type S = sig
     module Buffer : Buffer.S 
 
     module Dyn : Sigs.DynArrayS
+        with type underlying = Buffer.Float.t
 
     module VertexBuffer : sig
         type t = { arr : Dyn.t; mutable size : int }
