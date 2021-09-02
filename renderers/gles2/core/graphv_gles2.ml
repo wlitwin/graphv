@@ -91,10 +91,12 @@ module Blend = struct
     }
 
     let equal a b = 
-        a.src_rgb = b.src_rgb
-        && a.dst_rgb = b.dst_rgb
-        && a.src_alpha = b.src_alpha
-        && a.dst_alpha = b.dst_alpha
+        Stdlib.(
+            a.src_rgb = b.src_rgb
+            && a.dst_rgb = b.dst_rgb
+            && a.src_alpha = b.src_alpha
+            && a.dst_alpha = b.dst_alpha
+        )
     
     let of_composite_op_state (op : CompositeOperationState.t) = {
         src_rgb = Some (convert_blend_factor op.src_rgb);
@@ -222,7 +224,7 @@ end
     ;;
 
     let bind_texture (t : t) (id : Gl.texture option) =
-        if t.bound_texture <> id then (
+        if not (Gl.texture_equal t.impl t.bound_texture id) then (
             t.bound_texture <- id;
             Gl.bind_texture t.impl Gl.texture_2d id
         );

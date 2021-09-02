@@ -760,7 +760,8 @@ module Make
         ;;
 
         let flatten t =
-            if DynArray.length t.cache.paths = 0 then (
+            let open FloatOps in
+            if DynArray.length t.cache.paths =. 0 then (
                 DynArray.iter t.commands ~f:(function
                     | Move_to {x;y} ->
                         add_path t;
@@ -787,33 +788,33 @@ module Make
                 (* Wish we had sub arrays for DynArray *)
                 DynArray.iter t.cache.paths ~f:(fun path ->
                     let get i =
-                        DynArray.get points (path.first + i)
+                        DynArray.get points (path.first +. i)
                     in
                     (* If first and last points are the same, remove last, mark as closed *)
-                    let p0 = get (path.count - 1) |> ref in
+                    let p0 = get (path.count -. 1) |> ref in
                     let p1 = get 0 in
                     if Point.equals !p0.x !p0.y p1.x p1.y t.dist_tol then (
-                        path.count <- path.count - 1;
-                        p0 := get (path.count - 1);
+                        path.count <- path.count -. 1;
+                        p0 := get (path.count -. 1);
                         path.closed <- true;
                     );
 
                     (* Enforce winding *)
                     let pts = DynArray.unsafe_array points in
-                    if path.count > 2 then (
+                    if path.count >. 2 then (
                         let area = poly_area pts path.first path.count in
-                        if path.winding = Winding.CCW && area < 0. then (
+                        if Winding.equal path.winding Winding.CCW && area < 0. then (
                             poly_reverse pts path.first path.count
                         );
 
-                        if path.winding = Winding.CW && area > 0. then (
+                        if Winding.equal path.winding Winding.CW && area > 0. then (
                             poly_reverse pts path.first path.count
                         );
                     );
 
                     let p1_off = ref 0 in
-                    p0 := get (path.count - 1);
-                    for _=0 to path.count-1 do
+                    p0 := get (path.count -. 1);
+                    for _=0 to path.count-.1 do
                         let open FloatOps in
                         (* Calc segment directions *)
                         (* This calc is good *)
@@ -893,9 +894,11 @@ module Make
     ;;
 
     let calculate_joins t w line_join miter_limit =
+        let open FloatOps in
+
         let iw =
             if w > 0. then (
-                1.0 /. w
+                1.0 / w
             ) else (
                 0.
             )
@@ -903,15 +906,15 @@ module Make
 
         DynArray.iter t.cache.paths ~f:(fun path ->
             let [@inline always] get idx =
-                DynArray.get t.cache.points (path.first + idx)
+                DynArray.get t.cache.points (path.first +. idx)
             in
-            let p0_off = ref (path.count - 1) in
+            let p0_off = ref (path.count -. 1) in
             let p1_off = ref 0 in
             let left = ref 0 in
 
             path.nbevel <- 0;
 
-            for _=0 to path.count-1 do
+            for _=0 to path.count-.1 do
                 let p0 = get !p0_off in
                 let p1 = get !p1_off in
 
@@ -922,15 +925,15 @@ module Make
 
                 (* Calculate extrusions *)
                 (* these are right *)
-                p1.dmx <- (dlx0 +. dlx1) *. 0.5;
-                p1.dmy <- (dly0 +. dly1) *. 0.5;
+                p1.dmx <- (dlx0 + dlx1) * 0.5;
+                p1.dmy <- (dly0 + dly1) * 0.5;
 
-                let dmr2 = p1.dmx*.p1.dmx +. p1.dmy*.p1.dmy in
+                let dmr2 = p1.dmx*p1.dmx + p1.dmy*p1.dmy in
                 if dmr2 > 0.000001 then (
-                    let s = 1. /. dmr2 in
+                    let s = 1. / dmr2 in
                     let scale = if s > 600. then 600. else s in
-                    p1.dmx <- p1.dmx *. scale;
-                    p1.dmy <- p1.dmy *. scale;
+                    p1.dmx <- p1.dmx * scale;
+                    p1.dmy <- p1.dmy * scale;
                 );
 
                 (* Clear flags, keep corner *)
@@ -941,23 +944,23 @@ module Make
                 ;
 
                 (* Keep track of left turns *)
-                let cross = p1.dx*.p0.dy -. p0.dx*.p1.dy in
+                let cross = p1.dx*p0.dy - p0.dx*p1.dy in
                 if cross > 0. then (
                     incr left;
                     p1.flags <- PointFlags.add p1.flags ~flag:PointFlags.left
                 );
 
                 (* Calculate if we should use bevel or miter for inner join *)
-                let limit = Float.max 1.01 ((Float.min p0.len p1.len) *. iw) in
-                if (dmr2 *. limit*.limit) < 1. then (
+                let limit = Float.max 1.01 ((Float.min p0.len p1.len) * iw) in
+                if (dmr2 * limit*limit) < 1. then (
                     p1.flags <- PointFlags.add p1.flags ~flag:PointFlags.inner_bevel
                 );
 
                 (* Check to see if the corner needs to be beveled *)
                 if PointFlags.has p1.flags ~flag:PointFlags.corner then (
-                    if dmr2*.miter_limit*.miter_limit < 1.
-                        || line_join = LineJoin.Bevel
-                        || line_join = LineJoin.Round
+                    if dmr2*miter_limit*miter_limit < 1.
+                        || LineJoin.equal line_join LineJoin.Bevel
+                        || LineJoin.equal line_join LineJoin.Round
                     then (
                         p1.flags <- PointFlags.add p1.flags ~flag:PointFlags.bevel
                     )
@@ -966,14 +969,14 @@ module Make
                 if PointFlags.has p1.flags ~flag:PointFlags.bevel
                     || PointFlags.has p1.flags ~flag:PointFlags.inner_bevel
                 then (
-                    path.nbevel <- path.nbevel + 1;
+                    path.nbevel <- path.nbevel +. 1;
                 );
 
                 p0_off := !p1_off;
                 incr p1_off;
             done;
 
-            path.convex <- !left = path.count;
+            path.convex <- !left =. path.count;
         )
     ;;
 
@@ -1348,11 +1351,12 @@ module Make
     ;;
 
     let expand_stroke t w fringe line_cap line_join miter_limit =
+        let open FloatOps in
         let aa = fringe in
 
         let ncap = curve_divs w Float.pi t.tess_tol in
 
-        let w = w +. aa *. 0.5 in
+        let w = w + aa * 0.5 in
 
         let u0, u1 =
             if aa = 0. then (
@@ -1368,7 +1372,7 @@ module Make
         let dst = ref !verts in
         DynArray.iter t.cache.paths ~f:(fun path ->
             let get idx =
-                DynArray.get t.cache.points (path.first + idx)
+                DynArray.get t.cache.points (path.first +. idx)
             in
 
             path.fill <- VertexBuffer.Sub.empty;
@@ -1377,42 +1381,42 @@ module Make
 
             let s = ref 0 in
             let e = ref path.count in
-            let p0_off = ref (path.count-1) in
+            let p0_off = ref (path.count-.1) in
             let p1_off = ref 0 in
 
             if not path.closed then (
                 p0_off := 0;
                 p1_off := 1;
                 s := 1;
-                e := path.count-1;
+                e := path.count-.1;
 
                 let p0 = get !p0_off in
                 let p1 = get !p1_off in
-                let dx = p1.x -. p0.x in
-                let dy = p1.y -. p0.y in
+                let dx = p1.x - p0.x in
+                let dy = p1.y - p0.y in
                 let _, dx, dy = Point.normalize dx dy in
                 match line_cap with
-                | LineCap.Butt -> dst := butt_cap_start t.cache.verts !dst p0 dx dy w (~-.aa*.0.5) aa u0 u1
-                | Square -> dst := butt_cap_start t.cache.verts !dst p0 dx dy w (w -. aa) aa u0 u1
+                | LineCap.Butt -> dst := butt_cap_start t.cache.verts !dst p0 dx dy w (~-.aa*0.5) aa u0 u1
+                | Square -> dst := butt_cap_start t.cache.verts !dst p0 dx dy w (w - aa) aa u0 u1
                 | Round -> round_cap_start t.cache.verts dst p0 dx dy w ncap u0 u1
                 | Default -> ()
             );
 
             let j = ref !s in
-            while !j < !e do
+            while !j <. !e do
                 let p0 = get !p0_off in
                 let p1 = get !p1_off in
                 if PointFlags.has p1.flags ~flag:PointFlags.bevel
                     || PointFlags.has p1.flags ~flag:PointFlags.inner_bevel then (
-                        if line_join = LineJoin.Round then (
+                        if LineJoin.equal line_join LineJoin.Round then (
                             round_join t.cache.verts dst p0 p1 w w u0 u1 ncap
                         ) else (
                             dst := bevel_join t.cache.verts !dst p0 p1 w w u0 u1
                         );
                 ) else (
-                    VertexBuffer.set t.cache.verts !dst (p1.x +. (p1.dmx*.w)) (p1.y +. (p1.dmy*.w)) u0 1.;
+                    VertexBuffer.set t.cache.verts !dst (p1.x + (p1.dmx*w)) (p1.y + (p1.dmy*w)) u0 1.;
                     incr dst;
-                    VertexBuffer.set t.cache.verts !dst (p1.x -. (p1.dmx*.w)) (p1.y -. (p1.dmy*.w)) u1 1.;
+                    VertexBuffer.set t.cache.verts !dst (p1.x - (p1.dmx*w)) (p1.y - (p1.dmy*w)) u1 1.;
                     incr dst;
                 );
 
@@ -1423,7 +1427,7 @@ module Make
 
             if path.closed then (
                 let v0x, v0y, _, _ = VertexBuffer.get t.cache.verts !verts in
-                let v1x, v1y, _, _ = VertexBuffer.get t.cache.verts (!verts+1) in
+                let v1x, v1y, _, _ = VertexBuffer.get t.cache.verts (!verts+.1) in
                 VertexBuffer.set t.cache.verts !dst v0x v0y u0 1.;
                 incr dst;
                 VertexBuffer.set t.cache.verts !dst v1x v1y u1 1.;
@@ -1432,17 +1436,17 @@ module Make
                 let p0 = get !p0_off in
                 let p1 = get !p1_off in
                 (* add line cap *)
-                let dx = p1.x -. p0.x in
-                let dy = p1.y -. p0.y in
+                let dx = p1.x - p0.x in
+                let dy = p1.y - p0.y in
                 let _, dx, dy = Point.normalize dx dy in
                 match line_cap with
-                | Butt -> dst := butt_cap_end t.cache.verts !dst p1 dx dy w (~-.aa*.0.5) aa u0 u1
-                | Square -> dst := butt_cap_end t.cache.verts !dst p1 dx dy w (w-.aa) aa u0 u1
+                | Butt -> dst := butt_cap_end t.cache.verts !dst p1 dx dy w (~-.aa*0.5) aa u0 u1
+                | Square -> dst := butt_cap_end t.cache.verts !dst p1 dx dy w (w-aa) aa u0 u1
                 | Round -> round_cap_end t.cache.verts dst p1 dx dy w ncap u0 u1
                 | Default -> ()
             );
 
-            let len = !dst - !verts in
+            let len = !dst -. !verts in
             path.stroke <- VertexBuffer.Sub.sub t.cache.verts !verts len;
 
             verts := !dst;
@@ -1654,7 +1658,7 @@ module Make
             let paths = Array.make DynArray.(length t.cache.paths) empty_path in
             let start = VertexBuffer.Sub.vertex_offset (DynArray.get t.cache.paths 0).fill in
 
-            DynArray.iter t.cache.paths (fun path ->
+            DynArray.iter t.cache.paths ~f:(fun path ->
                 let fill_length = VertexBuffer.Sub.num_verts path.fill in
                 let stroke_length = VertexBuffer.Sub.num_verts path.stroke in
 
@@ -2010,6 +2014,15 @@ module Make
                             | Char
                             | CJK_char
 
+        let codepoint_equal a b =
+            match a, b with
+            | Space, Space
+            | Newline, Newline
+            | Char, Char
+            | CJK_char, CJK_char -> true
+            | _ -> false
+        ;;
+
         let codepoint_type = function
             | 9 | 11 | 12 | 13 | 32 -> Space
             | 0x85 | 10 -> Newline
@@ -2053,6 +2066,8 @@ module Make
             let break_width = ref 0. in
             let break_max_x = ref 0. in
 
+            let ( = ) = codepoint_equal in
+
             begin try
                 let rec loop (ptype : codepoint_type) : unit =
                     let res = F.iter_next t.fs iter quad in
@@ -2089,7 +2104,7 @@ module Make
                             row_max_x := 0.;
                         | _ ->
                             if !row_start =. ~-1 then (
-                                if Stdlib.(type_ = Char || type_ = CJK_char) then (
+                                if (type_ = Char || type_ = CJK_char) then (
                                     (* skip white space until the beginning of the line *)
                                     row_start_x := FI.x iter;
                                     row_start := FI.start iter;
@@ -2108,8 +2123,9 @@ module Make
                                 let next_width = FI.next_x iter - !row_start_x in
 
                                 (* Track last beginning of word *)
-                                if Stdlib.((ptype = Space && (type_ = Char || type_ = CJK_char))
-                                    || type_ = CJK_char) then
+                                if (ptype = Space && (type_ = Char || type_ = CJK_char))
+                                    || type_ = CJK_char 
+                                then
                                 (
                                     word_start := FI.start iter;
                                     word_start_x := FI.x iter;
@@ -2117,15 +2133,15 @@ module Make
                                 );
 
                                 (* Track last non-whitespace character *)
-                                if Stdlib.(type_ = Char || type_ = CJK_char) then (
+                                if type_ = Char || type_ = CJK_char then (
                                     row_end := FI.next iter;
                                     row_width := FI.next_x iter - !row_start_x;
                                     row_max_x := quad.x1 - !row_start_x;
                                 );
 
                                 (* Track last end of word *)
-                                if Stdlib.(((ptype = Char || ptype = CJK_char) && type_ = Space)
-                                    || (type_ = CJK_char)) then
+                                if ((ptype = Char || ptype = CJK_char) && type_ = Space)
+                                    || (type_ = CJK_char) then
                                 (
                                     break_end := FI.next iter;
                                     word_start := FI.next iter;
@@ -2134,8 +2150,9 @@ module Make
                                 );
 
                                 (* Break to new line when a character is beyond break width *)
-                                if Stdlib.(
-                                    (type_ = Char || type_ = CJK_char) && next_width > break_row_width) then (
+                                if 
+                                    (type_ = Char || type_ = CJK_char) && next_width > break_row_width 
+                                then (
 
                                     (* The run length is too long, need to break to a new line *)
                                     if !break_end =. !row_start then (
