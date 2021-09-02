@@ -6,8 +6,7 @@ module Make
     (Impl : Graphv_core_lib.Impl.S)
     (Font : Graphv_core_lib.Font_impl.S with type data := Impl.Buffer.UByte.t)
     : Context.S
-        with type Buffer.UByte.t = Impl.Buffer.UByte.t
-        and type Buffer.Float.t = Impl.Buffer.Float.t
+        with module Buffer = Impl.Buffer
         and type arg = Impl.gl
 = struct
 
@@ -1450,12 +1449,34 @@ module Make
         );
     ;;
 
-    let stroke (t: t) =
-        let state = get_state t in
+    let stroke_calc_width (t : t) (state : State.t) =
         let scale = Matrix.get_average_scale state.xform in
         let stroke_width = clamp (state.stroke_width *. scale) 0. 200. |> ref in
-        let stroke_paint = Paint.copy state.stroke in
+        let before = !stroke_width in
 
+        if !stroke_width < t.fringe_width then (
+            stroke_width := t.fringe_width;
+        );
+        before, !stroke_width
+    ;;
+
+    let stroke_prepare (t : t) (state : State.t) =
+        let before, stroke_width = stroke_calc_width t state in
+
+        Path.flatten t;
+
+        if Impl.edge_antialias t.impl && state.shape_anti_alias then (
+            expand_stroke t (stroke_width*.0.5) t.fringe_width state.line_cap state.line_join state.miter_limit;
+        ) else (
+            expand_stroke t (stroke_width*.0.5) 0.0 state.line_cap state.line_join state.miter_limit
+        );
+
+        before
+    ;;
+
+    let stroke_finish (t : t) (state : State.t) stroke_width =
+        let stroke_paint = Paint.copy state.stroke in
+        let stroke_width = ref stroke_width in
         if !stroke_width < t.fringe_width then (
             let alpha = clamp (!stroke_width /. t.fringe_width) 0. 1. in
             let alpha = alpha*.alpha in
@@ -1480,34 +1501,22 @@ module Make
             a = stroke_paint.outer_color.a*.state.alpha;
         };
 
-        Path.flatten t;
-
-        let stroke_width = !stroke_width in
-        if Impl.edge_antialias t.impl && state.shape_anti_alias then (
-            expand_stroke t (stroke_width*.0.5) t.fringe_width state.line_cap state.line_join state.miter_limit;
-        ) else (
-            expand_stroke t (stroke_width*.0.5) 0.0 state.line_cap state.line_join state.miter_limit
-        );
-
         Impl.stroke t.impl
             ~paint:stroke_paint
             ~composite_op:state.composite_operation
             ~scissor:state.scissor
             ~fringe:t.fringe_width
-            ~stroke_width
+            ~stroke_width:!stroke_width
             ~paths:t.cache.paths;
-
-            (*
-        (* Count triangles *)
-        DynArray.iter t.cache.paths ~f:(fun path ->
-            t.stroke_tri_count <- t.stroke_tri_count + (VertexBuffer.Sub.num_verts path.stroke) - 2;
-            t.draw_call_count <- t.draw_call_count + 1;
-        );
-        *)
     ;;
 
-    let fill (t : t) =
+    let stroke (t: t) =
         let state = get_state t in
+        let stroke_width = stroke_prepare t state in
+        stroke_finish t state stroke_width
+    ;;
+
+    let fill_prepare (t : t) (state : State.t) =
         Path.flatten t;
         (* TODO - finish *)
         if Impl.edge_antialias t.impl && state.shape_anti_alias then (
@@ -1515,7 +1524,9 @@ module Make
         ) else (
             expand_fill t 0. LineJoin.Miter 2.4
         );
+    ;;
 
+    let fill_finish (t : t) (state : State.t) =
         let fill_paint = Paint.copy state.fill in
         fill_paint.inner_color <- Color.{
             fill_paint.inner_color with
@@ -1536,6 +1547,142 @@ module Make
             ~verts:t.cache.verts
         ;
     ;;
+
+    let fill (t : t) =
+        let state = get_state t in
+        fill_prepare t state;
+        fill_finish t state;
+    ;;
+
+    module Cache = struct
+        type kind = Stroke
+                  | Fill
+                  | Fill_stroke
+                  | Stroke_fill
+
+        type path = {
+            fill_offset : int;
+            fill_length : int;
+            stroke_offset : int;
+            stroke_length : int;
+        }
+
+        let empty_path = {
+            fill_offset = 0;
+            fill_length = 0;
+            stroke_offset = 0;
+            stroke_length = 0;
+        }
+
+        type cached = {
+            values : Buffer.Float.t;
+            paths : path array;
+            kind : kind;
+        }
+
+        let begin_ = Path.begin_
+
+        let draw t tess ~x:tx ~y:ty =
+            (* Dump the state into the vertex buffer *)
+            let open FloatOps in
+            let state = get_state t in
+            let m = state.xform in
+            let i = ref 0 in
+            let len = Buffer.Float.length tess.values /. 4 in
+            let start = VertexBuffer.num_verts t.cache.verts in
+            VertexBuffer.set t.cache.verts (start+.len) 0. 0. 0. 0.;
+            let vbuff = VertexBuffer.unsafe_array t.cache.verts in
+            let off = ref (start*.4) in
+            while !i <. len*.4 do
+                let x = Buffer.Float.get tess.values !i in
+                let y = Buffer.Float.get tess.values (!i+.1) in
+                let x = x*m.m0 + y*m.m2 + m.m4 + tx in
+                let y = x*m.m1 + y*m.m3 + m.m5 + ty in
+
+                (*VertexBuffer.set t.cache.verts !off x y u v;*)
+                Buffer.Float.set vbuff (!off) x;
+                Buffer.Float.set vbuff (!off+.1) y;
+
+                let u = Buffer.Float.get tess.values (!i+.2) in
+                let v = Buffer.Float.get tess.values (!i+.3) in
+                Buffer.Float.set vbuff (!off+.2) u;
+                Buffer.Float.set vbuff (!off+.3) v;
+                off := !off +. 4;
+                i := !i +. 4;
+            done;
+
+            Array.iter (fun p ->
+                add_path t;
+                let path = last_path t in
+                path.fill <- VertexBuffer.Sub.sub t.cache.verts (start +. p.fill_offset) p.fill_length;
+                path.stroke <- VertexBuffer.Sub.sub t.cache.verts (start +. p.stroke_offset) p.stroke_length;
+                match tess.kind with
+                | Stroke ->
+                    let _before, width = stroke_calc_width t state in
+                    stroke_finish t state width;
+                | Fill ->
+                    fill_finish t state;
+                | Fill_stroke ->
+                    fill_finish t state;
+                    let _before, width = stroke_calc_width t state in
+                    stroke_finish t state width;
+                | Stroke_fill ->
+                    let _before, width = stroke_calc_width t state in
+                    stroke_finish t state width;
+                    fill_finish t state;
+            ) tess.paths;
+        ;;
+
+        let save_preamble t kind (state : State.t) =
+            begin match kind with
+            | Stroke -> stroke_prepare t state |> ignore;
+            | Fill -> fill_prepare t state;
+            | Stroke_fill
+            | Fill_stroke ->
+                fill_prepare t state;
+                stroke_prepare t state |> ignore;
+            end;
+        ;;
+
+        let save t kind =
+            let state = get_state t in
+            save_preamble t kind state;
+
+            (* Save off all the paths *)
+            let i = ref 0 in
+            let length = ref 0 in
+            let paths = Array.make DynArray.(length t.cache.paths) empty_path in
+            let start = VertexBuffer.Sub.vertex_offset (DynArray.get t.cache.paths 0).fill in
+
+            DynArray.iter t.cache.paths (fun path ->
+                let fill_length = VertexBuffer.Sub.num_verts path.fill in
+                let stroke_length = VertexBuffer.Sub.num_verts path.stroke in
+
+                let fill_offset = !length in
+                length := !length + fill_length;
+
+                let stroke_offset = !length in
+                length := !length + stroke_length;
+
+                let path = {
+                    fill_offset;
+                    fill_length;
+                    stroke_offset;
+                    stroke_length;
+                } in
+                paths.(!i) <- path;
+                incr i;
+            );
+
+            (* Make a copy of the buffer *)
+            let buffer = Buffer.Float.create (!length*4) in
+            let arr = VertexBuffer.unsafe_array t.cache.verts in
+            for i = start to (!length*4)-1 do
+                Buffer.Float.set buffer i (Buffer.Float.get arr i);
+            done;
+            {values = buffer; kind; paths}
+        ;;
+    end
 
     let end_frame t =
         Impl.flush t.impl t.cache.verts;

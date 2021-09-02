@@ -23,6 +23,14 @@ end
 
 type t
 
+module Cache : sig
+    type cached
+    type kind = Stroke | Fill | Fill_stroke | Stroke_fill
+    val begin_ : t -> unit
+    val draw : t -> cached -> x:float -> y:float -> unit
+    val save : t -> kind -> cached
+end
+
 (** Creates a new renderer. Make sure the OpenGL context that is being used
     supports the stencil buffer.
  *)

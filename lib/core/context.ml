@@ -16,6 +16,14 @@ module type S = sig
     module Winding = Graphv_core_lib.Winding
     module FloatOps = Graphv_core_lib.FloatOps
 
+    module Cache : sig
+        type cached
+        type kind = Stroke | Fill | Fill_stroke | Stroke_fill
+        val begin_ : t -> unit
+        val draw : t -> cached -> x:float -> y:float -> unit
+        val save : t -> kind -> cached
+    end
+
     type arg
     val create : flags:CreateFlags.t -> arg -> t
 
