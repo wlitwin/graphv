@@ -14,7 +14,7 @@ depends: [
   "ppx_expect" {>= "v0.14.1" & with-test}
   "js_of_ocaml-ppx" {>= "3.9.0"}
   "js_of_ocaml" {>= "3.9.0"}
-  "graphv_core_lib" {>= "0.1"}
+  "graphv_core_lib" {= "0.1.1"}
   "odoc" {with-doc}
 ]
 build: [

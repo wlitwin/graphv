@@ -11,8 +11,8 @@ bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}
   "ppx_expect" {>= "v0.14.1" & with-test}
-  "graphv_gles2_native" {>= "0.1"}
-  "graphv_webgl" {>= "0.1"}
+  "graphv_gles2_native" {= "0.1.1"}
+  "graphv_webgl" {= "0.1.1"}
   "odoc" {with-doc}
 ]
 build: [

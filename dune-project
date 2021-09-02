@@ -19,31 +19,31 @@
  (synopsis "Javascript implementation of the font interface for Graphv")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (graphv_font (>= 0.1))
+  (graphv_font (= 0.1.1))
   (js_of_ocaml-ppx (>= 3.9.0))
   (js_of_ocaml (>= 3.9.0))
-  (graphv_webgl_impl (>= 0.1))
-  (graphv_core_lib (>= 0.1))))
+  (graphv_webgl_impl (= 0.1.1))
+  (graphv_core_lib (= 0.1.1))))
 (package
  (name graphv_font)
  (synopsis "Functor for generating the Graphv font library")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (graphv_core_lib (>= 0.1))))
+  (graphv_core_lib (= 0.1.1))))
 (package
  (name graphv_font_stb_truetype)
  (synopsis "STB truetype implementation of the font interface for Graphv")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
   (stb_truetype (>= 0.6))
-  (graphv_font (>= 0.1))
-  (graphv_core_lib (>= 0.1))))
+  (graphv_font (= 0.1.1))
+  (graphv_core_lib (= 0.1.1))))
 (package
   (name graphv_core)
   (synopsis "Functor for creating a new Graphv library based on a font render and backend renderer")
   (depends
     (ppx_expect (and (>= v0.14.1) :with-test))
-    (graphv_core_lib (>= 0.1))
+    (graphv_core_lib (= 0.1.1))
     )
   )
 (package
@@ -53,7 +53,7 @@
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
   (conf-gles2 (>= 1))
-  (graphv_core_lib (>= 0.1))))
+  (graphv_core_lib (= 0.1.1))))
 (package
  (name graphv_webgl_impl)
  (synopsis
@@ -62,39 +62,39 @@
   (ppx_expect (and (>= v0.14.1) :with-test))
   (js_of_ocaml-ppx (>= 3.9.0))
   (js_of_ocaml (>= 3.9.0))
-  (graphv_core_lib (>= 0.1))))
+  (graphv_core_lib (= 0.1.1))))
 (package
  (name graphv_gles2)
  (synopsis "Functor for creating a Graphv renderer based on GLES2")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (graphv_core_lib (>= 0.1))))
+  (graphv_core_lib (= 0.1.1))))
 (package
  (name graphv_gles2_native)
  (synopsis "Full version of the Graphv library based on native GLES2")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (graphv_font (>= 0.1))
-  (graphv_font_stb_truetype (>= 0.1))
-  (graphv_gles2_native_impl (>= 0.1))
-  (graphv_gles2 (>= 0.1))
-  (graphv_core (>= 0.1))
+  (graphv_font (= 0.1.1))
+  (graphv_font_stb_truetype (= 0.1.1))
+  (graphv_gles2_native_impl (= 0.1.1))
+  (graphv_gles2 (= 0.1.1))
+  (graphv_core (= 0.1.1))
   ))
 (package
  (name graphv_webgl)
  (synopsis "Full version of the Graphv library based on WebGL")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (graphv_font (>= 0.1))
-  (graphv_font_js (>= 0.1))
-  (graphv_webgl_impl (>= 0.1))
-  (graphv_gles2 (>= 0.1))
-  (graphv_core (>= 0.1))))
+  (graphv_font (= 0.1.1))
+  (graphv_font_js (= 0.1.1))
+  (graphv_webgl_impl (= 0.1.1))
+  (graphv_gles2 (= 0.1.1))
+  (graphv_core (= 0.1.1))))
 (package
  (name graphv)
  (synopsis "Top_level graphv package, includes all dependencies")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (graphv_gles2_native (>= 0.1))
-  (graphv_webgl (>= 0.1))
+  (graphv_gles2_native (= 0.1.1))
+  (graphv_webgl (= 0.1.1))
   ))
