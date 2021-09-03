@@ -1,0 +1,11 @@
+(executable
+ (name graphv_webgl_tests)
+ (modes byte js)
+ (libraries
+    graphv_webgl
+    js_of_ocaml
+    )
+ (preprocess (pps ppx_expect js_of_ocaml-ppx))
+ (enabled_if (= %{profile} dev))
+ )
+
