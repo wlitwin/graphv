@@ -1582,6 +1582,8 @@ module Make
             values : Buffer.Float.t;
             paths : path array;
             kind : kind;
+            stroke_width : float;
+            fringe_width : float;
         }
 
         let begin_ = Path.begin_
@@ -1597,44 +1599,70 @@ module Make
             VertexBuffer.set t.cache.verts (start+.len) 0. 0. 0. 0.;
             let vbuff = VertexBuffer.unsafe_array t.cache.verts in
             let off = ref (start*.4) in
+
+            let xmin = ref 1e6 in
+            let ymin = ref 1e6 in
+            let xmax = ref ~-.1e6 in
+            let ymax = ref ~-.1e6 in
+
             while !i <. len*.4 do
                 let x = Buffer.Float.get tess.values !i in
                 let y = Buffer.Float.get tess.values (!i+.1) in
+                let u = Buffer.Float.get tess.values (!i+.2) in
+                let v = Buffer.Float.get tess.values (!i+.3) in
+
                 let x = x*m.m0 + y*m.m2 + m.m4 + tx in
                 let y = x*m.m1 + y*m.m3 + m.m5 + ty in
 
-                (*VertexBuffer.set t.cache.verts !off x y u v;*)
+                xmin := min !xmin x;
+                ymin := min !ymin y;
+                xmax := max !xmax x;
+                ymax := max !ymax y;
+
                 Buffer.Float.set vbuff (!off) x;
                 Buffer.Float.set vbuff (!off+.1) y;
 
-                let u = Buffer.Float.get tess.values (!i+.2) in
-                let v = Buffer.Float.get tess.values (!i+.3) in
                 Buffer.Float.set vbuff (!off+.2) u;
                 Buffer.Float.set vbuff (!off+.3) v;
                 off := !off +. 4;
                 i := !i +. 4;
             done;
 
+            let old_width = state.stroke_width in
+            let old_fringe = t.fringe_width in
+            let old_bounds = t.cache.bounds in
+            state.stroke_width <- tess.stroke_width;
+            t.fringe_width <- tess.fringe_width;
+            t.cache.bounds <- Bounds.{
+                xmin = !xmin;
+                ymin = !ymin;
+                xmax = !xmax;
+                ymax = !ymax;
+            };
+            let _, width = stroke_calc_width t state in
+
             Array.iter (fun p ->
                 add_path t;
                 let path = last_path t in
                 path.fill <- VertexBuffer.Sub.sub t.cache.verts (start +. p.fill_offset) p.fill_length;
                 path.stroke <- VertexBuffer.Sub.sub t.cache.verts (start +. p.stroke_offset) p.stroke_length;
-                match tess.kind with
-                | Stroke ->
-                    let _before, width = stroke_calc_width t state in
-                    stroke_finish t state width;
-                | Fill ->
-                    fill_finish t state;
-                | Fill_stroke ->
-                    fill_finish t state;
-                    let _before, width = stroke_calc_width t state in
-                    stroke_finish t state width;
-                | Stroke_fill ->
-                    let _before, width = stroke_calc_width t state in
-                    stroke_finish t state width;
-                    fill_finish t state;
             ) tess.paths;
+
+            begin match tess.kind with
+            | Stroke ->
+                stroke_finish t state width;
+            | Fill ->
+                fill_finish t state;
+            | Fill_stroke ->
+                fill_finish t state;
+                stroke_finish t state width;
+            | Stroke_fill ->
+                stroke_finish t state width;
+                fill_finish t state;
+            end;
+            state.stroke_width <- old_width;
+            t.fringe_width <- old_fringe;
+            t.cache.bounds <- old_bounds;
         ;;
 
         let save_preamble t kind (state : State.t) =
@@ -1643,9 +1671,29 @@ module Make
             | Fill -> fill_prepare t state;
             | Stroke_fill
             | Fill_stroke ->
+                (* TODO - the prepares loop all paths and overrites them *)
                 fill_prepare t state;
+                (*
+                let pl = last_path t in
+                add_path t;
+                let p = last_path t in
+                p.first <- pl.first;
+                p.count <- pl.count;
+                p.nbevel <- pl.nbevel;
+                p.winding <- pl.winding;
+                p.convex <- pl.convex;
+                *)
                 stroke_prepare t state |> ignore;
             end;
+        ;;
+
+        let total_path_length (paths : IPath.t DynArray.t) =
+            let length = ref 0 in
+            DynArray.iter paths ~f:(fun path ->
+                length := !length + VertexBuffer.Sub.num_verts path.fill;
+                length := !length + VertexBuffer.Sub.num_verts path.stroke;
+            );
+            !length
         ;;
 
         let save t kind =
@@ -1653,38 +1701,40 @@ module Make
             save_preamble t kind state;
 
             (* Save off all the paths *)
-            let i = ref 0 in
-            let length = ref 0 in
+            let length = total_path_length t.cache.paths in
+            let buffer = Buffer.Float.create (length*4) in
             let paths = Array.make DynArray.(length t.cache.paths) empty_path in
-            let start = VertexBuffer.Sub.vertex_offset (DynArray.get t.cache.paths 0).fill in
 
+            let i = ref 0 in
+            let off = ref 0 in
+            let vbuff = VertexBuffer.unsafe_array t.cache.verts in
             DynArray.iter t.cache.paths ~f:(fun path ->
                 let fill_length = VertexBuffer.Sub.num_verts path.fill in
                 let stroke_length = VertexBuffer.Sub.num_verts path.stroke in
 
-                let fill_offset = !length in
-                length := !length + fill_length;
-
-                let stroke_offset = !length in
-                length := !length + stroke_length;
+                let fill_off = VertexBuffer.Sub.vertex_offset path.fill in
+                let stroke_off = VertexBuffer.Sub.vertex_offset path.stroke in
+                Buffer.Float.blit ~src:vbuff ~dst:buffer ~s_off:(fill_off*4) ~d_off:(!off*4) ~len:(fill_length*4);
+                Buffer.Float.blit ~src:vbuff ~dst:buffer ~s_off:(stroke_off*4) ~d_off:((!off+fill_length)*4) ~len:(stroke_length*4);
 
                 let path = {
-                    fill_offset;
+                    fill_offset = !off;
                     fill_length;
-                    stroke_offset;
+                    stroke_offset = !off + fill_length;
                     stroke_length;
                 } in
+                off := !off + fill_length + stroke_length;
                 paths.(!i) <- path;
                 incr i;
             );
 
-            (* Make a copy of the buffer *)
-            let buffer = Buffer.Float.create (!length*4) in
-            let arr = VertexBuffer.unsafe_array t.cache.verts in
-            for i = start to (!length*4)-1 do
-                Buffer.Float.set buffer i (Buffer.Float.get arr i);
-            done;
-            {values = buffer; kind; paths}
+            {
+                values = buffer;
+                kind;
+                paths;
+                stroke_width = state.stroke_width;
+                fringe_width = t.fringe_width;
+            }
         ;;
     end
 
@@ -2124,7 +2174,7 @@ module Make
 
                                 (* Track last beginning of word *)
                                 if (ptype = Space && (type_ = Char || type_ = CJK_char))
-                                    || type_ = CJK_char 
+                                    || type_ = CJK_char
                                 then
                                 (
                                     word_start := FI.start iter;
@@ -2150,8 +2200,8 @@ module Make
                                 );
 
                                 (* Break to new line when a character is beyond break width *)
-                                if 
-                                    (type_ = Char || type_ = CJK_char) && next_width > break_row_width 
+                                if
+                                    (type_ = Char || type_ = CJK_char) && next_width > break_row_width
                                 then (
 
                                     (* The run length is too long, need to break to a new line *)
