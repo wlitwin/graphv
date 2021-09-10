@@ -25,15 +25,26 @@ let init cap f = {
     size = 0;
 }
 
-let get t idx = 
+let get t idx =
     (*assert (idx >= 0 && idx < t.size);*)
     Array.unsafe_get t.arr idx
+
+let copy (t : 'a t) (copy : 'a -> 'a) : 'a t =
+    let arr = Array.init (Array.length t.arr) (fun idx ->
+        copy t.arr.(idx)
+    ) in
+    {
+        empty_value = t.empty_value;
+        arr;
+        size = t.size;
+    }
+;;
 
 let add t value =
     let len = Array.length t.arr in
     if t.size >= len then (
-        let new_arr = Array.init 
-            (len * 3 / 2) 
+        let new_arr = Array.init
+            (len * 3 / 2)
             (fun i -> if i < (*t.size*) len then t.arr.(i) else t.empty_value)
         in
         t.arr <- new_arr;
@@ -42,11 +53,35 @@ let add t value =
     t.size <- t.size + 1;
 ;;
 
+let append_steal ~dst ~src create =
+    let d_len = Array.length dst.arr in
+    if dst.size + src.size >= d_len then (
+        let new_arr = Array.init
+            (d_len * 3 / 2)
+            (fun i ->
+                if i < dst.size then (
+                    dst.arr.(i)
+                ) else if (i - dst.size) < src.size then (
+                    src.arr.(i - dst.size)
+                ) else (
+                    create()
+                )
+            )
+        in
+        dst.arr <- new_arr;
+    ) else (
+        for i=dst.size to (dst.size+src.size) do
+            dst.arr.(i) <- src.arr.(i-dst.size)
+        done;
+    );
+    dst.size <- dst.size + src.size
+;;
+
 let steal t create =
     let len = Array.length t.arr in
     if t.size >= len then (
-        let new_arr = Array.init 
-            (len * 3 / 2) 
+        let new_arr = Array.init
+            (len * 3 / 2)
             (* WARN - We can use len because the array should have been made with init *)
             (fun i -> if i < (*t.size*) len then t.arr.(i) else create())
         in
@@ -73,7 +108,7 @@ let iter (t : 'a t) ~(f : 'a -> unit) : unit =
         f (Array.unsafe_get t.arr i)
     done
 
-let clear ?(free=false) t = 
+let clear ?(free=false) t =
     if free then (
         for i=0 to t.size-1 do
             t.arr.(i) <- t.empty_value

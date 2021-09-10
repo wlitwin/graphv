@@ -14,13 +14,13 @@ type locs = {
 let null_program = 0
 
 let texture_equal (_t : t) (a : texture option) (b : texture option) : bool =
-    match a, b with 
+    match a, b with
     | None, None -> true
     | Some a, Some b -> Int.equal a b
     | _ -> false
 ;;
 
-(* These were faster when they were part of the Gles2.Impl 
+(* These were faster when they were part of the Gles2.Impl
    but were moved here to make WebGL/Js_of_ocaml faster because
    inlining works better when everything is in the same file.
  *)
@@ -43,12 +43,12 @@ module VertexBuffer = struct
         }
     ;;
 
-    let clear t = 
+    let clear t =
         Dyn.clear t.arr;
         t.size <- 0;
     ;;
 
-    let iteri t ~f = 
+    let iteri t ~f =
         for i=0 to t.size-1 do
             f i Dyn.(get t.arr i)
         done
@@ -138,7 +138,7 @@ module VertexBuffer = struct
             (* Check if the dst is large enough... *)
             check_size dst (dst_start + len);
             dst.size <- max (dst.size+len) dst.size;
-            Dyn.Sub.blit 
+            Dyn.Sub.blit
                 ~src
                 ~dst:dst.arr
                 ~src_start:(src_start*4)
@@ -190,6 +190,19 @@ let reset (t : t) : unit =
     t.stroke <- empty_sub;
     t.winding <- Graphv_core_lib.Winding.CCW;
     t.convex <- true;
+;;
+
+let copy (t : t) : t = {
+    first = t.first;
+    count = t.count;
+    closed = t.closed;
+    nbevel = t.nbevel;
+    fill = t.fill;
+    stroke = t.stroke;
+    winding = t.winding;
+    convex = t.convex;
+}
+
 end
 
 let uniform2fv (_t : t) loc buffer =
@@ -200,17 +213,17 @@ let uniform4fv (_t : t) loc buffer =
     uniform4fv loc buffer
 ;;
 
-let create_program (_t : t) = 
+let create_program (_t : t) =
     let shader = Utils.create_shaders() in
     match shader with
     | None -> None
-    | Some shader -> 
+    | Some shader ->
         Some (shader.prog, {
             frag = Hashtbl.find shader.locs "frag";
             tex = Hashtbl.find shader.locs "tex";
             view_size = Hashtbl.find shader.locs "viewSize";
             vert_buf = Utils.gen_buffers();
-        }) 
+        })
     ;;
 
 let buffer_data (_t : t) target buffer how =
@@ -229,7 +242,7 @@ let stencil_mask (_t : t) a = stencil_mask a
 let finish (_t : t) = finish ()
 let cull_face (_t : t) m = cull_face m
 let uniform1i (_t : t) l i = uniform1i l i
-let stencil_op (_t : t) a b c = stencil_op a b c 
+let stencil_op (_t : t) a b c = stencil_op a b c
 let stencil_func (_t : t) d a b = stencil_func d a b
 let stencil_op_separate (_t : t) a b c d = stencil_op_separate a b c d
 let blend_func_separate (_t : t) a b c d = blend_func_separate a b c d
@@ -245,7 +258,7 @@ let get_uniform_location (_t : t) a b = get_uniform_location a b
 let gen_textures a = gen_textures a
 
 let bind_texture (_t : t) (target : texture_target) value =
-    let value = 
+    let value =
         match value with
         | None -> 0
         | Some v -> v

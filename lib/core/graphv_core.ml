@@ -35,7 +35,7 @@ module Make
     module PathCache = struct
         type t = {
             points : Point.t DynArray.t;
-            paths : IPath.t DynArray.t;
+            mutable paths : IPath.t DynArray.t;
             verts : VertexBuffer.t;
             mutable bounds : Bounds.t;
         }
@@ -1669,21 +1669,28 @@ module Make
             begin match kind with
             | Stroke -> stroke_prepare t state |> ignore;
             | Fill -> fill_prepare t state;
-            | Stroke_fill
-            | Fill_stroke ->
-                (* TODO - the prepares loop all paths and overrites them *)
-                fill_prepare t state;
-                (*
-                let pl = last_path t in
-                add_path t;
-                let p = last_path t in
-                p.first <- pl.first;
-                p.count <- pl.count;
-                p.nbevel <- pl.nbevel;
-                p.winding <- pl.winding;
-                p.convex <- pl.convex;
-                *)
+            | Stroke_fill ->
                 stroke_prepare t state |> ignore;
+
+                let copy = DynArray.copy t.cache.paths IPath.copy in
+                let temp = t.cache.paths in
+                t.cache.paths <- copy;
+
+                fill_prepare t state;
+
+                DynArray.append_steal ~dst:temp ~src:copy IPath.create;
+                t.cache.paths <- temp;
+            | Fill_stroke ->
+                fill_prepare t state;
+
+                let copy = DynArray.copy t.cache.paths IPath.copy in
+                let temp = t.cache.paths in
+                t.cache.paths <- copy;
+
+                stroke_prepare t state |> ignore;
+
+                DynArray.append_steal ~dst:temp ~src:copy IPath.create;
+                t.cache.paths <- temp;
             end;
         ;;
 

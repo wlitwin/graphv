@@ -28,7 +28,7 @@ let _ =
     Gl.clear_color 0.3 0.3 0.32 1.;
 
     let vg = Gv.create
-        ~flags:Gv.CreateFlags.(no_flags)
+        ~flags:Gv.CreateFlags.(antialias lor stencil_strokes)
         ()
     in
 
@@ -37,7 +37,7 @@ let _ =
     let vel = 400. in
     let vel_2 = ~-.(vel *. 0.5) in
 
-    let rects = Array.init (15000/3) (fun _ ->
+    let rects = Array.init (4000) (fun _ ->
         {
             x = Random.float 200. +. 100.;
             y = Random.float 200. +. 100.;
@@ -51,6 +51,19 @@ let _ =
     let time = ref (GLFW.getTime()) in
     let frames = ref 0 in
     let last_count = ref !time in
+
+
+    Gv.set_stroke_width vg ~width:4.;
+    Gv.Cache.begin_ vg;
+    (*Gv.Path.circle vg ~cx:0. ~cy:0. ~r:10.;*)
+    Gv.Path.rect vg ~x:0. ~y:0. ~w:20. ~h:20.;
+
+    let tess = Gv.Cache.save vg Gv.Cache.Fill_stroke in
+
+    let c = Gc.get() in
+    c.minor_heap_size <- 1024*1024*15;
+    c.allocation_policy <- 2;
+    Gc.set c;
 
     while not GLFW.(windowShouldClose ~window) do
         let win_w, win_h = GLFW.getWindowSize ~window in
@@ -84,6 +97,8 @@ let _ =
         let win_w = float win_w in
         let win_h = float win_h in
 
+        Gv.set_stroke_width vg ~width:4.;
+
         let len = Array.length rects in
         for i=0 to len-1 do
             let r = rects.(i) in
@@ -102,41 +117,28 @@ let _ =
 
             if r.x < 0. then (
                 r.x <- 0.;
-                r.vx <- ~-.(r.vx);
+                r.vx <- ~-.(r.vx) +. Random.float 200. -. 100.;
             );
 
             if r.y < 0. then (
                 r.y <- 0.;
-                r.vy <- ~-.(r.vy);
+                r.vy <- ~-.(r.vy) +. Random.float 200. -. 100.;
             );
 
-            Path.begin_ vg;
-            (*Path.rect vg ~x:r.x ~y:r.y ~w:r.w ~h:r.h;*)
-            Path.circle vg ~cx:r.x ~cy:r.y ~r:(r.w*.0.5);
             let r1 = Float.abs r.vx /. 400. *. 255. |> int_of_float in
             let g1 = Float.abs r.vy /. 400. *. 255. |> int_of_float in
             set_fill_color vg
                 ~color:Gv.Color.(rgba ~r:r1 ~g:g1 ~b:255 ~a:255);
-            fill vg;
+            set_stroke_color vg ~color:Color.white;
+            (*
+            Gv.Path.begin_ vg;
+            Gv.Path.rect vg ~x:r.x ~y:r.y ~w:r.w ~h:r.h;
+            Gv.fill vg;
+            Gv.stroke vg;
+            *)
+            Gv.Cache.begin_ vg;
+            Gv.Cache.draw vg tess ~x:r.x ~y:r.y;
         done;
-
-
-        (*
-        Gv.Transform.scale vg ~x:2. ~y:2.;
-
-        Gv.Path.begin_ vg;
-        Gv.Path.arc vg ~cx:200. ~cy:200. ~a0:0. ~a1:(Float.pi*.0.5) ~r:100. ~dir:Gv.Winding.CW;
-        Gv.set_stroke_color vg
-            ~color:Gv.Color.(rgba ~r:255 ~g:203 ~b:255 ~a:255);
-        Gv.set_stroke_width vg ~width:50.;
-        Gv.stroke vg;
-
-        Gv.Path.begin_ vg;
-        Gv.Path.circle vg ~cx:300. ~cy:200. ~r:30.;
-        Gv.set_fill_color vg
-            ~color:Gv.Color.(rgba ~r:154 ~g:203 ~b:255 ~a:255);
-        Gv.fill vg;
-        *)
 
         Gv.end_frame vg;
 

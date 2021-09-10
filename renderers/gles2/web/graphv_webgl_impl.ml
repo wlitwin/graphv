@@ -12,7 +12,7 @@ module Buffer = struct
         let set = Typed_array.set
         let get = Typed_array.unsafe_get
         let [@inline always] length (t : t) : int = t##.length
-        let [@inline always] sub (t : t) (start : int) (len : int) : t = 
+        let [@inline always] sub (t : t) (start : int) (len : int) : t =
             t##subarray start len
 
         let create size =
@@ -122,12 +122,12 @@ module VertexBuffer = struct
         }
     ;;
 
-    let clear t = 
+    let clear t =
         Dyn.clear t.arr;
         t.size <- 0;
     ;;
 
-    let iteri t ~f = 
+    let iteri t ~f =
         for i=0 to t.size-1 do
             f i Dyn.(get t.arr i)
         done
@@ -217,7 +217,7 @@ module VertexBuffer = struct
             (* Check if the dst is large enough... *)
             check_size dst (dst_start + len);
             dst.size <- max (dst.size+len) dst.size;
-            Dyn.Sub.blit 
+            Dyn.Sub.blit
                 ~src
                 ~dst:dst.arr
                 ~src_start:(src_start*4)
@@ -234,7 +234,7 @@ module VertexBuffer = struct
         let empty = create()
     end
 end
-    
+
 module Path = struct
     type t = {
         mutable first : int;
@@ -259,7 +259,7 @@ module Path = struct
         winding = Winding.CCW;
         convex = true;
     }
-    
+
     let reset (t : t) : unit =
         t.first <- 0;
         t.count <- 0;
@@ -269,6 +269,18 @@ module Path = struct
         t.stroke <- empty_sub;
         t.winding <- Winding.CCW;
         t.convex <- true;
+    ;;
+
+    let copy (t : t) : t = {
+        first = t.first;
+        count = t.count;
+        closed = t.closed;
+        nbevel = t.nbevel;
+        fill = t.fill;
+        stroke = t.stroke;
+        winding = t.winding;
+        convex = t.convex;
+    }
 end
 
 type enum = int
@@ -276,7 +288,7 @@ type blending_factor = WebGL.blendingFactor
 type texture_target = WebGL.texTarget
 type pixel_format = WebGL.pixelFormat
 type pixel_type = WebGL.pixelType
-type tex_filter = WebGL.texFilter 
+type tex_filter = WebGL.texFilter
 type tex_param_filter = WebGL.texFilter WebGL.texParam
 type tex_param_wrap = WebGL.wrapMode WebGL.texParam
 type tex_param_filter_param = WebGL.texFilter
@@ -351,7 +363,7 @@ let stream_draw : buffer_usage = Js.Unsafe.pure_js_expr "0x88E0"
 let invalid_enum : error_code = Js.Unsafe.pure_js_expr "0x500"
 
 let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
-    match a, b with 
+    match a, b with
     | None, None -> true
     | Some a, Some b -> a == b
     | _ -> false
@@ -359,7 +371,7 @@ let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
 
 let cull_face (c : t) m = c##cullFace m
 let front_face (c : t) m = c##frontFace m
-let bind_texture (c : t) t v = 
+let bind_texture (c : t) t v =
     match v with
     | Some v -> c##bindTexture t v
     | None -> ()
@@ -375,18 +387,18 @@ let stencil_op (c : t) a b d = c##stencilOp a b d
 let stencil_op_separate (c : t) a b e d = c##stencilOpSeparate a b e d
 
 let blend_func_separate (c : t) a b e d = c##blendFuncSeparate a b e d
-let pixel_storei (c : t) t v = 
+let pixel_storei (c : t) t v =
     c##pixelStorei t v
 
 let enable_vertex_attrib_array (c : t) v = c##enableVertexAttribArray v
 let disable_vertex_attrib_array (c : t) v = c##disableVertexAttribArray v
-let vertex_attrib_pointer (c : t) a b g d e f = 
+let vertex_attrib_pointer (c : t) a b g d e f =
     c##vertexAttribPointer a b g (Js.bool d) e f
 
 let tex_parameteri_1 (c : t) t a b = c##texParameteri t a b
 let tex_parameteri_2 (c : t) t a b = c##texParameteri t a b
 
-let buffer_data (c : t) t (buffer : buffer) b = 
+let buffer_data (c : t) t (buffer : buffer) b =
     c##bufferData t buffer b
 
 let tex_image2d (c : t) q w e r t y u i o =
@@ -398,7 +410,7 @@ let tex_sub_image2d (c : t) q w e r t y u i o =
 let debug = false
 
 let check_error (c : t) _str =
-    if debug then ( 
+    if debug then (
         let error = c##getError in
         if error <> c##._NO_ERROR_ then (
             Printf.printf "WEBGL ERROR\n%!";
@@ -431,12 +443,12 @@ let uniform2fv (c : t) loc values =
     c##uniform2fv loc temp_array
 ;;
 
-let bind_buffer (c : t) b (v : buffer_id) = 
+let bind_buffer (c : t) b (v : buffer_id) =
     c##bindBuffer b v
 
 let draw_arrays (c : t) t o a = c##drawArrays t o a
 let generate_mipmap (c : t) m = c##generateMipmap m
-let color_mask (c : t) a b z d = 
+let color_mask (c : t) a b z d =
     let a = Js.bool a
     and b = Js.bool b
     and z = Js.bool z
@@ -448,7 +460,7 @@ type program = WebGL.program Js.t
 let use_program (c : t) p = c##useProgram p
 
 let uniform1i (c : t) idx v = c##uniform1i idx v
-let get_uniform_location (c : t) p name = 
+let get_uniform_location (c : t) p name =
     c##getUniformLocation p (Js.string name)
 
 let finish (c : t) = c##finish

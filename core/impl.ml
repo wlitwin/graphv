@@ -51,6 +51,7 @@ module type S = sig
 
         val create : unit -> t
         val reset : t -> unit
+        val copy : t -> t
     end
 
     type gl
