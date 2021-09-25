@@ -310,7 +310,7 @@ Text.text vg ~x:0. ~y:0. "Hello World!";
 ]}
 
 {4 Native}
-Font files must be in {{:https://en.wikipedia.org/wiki/TrueType} TTF} format. If using the default {{:../graphv_gles2_native/Graphv_gles2_native/index.html}Graphv_gles2_native} library, the font must be loadable by the {{:https://github.com/nothings/stb} STD True Type} library as that is the backend used.
+Font files must be in {{:https://en.wikipedia.org/wiki/TrueType} TTF} format. If using the default {{:../graphv_gles2_native/Graphv_gles2_native/index.html}Graphv_gles2_native} library, the font must be loadable by the {{:https://github.com/nothings/stb} STB True Type} library as that is the backend used.
 
 {4 Web}
 Fonts on the web use the CSS fonts loaded by the browser. This means custom fonts must be loaded using the browsers custom font methods. There are various resources on the web such as {{:https://developer.mozilla.org/en-US/docs/Learn/CSS/Styling_text/Web_fonts} this} for loading in custom fonts. The example demo uses the CSS method:
