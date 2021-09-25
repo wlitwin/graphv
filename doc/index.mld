@@ -266,3 +266,78 @@ canvas {
 </html>
 v}
 
+{1 Implementation}
+
+This section will contain relevant information about how different features are implemented. It will also discuss some of the limitations that might apply when using different features.
+
+{2 Fonts}
+Fonts are implemented using a {{:https://en.wikipedia.org/wiki/Texture_atlas} texture atlas}. This comes with some pros and cons.
+
+Pros:
+- Simple to implement
+- Very fast to render
+- One time cost (per glyph+size+font)
+- Fairly space efficient
+- Minimal CPU<->GPU data
+
+Cons:
+- Static, needs a new entry for every glyph/size/font combination
+- Can only support a limited number of fonts
+- Can only support a limited size of fonts
+- Not actually "vectorized"
+
+
+{3 Usage}
+
+Loading a font is very simple, specify a name and a file (or css font-family on the web):
+
+{[
+(*1*) let _ = Graphv.Text.create vg ~name:"id" ~file:"filename" in
+(*2*) Graphv.Text.add_fallback vg ~name:"id" ~fallback:"another_id";
+]}
+
+Step 2 is optional and specifies a secondary font to use when a glyph cannot be found in the first font. Multiple fallbacks can be added for a single font. The most common use case is to pair a regular text font with an emoji or icon font. That way only one font needs to be referenced when drawing to get both text and icons.
+
+To draw using a font specify the size, font face, alignment, blur, and color. You only need to specify these if they have changed since the last text you have drawn, as Graphv is stateful.
+
+{[
+let open Graphv in
+Text.set_size vg ~size:15.;
+Text.set_font_face vg ~name:"sans";
+Text.set_blur vg ~blur:2.;
+set_fill_color vg ~color:Color.white;
+Text.text vg ~x:0. ~y:0. "Hello World!";
+]}
+
+{4 Native}
+Font files must be in {{:https://en.wikipedia.org/wiki/TrueType} TTF} format. If using the default {{:../graphv_gles2_native/Graphv_gles2_native/index.html}Graphv_gles2_native} library, the font must be loadable by the {{:https://github.com/nothings/stb} STD True Type} library as that is the backend used.
+
+{4 Web}
+Fonts on the web use the CSS fonts loaded by the browser. This means custom fonts must be loaded using the browsers custom font methods. There are various resources on the web such as {{:https://developer.mozilla.org/en-US/docs/Learn/CSS/Styling_text/Web_fonts} this} for loading in custom fonts. The example demo uses the CSS method:
+
+{v
+@font-face {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 100;
+    font-display: swap;
+    src: url('../assets/Roboto-Regular.ttf') format('opentype');
+}
+v}
+
+and then loads the font with the CSS name:
+
+{v
+let _ = NVG.Text.create vg ~name:"sans" ~file:"Roboto" in
+v}
+
+Where the `file` is the CSS `font-family` name.
+
+{3 Limitations}
+Stroke does not work with fonts. Font drawing can only fill the glyph areas.
+
+The biggest limitation is the texture size. Once the texture atlas is full no more glyphs can be added to it unless the atlas is reset. Which will incur the costs of generating all the glyphs again.
+
+To avoid this scenario you should try to limit the combinations of font/size/glyph in your programs. Similarly, the larger the font is, the more space it will take up in the texture atlas. This can cause the texture atlas to fill up with only a few characters instead of a couple thousand. In your program it may be useful to have a number of "preferred" sizes and snap every text string to one of them. In the future some extra font APIs may be added to make managing these scenarios easier.
+
+Another avenue will be exploring alternative font rendering methods like {{:https://github.com/Chlumsky/msdfgen} mutli-signed distance fields} which have fewer limitations than the standard bitmap texture atlas.
