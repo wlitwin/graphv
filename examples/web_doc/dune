@@ -7,3 +7,7 @@
       js_of_ocaml
   )
 )
+
+(alias
+  (name default)
+  (deps main.js index.html))

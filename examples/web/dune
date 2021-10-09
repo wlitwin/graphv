@@ -8,3 +8,7 @@
  js_of_ocaml
  graphv_webgl
  ))
+
+(alias
+  (name default)
+  (deps main.js index.html))
