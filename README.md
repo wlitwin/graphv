@@ -8,7 +8,7 @@ Port of the [NanoVG](https://github.com/memononen/nanovg) C library to (mostly) 
 
 Docs can be found [here](https://wlitwin.github.io/docs/graphv/graphv). They are still a work in progress.
 
-# Playground
+## Playground
 
 A client-side web playground can be found [here](https://wlitwin.github.io/demos/graphv_playground). The compilation takes ~5s the first time, then it should be ~1-2s for recompiles.
 
