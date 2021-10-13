@@ -8,16 +8,20 @@ Port of the [NanoVG](https://github.com/memononen/nanovg) C library to (mostly) 
 
 Docs can be found [here](https://wlitwin.github.io/docs/graphv/graphv). They are still a work in progress.
 
-## Screenshots
+# Playground
 
-![Screenshot of native GLES2 demo](/screenshots/graphv-native.png?raw=true "Native Demo")
-![Screenshot of chrome web demo](/screenshots/graphv-web.png?raw=true "Web Demo (Chrome)")
+A client-side web playground can be found [here](https://wlitwin.github.io/demos/graphv_playground). The compilation takes ~5s the first time, then it should be ~1-2s for recompiles.
 
 ## Demo
 
 A live web demo can be found [here](https://wlitwin.github.io/demos/graphv). If the fonts look wrong the first time, refresh.
 
 Performance varies quite a lot between browsers, Chrome tends to be the fastest. The demo supports mouse and touch events. Clicking/tapping will zoom the top-left widget, hovering the text will highlight rows, and two fingers on mobile will allow zooming/panning. Dragging a single finger on mobile will make the eyes follow the finger.
+
+## Screenshots
+
+![Screenshot of native GLES2 demo](/screenshots/graphv-native.png?raw=true "Native Demo")
+![Screenshot of chrome web demo](/screenshots/graphv-web.png?raw=true "Web Demo (Chrome)")
 
 ## Performance
 
