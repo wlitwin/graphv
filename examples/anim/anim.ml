@@ -222,8 +222,11 @@ module Driver = struct
         type t = elt
         let compare t1 t2 =
             let c = Float.compare t1.time t2.time in
-            if c = 0 then Int.compare t1.concrete.id t2.concrete.id
-            else c
+            if c = 0 then (
+                let c = Int.compare t1.concrete.id t2.concrete.id in
+                if c = 0 then Int.compare (Obj.magic t1) (Obj.magic t2)
+                else c
+            ) else c
     end)
 
     type t = {
@@ -320,20 +323,20 @@ module Driver = struct
     and add (t : t) (id : int) (delay : float) (anim : anim) =
         match anim.kind with
         | Leaf -> add_basic t id delay anim
+
         | Parallel (inf, lst) ->
             let offset = delay +. anim.delay in
             List.iter (add t id offset) lst;
             add_completer_if_needed t id offset inf anim
+
         | Serial (inf, lst) ->
             let offset = delay +. anim.delay in
-
             begin match anim.direction with
             | None | Some Forward | Some (Mirror Forward) ->
                 List.fold_left (fun offset anim ->
                     add t id offset anim;
                     offset +. calc_duration anim
                 ) offset lst |> ignore
-
             | Some Backward | Some (Mirror Backward) ->
                 List.fold_right (fun anim offset ->
                     add t id offset anim;
@@ -367,7 +370,7 @@ module Driver = struct
                 t.active <- (*c :: t.active;*) List.append t.active [c];
                 t.queue <- PQ.remove elem t.queue;
                 check_queue t dt
-            )
+            ) 
     ;;
 
     let swap_mirror (anim : concrete) =

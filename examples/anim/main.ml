@@ -54,43 +54,33 @@ let _ =
     in
 
     let rect = {
-        x = 400.;
-        y = 400.;
+        x = 0.;
+        y = 50.;
         sx = 1.;
         sy = 1.;
         opacity = 0.1;
         rotate = 0.;
     } in
 
-    let ease = Anim.Ease.linear in
+    let ease = Anim.Ease.out_bounce in
     let anim = Anim.(
         parallel ~complete:(fun _ _ ->
             Printf.printf "CALLED PARALLEL COMPLETE\n%!";
         ) [
             serial ~complete:(fun _ _ -> 
                 Printf.printf "CALLED SERIAL COMPLETE\n%!";
-                (*
-                rect.x <- 400.;
-                rect.y <- 400.;
-                rect.sx <- 1.;
-                rect.sy <- 1.;
-                rect.opacity <- 0.1;
-                rect.rotate <- 0.;
-                *)
-            ) ~direction:(Mirror Backward) ~repeat:(Count 2) [
+            ) ~direction:(Mirror Forward) ~repeat:(Count 2) [
                 create 1. ~ease (x rect 0. 200.);
                 create 1. ~ease (y rect 50. 100.);
                 create 1. ~ease (x rect 200. 400.);
                 create 1. ~ease (y rect 100. 400.);
             ];
-            (*
             create ~ease:Ease.out_cubic 4. (opacity rect 0.1 1.);
             create ~ease 1. (rotate rect 0. (4.*.Float.pi*.2.));
             serial [
                 create ~ease ~delay:1. 1. (sx rect 1. 5.);
                 create ~ease ~delay:0. 1. (sy rect 1. 5.);
             ];
-            *)
         ]
     )
     in
@@ -109,18 +99,18 @@ let _ =
     in
 
     let ease = Anim.Ease.in_out_quint in
-    (*
-    let anim = Anim.Anim.(
-        parallel ~repeat:(Count 2) ~complete:(fun _ _ -> print_endline "Circles done") [
+    let anim = Anim.(
+        parallel ~ease ~complete:(fun _ _ -> print_endline "Circles done") [
             anim;
-            create ~delay:0.0 2.5 ~ease (loc_xy circles.(0));
-            create ~delay:0.2 2.5 ~ease (loc_xy circles.(1));
-            create ~delay:0.4 2.5 ~ease (loc_xy circles.(2));
-            create ~delay:0.6 2.5 ~ease (loc_xy circles.(3));
-            create ~delay:0.8 2.5 ~ease (loc_xy circles.(4));
+            parallel ~repeat:(Count 2) [
+                create ~delay:0.0 2.5 ~ease (loc_xy circles.(0));
+                create ~delay:0.2 2.5 ~ease (loc_xy circles.(1));
+                create ~delay:0.4 2.5 ~ease (loc_xy circles.(2));
+                create ~delay:0.6 2.5 ~ease (loc_xy circles.(3));
+                create ~delay:0.8 2.5 ~ease (loc_xy circles.(4));
+            ]
         ]
     ) in
-*)
 
     let x = ref 0. in
 
@@ -129,8 +119,8 @@ let _ =
     ) in
     
     let driver = Anim.Driver.create() in
-    (*Anim.Anim.Driver.start_ driver ex;*)
     Anim.Driver.start_ driver anim;
+    Anim.Driver.start_ driver ex;
 
     (*exit 1 |> ignore;*)
 
