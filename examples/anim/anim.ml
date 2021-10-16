@@ -14,7 +14,11 @@ type reason =
     | Done
     | Canceled
 
-type description = {
+type kind = Serial of bool * anim list
+          | Parallel of bool * anim list
+          | Leaf
+
+and anim = {
     delay : float;
     duration : float (* option *);
     repeat : repeat;
@@ -22,23 +26,9 @@ type description = {
     update : float -> unit;
     complete : (int -> reason -> unit) option;
     direction : direction option;
+    kind : kind;
     ease : Ease.t option;
 }
-
-type anim =
-    | Serial of bool (* true if children contain infinite *) * description * anim list
-    | Parallel of bool (* true if children contain infinite *) * description * anim list
-    | Leaf of description
-
-(* TODO -
-    type anim = Serial of bool * desc list
-              | Parallel of bool * desc list
-              | Leaf
-    and desc = {
-        ...
-        kind : anim;
-    }
-*)
 
 let invert_direction = function
     | Some (Mirror Backward) -> Some (Mirror Forward)
@@ -49,36 +39,30 @@ let invert_direction = function
     | Some (Mirror (Mirror _)) -> assert false
 ;;
 
-let get_repeat (desc : description) =
+let get_repeat (desc : anim) =
     match desc.repeat with
     | Infinite -> 1
     | (Count times) -> times
 ;;
 
-let calc_duration (anim : anim) =
-    match anim with
-    | Leaf desc
-    | Serial (_, desc, _)
-    | Parallel (_, desc, _) -> 
-        let repeat = float (get_repeat desc) in
-        desc.delay +. (desc.duration +. desc.repeat_delay)*.repeat
+let calc_duration (desc : anim) =
+    let repeat = float (get_repeat desc) in
+    desc.delay +. (desc.duration +. desc.repeat_delay)*.repeat
 ;;
 
-let rec invert_desc = function
-    | Leaf ({direction; _} as r) -> 
-        Leaf {r with direction = 
-            invert_direction direction
-        }
-    | Serial (b, ({direction; _} as r), lst) ->
-        let direction = invert_direction r.direction in
-        Serial (b, {r with direction}
-            , List.map invert_desc lst
-        )
-    | Parallel (b, ({direction; _} as r), lst) ->
-        let direction = invert_direction r.direction in
-        Parallel (b, {r with direction}
-            , List.map invert_desc lst
-        )
+let rec invert_desc desc = 
+    let kind = 
+        match desc.kind with
+        | Leaf -> Leaf
+        | Serial (b, lst) ->
+            Serial (b, List.map invert_desc lst)
+        | Parallel (b, lst) ->
+            Parallel (b, List.map invert_desc lst)
+    in
+    { desc with 
+        kind; 
+        direction = invert_direction desc.direction
+    }
 ;;
 
 let is_infinite = function
@@ -87,15 +71,15 @@ let is_infinite = function
     | Some _ -> false
 ;;
 
-let rec has_infinite = function
-    | Leaf { repeat = Infinite; _ } -> true
-    | Leaf _ -> false
-    | Parallel (_, { repeat = Infinite; _}, _) -> true
-    | Serial (_, { repeat = Infinite; _ }, _) -> true
-    | Serial (b, _, lst)
-    | Parallel (b, _, lst) -> 
-        if b then true
-        else List.exists has_infinite lst
+let rec has_infinite desc =
+    if desc.repeat = Infinite then true
+    else (
+        match desc.kind with
+        | Leaf -> false
+        | Serial (_, lst)
+        | Parallel (_, lst) ->
+            List.exists has_infinite lst
+    )
 ;;
 
 let has_infinite_lst = 
@@ -121,12 +105,14 @@ let mk_desc
     ?direction
     duration
     update
+    kind
 = {
     delay = Option.value ~default:0. delay;
     ease;
     repeat = Option.value ~default:(Count 1) repeat;
     repeat_delay = Option.value ~default:0. repeat_delay;
     direction;
+    kind;
     complete;
     update;
     duration;
@@ -142,20 +128,21 @@ let create
     duration
     update
 =
-    Leaf (mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration update)
+    mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration update Leaf
 ;;
 
 let propagate_direction lst = function
     | None -> lst
     | Some direction ->
         let rec replace = function
-            | Leaf ({ direction=None; _ } as r) -> Leaf {r with direction=Some direction}
-            | Serial (b, ({direction=None; _} as r), lst) ->
-                Serial (b, {r with direction=Some direction},
-                    List.map replace lst)
-            | Parallel (b, ({direction=None; _} as r), lst) ->
-                Parallel (b, {r with direction=Some direction},
-                    List.map replace lst)
+            | { direction=None; _ } as r -> 
+                {r with 
+                    direction=Some direction;
+                    kind = match r.kind with
+                         | Leaf -> Leaf
+                         | Serial (b, lst) -> Serial (b, List.map replace lst)
+                         | Parallel (b, lst) -> Parallel (b, List.map replace lst)
+                }
             | anim -> anim
         in
         List.map replace lst
@@ -175,18 +162,9 @@ let serial
     let duration = List.fold_left (fun total anim -> 
         total +. calc_duration anim
     ) 0. lst in
-    let self = mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore in
-    let lst = propagate_direction lst direction in
-    Printf.printf "Start\n%!";
-    List.iter (function
-        | Leaf d -> Printf.printf " L %.2f (%.2f)\n%!" d.delay d.duration
-        | Serial (_, d, _) -> Printf.printf " S %.2f (%.2f)\n%!" d.delay d.duration
-        | Parallel (_, d, _) -> Printf.printf " P %.2f (%.2f)\n%!" d.delay d.duration
-    ) lst;
     (* Propagate our repeat to children if not none *)
-    
-    print_endline "END";
-    Serial (inf, self, lst)
+    let lst = propagate_direction lst direction in
+    mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore (Serial (inf, lst))
 ;;
 
 let parallel
@@ -205,8 +183,7 @@ let parallel
         ) Float.min_float lst 
     in
     let lst = propagate_direction lst direction in
-    let self = mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore in
-    Parallel (inf, self, lst)
+    mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore (Parallel (inf, lst))
 ;;
 
 module Driver = struct
@@ -223,7 +200,7 @@ module Driver = struct
         complete : int -> reason -> unit;
     }
 
-    let anim_of_description id offset (d : description) : concrete = {
+    let anim_of_description id offset (d : anim) : concrete = {
         id;
         delay = offset +. d.delay;
         duration = d.duration;
@@ -233,9 +210,7 @@ module Driver = struct
         direction = Option.value ~default:Forward d.direction;
         ease = Option.value ~default:Ease.linear d.ease;
         update = d.update;
-        complete = Option.value ~default:(fun _ _ -> 
-            Printf.printf "DUMMY COMPLETE\n%!";
-        ) d.complete;
+        complete = Option.value ~default:(fun _ _ -> ()) d.complete;
     }
 
     type elt = {
@@ -293,18 +268,16 @@ module Driver = struct
 
     let add_basic (t : t) id offset desc =
         let anim = anim_of_description id offset desc in
-        Printf.printf " ADD %.2f (%.2f) %s\n%!" anim.delay anim.duration (dir_str (Some anim.direction));
         enqueue_anim t anim
     ;;
 
-    let get_end (desc : description) =
+    let get_end (desc : anim) =
         let duration = desc.duration in
         desc.delay +. duration
     ;;
 
-    let is_mirror = function
-        | Serial (_, {direction = Some (Mirror _)}, _)
-        | Parallel (_, {direction = Some (Mirror _)}, _) -> true
+    let is_mirror : anim -> bool = function
+        | {direction = Some (Mirror _)} -> true
         | _ -> false
     ;;
 
@@ -313,10 +286,8 @@ module Driver = struct
         | (Count x) -> x >= 0
     ;;
 
-    let replace_delay_with_repeat_delay = function
-        | Leaf r -> Leaf { r with delay = r.repeat_delay }
-        | Serial (b, r, l) -> Serial (b, {r with delay = r.repeat_delay}, l)
-        | Parallel (b, r, l) -> Parallel (b, {r with delay = r.repeat_delay}, l)
+    let replace_delay_with_repeat_delay (desc : anim) = 
+        { desc with delay = desc.repeat_delay }
     ;;
 
     let check_and_decr_repeat rep =
@@ -328,15 +299,15 @@ module Driver = struct
     ;;
 
     let rec add (t : t) (id : int) (delay : float) (anim : anim) =
-        match anim with
-        | Leaf desc -> add_basic t id delay desc
-        | Parallel (inf, desc, lst) ->
-            let offset = delay +. desc.delay in
+        match anim.kind with
+        | Leaf -> add_basic t id delay anim
+        | Parallel (inf, lst) ->
+            let offset = delay +. anim.delay in
             (* We repeat if our child is not infinite or we are infinite *)
             List.iter (add t id offset) lst;
-            if not inf && has_repeat desc.repeat then (
+            if not inf && has_repeat anim.repeat then (
                 let complete id reason =
-                    Option.iter (fun c -> c id reason) desc.complete;
+                    Option.iter (fun c -> c id reason) anim.complete;
                     let requeue anim =
                         let anim = 
                             if is_mirror anim then               
@@ -346,27 +317,29 @@ module Driver = struct
                         let anim = replace_delay_with_repeat_delay anim in
                         add t id 0. anim 
                     in
-                    match desc.repeat with
+                    match anim.repeat with
                     | Infinite -> requeue anim
                     | Count x ->
                         if x > 1 then (
-                            requeue (Parallel (inf, {desc with repeat = Count (x-1)}, lst))
+                            requeue {anim with repeat = Count (x-1)}
+                            (*(Parallel (inf, {desc with repeat = Count (x-1)}, lst))*)
                         ) 
                 in
                 let dummy = 
                     mk_desc 
-                    ~delay:(get_end desc)
+                    ~delay:(get_end anim)
                     ~complete:complete
                     0.
                     ignore
+                    Leaf
                 in
-                add t id offset (Leaf dummy)
+                add t id offset dummy
             );
-        | Serial (inf, desc, lst) ->
-            let offset = delay +. desc.delay in
+        | Serial (inf, lst) ->
+            let offset = delay +. anim.delay in
             (* We repeat if our child is not infinite or we are infinite *)
             (* Can calculate proper offset here *)
-            begin match desc.direction with
+            begin match anim.direction with
             | None | Some Forward | Some (Mirror Forward) ->
                 List.fold_left (fun offset anim ->
                     add t id offset anim;
@@ -382,9 +355,9 @@ module Driver = struct
             | _ -> assert false
             end;
 
-            if not inf && has_repeat desc.repeat then (
+            if not inf && has_repeat anim.repeat then (
                 let complete id reason =
-                    Option.iter (fun c -> c id reason) desc.complete;
+                    Option.iter (fun c -> c id reason) anim.complete;
                     let requeue anim =
                         let anim = 
                             if is_mirror anim then (
@@ -394,21 +367,22 @@ module Driver = struct
                         let anim = replace_delay_with_repeat_delay anim in
                         add t id 0. anim 
                     in
-                    match desc.repeat with
+                    match anim.repeat with
                     | Infinite -> requeue anim
                     | Count x ->
                         if x > 1 then (
-                            requeue (Serial (inf, {desc with repeat = Count (x-1)}, lst))
+                            requeue {anim with repeat = Count (x-1)}
                         ) 
                 in
                 let dummy = 
                     mk_desc 
-                    ~delay:(get_end desc)
+                    ~delay:(get_end anim)
                     ~complete:complete
                     0.
                     ignore
+                    Leaf
                 in
-                add t id offset (Leaf dummy)
+                add t id offset dummy
             );
     ;;
 
