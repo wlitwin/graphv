@@ -50,8 +50,8 @@ let calc_duration (desc : anim) =
     desc.delay +. (desc.duration +. desc.repeat_delay)*.repeat
 ;;
 
-let rec invert_desc desc = 
-    let kind = 
+let rec invert_desc desc =
+    let kind =
         match desc.kind with
         | Leaf -> Leaf
         | Serial (b, lst) ->
@@ -59,8 +59,8 @@ let rec invert_desc desc =
         | Parallel (b, lst) ->
             Parallel (b, List.map invert_desc lst)
     in
-    { desc with 
-        kind; 
+    { desc with
+        kind;
         direction = invert_direction desc.direction
     }
 ;;
@@ -82,7 +82,7 @@ let rec has_infinite desc =
     )
 ;;
 
-let has_infinite_lst = 
+let has_infinite_lst =
     List.exists has_infinite
 
 let filter_infinite_serial =
@@ -135,8 +135,8 @@ let propagate_direction lst = function
     | None -> lst
     | Some direction ->
         let rec replace = function
-            | { direction=None; _ } as r -> 
-                {r with 
+            | { direction=None; _ } as r ->
+                {r with
                     direction=Some direction;
                     kind = match r.kind with
                          | Leaf -> Leaf
@@ -148,7 +148,7 @@ let propagate_direction lst = function
         List.map replace lst
 ;;
 
-let serial 
+let serial
     ?delay
     ?ease
     ?complete
@@ -159,7 +159,7 @@ let serial
 =
     let inf = has_infinite_lst lst in
     let lst = filter_infinite_serial lst in
-    let duration = List.fold_left (fun total anim -> 
+    let duration = List.fold_left (fun total anim ->
         total +. calc_duration anim
     ) 0. lst in
     (* Propagate our repeat to children if not none *)
@@ -177,10 +177,10 @@ let parallel
     (lst : anim list)
 =
     let inf = has_infinite_lst lst in
-    let duration = 
-        List.fold_left (fun max_d anim -> 
+    let duration =
+        List.fold_left (fun max_d anim ->
             Float.max max_d (calc_duration anim)
-        ) Float.min_float lst 
+        ) Float.min_float lst
     in
     let lst = propagate_direction lst direction in
     mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore (Parallel (inf, lst))
@@ -214,13 +214,13 @@ module Driver = struct
     }
 
     type elt = {
-        time : float; 
+        time : float;
         concrete : concrete;
     }
 
     module PQ = MoreLabels.Set.Make(struct
         type t = elt
-        let compare t1 t2 = 
+        let compare t1 t2 =
             let c = Float.compare t1.time t2.time in
             if c = 0 then Int.compare t1.concrete.id t2.concrete.id
             else c
@@ -257,15 +257,6 @@ module Driver = struct
         t.queue <- PQ.add entry t.queue
     ;;
 
-    let dir_str = function
-        | Some Forward -> "FW"
-        | Some Backward -> "FW"
-        | Some (Mirror Forward) -> "MFW"
-        | Some (Mirror Backward) -> "MBW"
-        | Some _ -> "unknown"
-        | None -> "None"
-    ;;
-
     let add_basic (t : t) id offset desc =
         let anim = anim_of_description id offset desc in
         enqueue_anim t anim
@@ -286,10 +277,6 @@ module Driver = struct
         | (Count x) -> x >= 0
     ;;
 
-    let replace_delay_with_repeat_delay (desc : anim) = 
-        { desc with delay = desc.repeat_delay }
-    ;;
-
     let check_and_decr_repeat rep =
         match !rep with
         | Infinite -> true
@@ -298,47 +285,48 @@ module Driver = struct
             x > 1
     ;;
 
-    let rec add (t : t) (id : int) (delay : float) (anim : anim) =
+    let rec add_completer_if_needed (t : t) id offset (inf : bool) (anim : anim) =
+        (* We repeat if our child is not infinite or we are infinite *)
+        if not inf && has_repeat anim.repeat then (
+            let complete id reason =
+                Option.iter (fun c -> c id reason) anim.complete;
+                let requeue anim =
+                    let anim =
+                        if is_mirror anim then
+                            invert_desc anim
+                        else anim
+                    in
+                    let anim = { anim with delay = anim.repeat_delay } in
+                    add t id 0. anim
+                in
+                match anim.repeat with
+                | Infinite -> requeue anim
+                | Count x ->
+                    if x > 1 then (
+                        requeue {anim with repeat = Count (x-1)}
+                    )
+            in
+            let dummy =
+                mk_desc
+                ~delay:(get_end anim)
+                ~complete:complete
+                0.
+                ignore
+                Leaf
+            in
+            add t id offset dummy
+        );
+
+    and add (t : t) (id : int) (delay : float) (anim : anim) =
         match anim.kind with
         | Leaf -> add_basic t id delay anim
         | Parallel (inf, lst) ->
             let offset = delay +. anim.delay in
-            (* We repeat if our child is not infinite or we are infinite *)
             List.iter (add t id offset) lst;
-            if not inf && has_repeat anim.repeat then (
-                let complete id reason =
-                    Option.iter (fun c -> c id reason) anim.complete;
-                    let requeue anim =
-                        let anim = 
-                            if is_mirror anim then               
-                                invert_desc anim
-                            else anim
-                        in
-                        let anim = replace_delay_with_repeat_delay anim in
-                        add t id 0. anim 
-                    in
-                    match anim.repeat with
-                    | Infinite -> requeue anim
-                    | Count x ->
-                        if x > 1 then (
-                            requeue {anim with repeat = Count (x-1)}
-                            (*(Parallel (inf, {desc with repeat = Count (x-1)}, lst))*)
-                        ) 
-                in
-                let dummy = 
-                    mk_desc 
-                    ~delay:(get_end anim)
-                    ~complete:complete
-                    0.
-                    ignore
-                    Leaf
-                in
-                add t id offset dummy
-            );
+            add_completer_if_needed t id offset inf anim
         | Serial (inf, lst) ->
             let offset = delay +. anim.delay in
-            (* We repeat if our child is not infinite or we are infinite *)
-            (* Can calculate proper offset here *)
+
             begin match anim.direction with
             | None | Some Forward | Some (Mirror Forward) ->
                 List.fold_left (fun offset anim ->
@@ -355,35 +343,7 @@ module Driver = struct
             | _ -> assert false
             end;
 
-            if not inf && has_repeat anim.repeat then (
-                let complete id reason =
-                    Option.iter (fun c -> c id reason) anim.complete;
-                    let requeue anim =
-                        let anim = 
-                            if is_mirror anim then (
-                                invert_desc anim
-                            ) else anim
-                        in
-                        let anim = replace_delay_with_repeat_delay anim in
-                        add t id 0. anim 
-                    in
-                    match anim.repeat with
-                    | Infinite -> requeue anim
-                    | Count x ->
-                        if x > 1 then (
-                            requeue {anim with repeat = Count (x-1)}
-                        ) 
-                in
-                let dummy = 
-                    mk_desc 
-                    ~delay:(get_end anim)
-                    ~complete:complete
-                    0.
-                    ignore
-                    Leaf
-                in
-                add t id offset dummy
-            );
+            add_completer_if_needed t id offset inf anim
     ;;
 
     let start (t : t) (anim : anim) : int =
@@ -422,7 +382,7 @@ module Driver = struct
         match anim.repeat with
         | Infinite -> enqueue_anim t anim
         | Count times ->
-            if times > 1 then ( 
+            if times > 1 then (
                 anim.repeat <- Count (times-1);
                 enqueue_anim t anim
             )
@@ -479,13 +439,13 @@ module Driver = struct
     ;;
 
     let cancel (t : t) (id : int) =
-        t.active <- List.filter (fun anim -> 
+        t.active <- List.filter (fun anim ->
             if anim.id = id then (
                 anim.complete anim.id Canceled;
                 false
             ) else true
         ) t.active;
-        t.queue <- PQ.filter (fun elem -> 
+        t.queue <- PQ.filter (fun elem ->
             if elem.concrete.id = id then (
                 elem.concrete.complete id Canceled;
                 false
