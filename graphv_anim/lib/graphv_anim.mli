@@ -6,30 +6,34 @@ type anim
 module Ease = Ease
 
 val create :
-?delay:float ->
-?ease:Ease.t ->
-?complete:(int -> reason -> unit) ->
-?repeat:repeat ->
-?repeat_delay:float ->
-?direction:direction -> float -> (float -> unit) -> anim
+    ?delay:float ->
+    ?ease:Ease.t ->
+    ?complete:(int -> reason -> unit) ->
+    ?repeat:repeat ->
+    ?repeat_delay:float ->
+    ?direction:direction -> float ->
+    (float -> unit) ->
+    anim
 
 val serial :
-?delay:float ->
-?ease:Ease.t ->
-?complete:(int -> reason -> unit) ->
-?repeat:repeat ->
-?repeat_delay:float ->
-?direction:direction -> 
-    anim list -> anim
+    ?delay:float ->
+    ?ease:Ease.t ->
+    ?complete:(int -> reason -> unit) ->
+    ?repeat:repeat ->
+    ?repeat_delay:float ->
+    ?direction:direction ->
+    anim list ->
+    anim
 
 val parallel :
-?delay:float ->
-?ease:Ease.t ->
-?complete:(int -> reason -> unit) ->
-?repeat:repeat ->
-?repeat_delay:float ->
-?direction:direction -> 
-    anim list -> anim
+    ?delay:float ->
+    ?ease:Ease.t ->
+    ?complete:(int -> reason -> unit) ->
+    ?repeat:repeat ->
+    ?repeat_delay:float ->
+    ?direction:direction ->
+    anim list ->
+    anim
 
 module Driver :
 sig
