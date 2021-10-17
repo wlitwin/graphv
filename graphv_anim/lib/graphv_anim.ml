@@ -209,6 +209,7 @@ module Driver = struct
 
     type elt = {
         time : float;
+        order : int;
         concrete : concrete;
     }
 
@@ -218,7 +219,7 @@ module Driver = struct
             let c = Float.compare t1.time t2.time in
             if c = 0 then (
                 let c = Int.compare t1.concrete.id t2.concrete.id in
-                if c = 0 then Int.compare (Obj.magic t1) (Obj.magic t2)
+                if c = 0 then Int.compare t1.order t2.order
                 else c
             ) else c
     end)
@@ -228,6 +229,7 @@ module Driver = struct
         mutable queue : PQ.t;
         mutable active : concrete list;
         mutable next_id : int;
+        mutable next_uniq : int;
     }
 
     let create () = {
@@ -235,11 +237,19 @@ module Driver = struct
         queue = PQ.empty;
         active = [];
         next_id = 0;
+        next_uniq = 0;
     }
 
+    let get_next_uniq t =
+        let id = t.next_uniq in
+        t.next_uniq <- t.next_uniq + 1;
+        id
+    ;;
+
     let make_entry t c = {
-        time = t +. c.delay;
+        time = t.time +. c.delay;
         concrete=c;
+        order = get_next_uniq t;
     }
 
     let get_next_id t =
@@ -249,7 +259,7 @@ module Driver = struct
     ;;
 
     let enqueue_anim (t : t) (anim : concrete) =
-        let entry = make_entry t.time anim in
+        let entry = make_entry t anim in
         anim.elapsed <- 0.;
         t.queue <- PQ.add entry t.queue
     ;;

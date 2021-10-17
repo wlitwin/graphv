@@ -72,8 +72,8 @@ let%expect_test "Create nested serial" =
       Starting 0
       Basic Update 1.00
       Basic Complete 0 Done
-      Outer serial complete 0 Done
       Inner serial Complete 0 Done
+      Outer serial complete 0 Done
       Active 0 = 0
       Pending 0 = 0 |}]
 ;;
@@ -119,15 +119,15 @@ let%expect_test "Multiple nested serial" =
       Basic 2 Update 0.00
       Basic 2 Update 1.00
       Basic 2 Complete 0 Done
-      Basic 3 Update 0.00
       Inner serial complete 1 0 Done
+      Basic 3 Update 0.00
       Basic 3 Update 1.00
       Basic 3 Complete 0 Done
       Basic 4 Update 0.00
       Basic 4 Update 1.00
       Basic 4 Complete 0 Done
-      Outer serial complete 0 Done
       Inner serial complete 2 0 Done
+      Outer serial complete 0 Done
       Active 0 = 0
       Pending 0 = 0 |}]
 ;;

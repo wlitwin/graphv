@@ -59,7 +59,7 @@ let _ =
         y = 50.;
         sx = 1.;
         sy = 1.;
-        opacity = 0.1;
+        opacity = 0.0;
         rotate = 0.;
     } in
 
@@ -80,18 +80,18 @@ let _ =
                 create ~ease ~delay:1. 1. (sx rect 1. 5.);
                 create ~ease ~delay:0. 1. (sy rect 1. 5.);
             ];
-            create ~ease:Ease.out_cubic 4. (opacity rect 0.1 1.);
-            create ~ease 1. (rotate rect 0. (4.*.Float.pi*.2.));
+            create ~ease:Ease.out_cubic 4. (opacity rect 0.0 1.);
+            create ~ease 1. (rotate rect 0. (1.*.Float.pi*.2.));
         ]
     )
     in
 
     let circles = [|
-        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 1.; rotate = 0. };
-        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 1.; rotate = 0. };
-        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 1.; rotate = 0. };
-        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 1.; rotate = 0. };
-        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 1.; rotate = 0. };
+        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 0.; rotate = 0. };
+        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 0.; rotate = 0. };
+        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 0.; rotate = 0. };
+        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 0.; rotate = 0. };
+        { x = 700.; y = 100.; sx = 1.; sy = 1.; opacity = 0.; rotate = 0. };
     |] in
 
     let loc_xy circle t =
@@ -99,16 +99,28 @@ let _ =
         circle.y <- (Float.sin (t*.2.*.Float.pi))*.50. +. 100.;
     in
 
+    let ease = Anim.Ease.in_out_cubic in
+    let circle_anim idx delay = Anim.(
+            parallel [
+                create ~delay 2.5 ~ease (loc_xy circles.(idx));
+                serial ~delay [
+                    create 1.25 ~ease (opacity circles.(idx) 0. 1.);
+                    create 1.25 ~ease (opacity circles.(idx) 1. 0.);
+                ];
+            ];
+        )
+    in
+
     let ease = Anim.Ease.in_out_quint in
     let anim = Anim.(
         parallel ~ease ~complete:(fun _ _ -> print_endline "Circles done") [
             anim;
             parallel ~repeat:(Count 2) [
-                create ~delay:0.0 2.5 ~ease (loc_xy circles.(0));
-                create ~delay:0.2 2.5 ~ease (loc_xy circles.(1));
-                create ~delay:0.4 2.5 ~ease (loc_xy circles.(2));
-                create ~delay:0.6 2.5 ~ease (loc_xy circles.(3));
-                create ~delay:0.8 2.5 ~ease (loc_xy circles.(4));
+                circle_anim 0 0.;
+                circle_anim 1 0.2;
+                circle_anim 2 0.4;
+                circle_anim 3 0.6;
+                circle_anim 4 0.8;
             ]
         ]
     ) in
@@ -173,14 +185,23 @@ let _ =
             Gv.Path.begin_ vg;
             let c = circles.(i) in
             Gv.Path.circle vg ~cx:c.x ~cy:c.y ~r:10.;
+            let color =
+                Gv.Color.(rgba ~r:255 ~g:255 ~b:255 ~a:(c.opacity *. 255. |> int_of_float))
+            in
+            Gv.set_fill_color vg ~color;
+            let color =
+                Gv.Color.(rgba ~r:0 ~g:0 ~b:0 ~a:(c.opacity *. 255. |> int_of_float))
+            in
+            Gv.set_stroke_color vg ~color;
             Gv.fill vg;
             Gv.stroke vg;
         done;
 
         Gv.Path.begin_ vg;
         Gv.Path.rect vg ~x:!x ~y:250. ~w:20. ~h:20.;
+        Gv.set_fill_color vg ~color:Gv.Color.white;
+        Gv.set_stroke_color vg ~color:Gv.Color.black;
         Gv.fill vg;
-
 
         Gv.Path.begin_ vg;
 
@@ -209,6 +230,8 @@ let _ =
             ~color:Gv.Color.(rgba ~r:255 ~g:255 ~b:255 ~a:(rect.opacity *. 255. |> int_of_float));
         Gv.fill vg;
         Gv.stroke vg;
+
+        Gv.Text.set_size vg ~size:14.;
 
         Gv.end_frame vg;
 
