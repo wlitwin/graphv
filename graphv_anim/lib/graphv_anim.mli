@@ -41,6 +41,8 @@ sig
   val tick : t -> float -> unit
   val cancel : t -> int -> unit
   val cancel_all : t -> unit
+  val active_count : t -> int
+  val pending_count : t -> int
 end
 
 val lerp : float -> float -> float -> float

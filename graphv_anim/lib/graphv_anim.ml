@@ -451,6 +451,9 @@ module Driver = struct
         t.active <- [];
         t.queue <- PQ.empty;
     ;;
+
+    let active_count (t : t) = List.length t.active
+    let pending_count (t : t) = PQ.cardinal t.queue
 end
 
 let lerp a b t =
