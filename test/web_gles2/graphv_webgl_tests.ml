@@ -54,7 +54,7 @@ let _ =
     let vel = 400. in
     let vel_2 = ~-.(vel *. 0.5) in
 
-    let rects = Array.init (2000) (fun _ ->
+    let rects = Array.init (4000) (fun _ ->
         {
             x = Random.float 200. +. 100.;
             y = Random.float 200. +. 100.;

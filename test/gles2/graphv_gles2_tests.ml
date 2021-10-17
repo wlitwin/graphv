@@ -37,7 +37,7 @@ let _ =
     let vel = 400. in
     let vel_2 = ~-.(vel *. 0.5) in
 
-    let rects = Array.init (4000) (fun _ ->
+    let rects = Array.init (20000) (fun _ ->
         {
             x = Random.float 200. +. 100.;
             y = Random.float 200. +. 100.;
@@ -58,7 +58,7 @@ let _ =
     (*Gv.Path.circle vg ~cx:0. ~cy:0. ~r:10.;*)
     Gv.Path.rect vg ~x:0. ~y:0. ~w:20. ~h:20.;
 
-    let tess = Gv.Cache.save vg Gv.Cache.Fill_stroke in
+    let tess = Gv.Cache.save vg Gv.Cache.Fill in
 
     let c = Gc.get() in
     c.minor_heap_size <- 1024*1024*15;
@@ -130,12 +130,13 @@ let _ =
             set_fill_color vg
                 ~color:Gv.Color.(rgba ~r:r1 ~g:g1 ~b:255 ~a:255);
             set_stroke_color vg ~color:Color.white;
+
             (*
             Gv.Path.begin_ vg;
             Gv.Path.rect vg ~x:r.x ~y:r.y ~w:r.w ~h:r.h;
             Gv.fill vg;
-            Gv.stroke vg;
             *)
+
             Gv.Cache.begin_ vg;
             Gv.Cache.draw vg tess ~x:r.x ~y:r.y;
         done;

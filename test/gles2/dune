@@ -5,7 +5,6 @@
     glfw-ocaml
     tgls.tgles2
     )
- (preprocess (pps ppx_expect))
  (enabled_if (= %{profile} dev))
  )
 
