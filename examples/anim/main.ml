@@ -1,6 +1,7 @@
 open Tgles2
 
-module NVG = Graphv_gles2_native
+module Gv = Graphv_gles2_native
+module Anim = Graphv_anim
 
 type shape = {
     mutable x : float;
@@ -48,8 +49,8 @@ let _ =
 
     Gl.clear_color 0.3 0.3 0.32 1.;
 
-    let vg = NVG.create
-        ~flags:NVG.CreateFlags.(antialias lor stencil_strokes) 
+    let vg = Gv.create
+        ~flags:Gv.CreateFlags.(antialias lor stencil_strokes) 
         () 
     in
 
@@ -64,23 +65,23 @@ let _ =
 
     let ease = Anim.Ease.out_bounce in
     let anim = Anim.(
-        parallel ~complete:(fun _ _ ->
+        parallel ~direction:(Mirror Forward) ~repeat:(Count 2) ~complete:(fun _ _ ->
             Printf.printf "CALLED PARALLEL COMPLETE\n%!";
         ) [
             serial ~complete:(fun _ _ -> 
                 Printf.printf "CALLED SERIAL COMPLETE\n%!";
-            ) ~direction:(Mirror Forward) ~repeat:(Count 2) [
+            ) [
                 create 1. ~ease (x rect 0. 200.);
                 create 1. ~ease (y rect 50. 100.);
                 create 1. ~ease (x rect 200. 400.);
                 create 1. ~ease (y rect 100. 400.);
             ];
-            create ~ease:Ease.out_cubic 4. (opacity rect 0.1 1.);
-            create ~ease 1. (rotate rect 0. (4.*.Float.pi*.2.));
             serial [
                 create ~ease ~delay:1. 1. (sx rect 1. 5.);
                 create ~ease ~delay:0. 1. (sy rect 1. 5.);
             ];
+            create ~ease:Ease.out_cubic 4. (opacity rect 0.1 1.);
+            create ~ease 1. (rotate rect 0. (4.*.Float.pi*.2.));
         ]
     )
     in
@@ -162,54 +163,54 @@ let _ =
         Anim.Driver.tick driver dt;
         timer := !timer +. dt;
 
-        NVG.begin_frame vg
+        Gv.begin_frame vg
             ~width:(float win_w)
             ~height:(float win_h)
             ~device_ratio:1.
             ;
 
         for i=4 downto 0 do
-            NVG.Path.begin_ vg;
+            Gv.Path.begin_ vg;
             let c = circles.(i) in
-            NVG.Path.circle vg ~cx:c.x ~cy:c.y ~r:10.;
-            NVG.fill vg;
-            NVG.stroke vg;
+            Gv.Path.circle vg ~cx:c.x ~cy:c.y ~r:10.;
+            Gv.fill vg;
+            Gv.stroke vg;
         done;
 
-        NVG.Path.begin_ vg;
-        NVG.Path.rect vg ~x:!x ~y:250. ~w:20. ~h:20.;
-        NVG.fill vg;
+        Gv.Path.begin_ vg;
+        Gv.Path.rect vg ~x:!x ~y:250. ~w:20. ~h:20.;
+        Gv.fill vg;
 
 
-        NVG.Path.begin_ vg;
+        Gv.Path.begin_ vg;
 
-        NVG.Transform.translate vg ~x:(rect.x +. 25.*.rect.sx) ~y:(rect.y +. 25.*.rect.sy);
-        NVG.Transform.rotate vg ~angle:rect.rotate;
-        NVG.Transform.translate vg ~x:(~-.25.*.rect.sx) ~y:(~-.25.*.rect.sy);
-        (*NVG.Transform.translate vg ~x:(rect.x) ~y:(rect.y);
-        NVG.Transform.rotate vg ~angle:rect.rotate;
-        NVG.Transform.translate vg ~x:(rect.sx) ~y:(rect.sy);*)
+        Gv.Transform.translate vg ~x:(rect.x +. 25.*.rect.sx) ~y:(rect.y +. 25.*.rect.sy);
+        Gv.Transform.rotate vg ~angle:rect.rotate;
+        Gv.Transform.translate vg ~x:(~-.25.*.rect.sx) ~y:(~-.25.*.rect.sy);
+        (*Gv.Transform.translate vg ~x:(rect.x) ~y:(rect.y);
+        Gv.Transform.rotate vg ~angle:rect.rotate;
+        Gv.Transform.translate vg ~x:(rect.sx) ~y:(rect.sy);*)
 
-        NVG.Path.rect vg ~x:(0.) ~y:(0.) ~w:(50.*.rect.sx) ~h:(50.*.rect.sy);
-        (*NVG.Path.circle vg ~cx:0. ~cy:0. ~r:(25.*.rect.sx);
-        let paint = NVG.Paint.box_gradient vg
+        Gv.Path.rect vg ~x:(0.) ~y:(0.) ~w:(50.*.rect.sx) ~h:(50.*.rect.sy);
+        (*Gv.Path.circle vg ~cx:0. ~cy:0. ~r:(25.*.rect.sx);
+        let paint = Gv.Paint.box_gradient vg
             ~x:0. ~y:0.
             ~w:(50.*.rect.sy)
             ~h:(50.*.rect.sx)
             ~r:10.
             ~f:20.
-            ~icol:NVG.Color.white
-            ~ocol:NVG.Color.black
+            ~icol:Gv.Color.white
+            ~ocol:Gv.Color.black
         in
-        NVG.set_fill_paint vg ~paint;
+        Gv.set_fill_paint vg ~paint;
         *)
 
-        NVG.set_fill_color vg 
-            ~color:NVG.Color.(rgba ~r:255 ~g:255 ~b:255 ~a:(rect.opacity *. 255. |> int_of_float));
-        NVG.fill vg;
-        NVG.stroke vg;
+        Gv.set_fill_color vg 
+            ~color:Gv.Color.(rgba ~r:255 ~g:255 ~b:255 ~a:(rect.opacity *. 255. |> int_of_float));
+        Gv.fill vg;
+        Gv.stroke vg;
 
-        NVG.end_frame vg;
+        Gv.end_frame vg;
 
         GLFW.swapBuffers ~window;
         GLFW.pollEvents();
