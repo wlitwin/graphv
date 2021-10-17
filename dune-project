@@ -98,3 +98,9 @@
   (graphv_gles2_native (= 0.1.1))
   (graphv_webgl (= 0.1.1))
   ))
+(package
+  (name graphv_anim)
+  (synopsis "A small animation library for graphv")
+  (depends
+    (ocaml (>= 4.08))
+    ))
