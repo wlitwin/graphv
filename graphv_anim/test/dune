@@ -1,0 +1,9 @@
+(library
+ (name graphv_anim_tests)
+ (inline_tests)
+ (preprocess (pps ppx_expect))
+ (libraries
+   graphv_anim
+   ppx_expect
+   )
+ )
