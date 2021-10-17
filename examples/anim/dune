@@ -4,5 +4,6 @@
       graphv_gles2_native
       glfw-ocaml
       tgls.tgles2
+      graphv_anim
   )
 )

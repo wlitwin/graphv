@@ -65,12 +65,6 @@ let rec invert_desc desc =
     }
 ;;
 
-let is_infinite = function
-    | None -> false
-    | Some Infinite -> true
-    | Some _ -> false
-;;
-
 let rec has_infinite desc =
     if desc.repeat = Infinite then true
     else (
@@ -271,21 +265,13 @@ module Driver = struct
     ;;
 
     let is_mirror : anim -> bool = function
-        | {direction = Some (Mirror _)} -> true
+        | {direction = Some (Mirror _); _} -> true
         | _ -> false
     ;;
 
     let has_repeat = function
         | Infinite -> true
         | (Count x) -> x >= 0
-    ;;
-
-    let check_and_decr_repeat rep =
-        match !rep with
-        | Infinite -> true
-        | Count x ->
-            rep := Count (x-1);
-            x > 1
     ;;
 
     let rec add_completer_if_needed (t : t) id offset (inf : bool) (anim : anim) =
@@ -448,7 +434,7 @@ module Driver = struct
                 false
             ) else true
         ) t.active;
-        t.queue <- PQ.filter (fun elem ->
+        t.queue <- PQ.filter ~f:(fun elem ->
             if elem.concrete.id = id then (
                 elem.concrete.complete id Canceled;
                 false
@@ -461,7 +447,7 @@ module Driver = struct
         t.time <- 0.;
         t.next_id <- 0;
         List.iter (fun anim -> anim.complete anim.id Canceled) t.active;
-        PQ.iter (fun elem -> elem.concrete.complete elem.concrete.id Canceled) t.queue;
+        PQ.iter ~f:(fun elem -> elem.concrete.complete elem.concrete.id Canceled) t.queue;
         t.active <- [];
         t.queue <- PQ.empty;
     ;;
