@@ -137,7 +137,8 @@ module Impl(P : Params) : Graphv_font.FontBackend.S
                 let b = Dom_html.pixel_get copy##.data (x*4+3 + y*4*w) in
                 Buffer.set data (x + x_off + (y + y_off)*width) b
             done
-        done
+        done;
+        print_endline "MAKING NEW BITMAP!";
     ;;
 
     let scale_for_mapping_em_to_pixels _font scale = 
