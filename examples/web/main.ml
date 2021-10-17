@@ -12,14 +12,14 @@ let blowup = ref false
 let raf vg data =
     let prev = ref 0. in
     let rec closure vg data now =
-        let ctx_webgl = NVG.ctx_webgl in
+        let ctx_webgl = Gv.ctx_webgl in
         ctx_webgl##clearColor 0.3 0.3 0.32 1.;
         ctx_webgl##clear (ctx_webgl##._COLOR_BUFFER_BIT_ lor ctx_webgl##._DEPTH_BUFFER_BIT_ lor ctx_webgl##._STENCIL_BUFFER_BIT_);
-        let w = NVG.canvas##.width in
-        let h = NVG.canvas##.height in
+        let w = Gv.canvas##.width in
+        let h = Gv.canvas##.height in
         ctx_webgl##viewport 0 0 w h;
 
-        NVG.begin_frame vg ~width:(float w) ~height:(float h) ~device_ratio:1.;
+        Gv.begin_frame vg ~width:(float w) ~height:(float h) ~device_ratio:1.;
 
         let now = now /. 1000. in
         let dt = now -. !prev in
@@ -30,7 +30,7 @@ let raf vg data =
         Demo.render_demo vg !mx !my (float w) (float h) now !blowup data;
         PerfGraph.render graph vg 5. 5.;
 
-        NVG.end_frame vg;
+        Gv.end_frame vg;
 
         Dom_html.window##requestAnimationFrame Js.(wrap_callback (closure vg data))
         |> ignore
@@ -38,20 +38,20 @@ let raf vg data =
     closure vg data
 ;;
 
-let load_data (vg : NVG.t) k =
+let load_data (vg : Gv.t) k =
     let img_canvas : Dom_html.canvasElement Js.t =
         Dom_html.document##createElement Js.(string "canvas")
         |> Js.Unsafe.coerce
     in
     let img_ctx = img_canvas##getContext Dom_html._2d_ in
 
-    let images = Array.make 12 NVG.Image.dummy in
+    let images = Array.make 12 Gv.Image.dummy in
 
     let count = ref 0 in
 
     let add_image idx w h data =
         let data = new%js Typed_array.uint8Array_fromBuffer (Js.Unsafe.coerce data##.data) in
-        let img = NVG.Image.from_buffer vg ~data ~flags:NVG.ImageFlags.no_flags
+        let img = Gv.Image.from_buffer vg ~data ~flags:Gv.ImageFlags.no_flags
             ~width:w
             ~height:h
         in
@@ -110,7 +110,7 @@ let scale_canvas_by_body (canvas : Dom_html.canvasElement Js.t) =
 ;;
 
 let _ =
-    let open NVG in
+    let open Gv in
     let w, h = Js.Unsafe.(coerce canvas)##.width, Js.Unsafe.(coerce canvas)##.height in
     Dom_html.window##.onresize := Dom_html.handler (fun _evt ->
         scale_canvas_by_body canvas;
@@ -139,16 +139,16 @@ let _ =
         end;
         if lst##.length > 1 then Js._true else Js._false
     )) Js._false |> ignore;
-    let vg = NVG.create ~flags:NVG.CreateFlags.(antialias lor stencil_strokes) ctx_webgl in
+    let vg = Gv.create ~flags:Gv.CreateFlags.(antialias lor stencil_strokes) ctx_webgl in
 
-    let _ = NVG.Text.create vg ~name:"mono" ~file:"mono" in
-    let _ = NVG.Text.create vg ~name:"icons" ~file:"icons" in
-    let _ = NVG.Text.create vg ~name:"arial" ~file:"arial" in
-    let _ = NVG.Text.create vg ~name:"sans" ~file:"Roboto" in
-    let _ = NVG.Text.create vg ~name:"sans-bold" ~file:"Roboto-Bold" in
-    let _ = NVG.Text.create vg ~name:"emoji" ~file:"Emoji" in
-    NVG.Text.add_fallback vg ~name:"sans" ~fallback:"emoji";
-    NVG.Text.add_fallback vg ~name:"sans-bold" ~fallback:"emoji";
+    let _ = Gv.Text.create vg ~name:"mono" ~file:"mono" in
+    let _ = Gv.Text.create vg ~name:"icons" ~file:"icons" in
+    let _ = Gv.Text.create vg ~name:"arial" ~file:"arial" in
+    let _ = Gv.Text.create vg ~name:"sans" ~file:"Roboto" in
+    let _ = Gv.Text.create vg ~name:"sans-bold" ~file:"Roboto-Bold" in
+    let _ = Gv.Text.create vg ~name:"emoji" ~file:"Emoji" in
+    Gv.Text.add_fallback vg ~name:"sans" ~fallback:"emoji";
+    Gv.Text.add_fallback vg ~name:"sans-bold" ~fallback:"emoji";
 
     Dom_html.document##.onkeyup := Dom.handler (fun (evt : Dom_html.keyboardEvent Js.t) ->
         if evt##.keyCode = 32 then (

@@ -4,7 +4,7 @@ let clampf a mn mx =
     else a
 ;;
 
-let is_black (c : NVG.Color.t) =
+let is_black (c : Gv.Color.t) =
     c.r = 0.0 
     && c.g = 0.0 
     && c.b = 0.0 
@@ -37,8 +37,8 @@ let to_utf8 (c : int) =
     Bytes.to_string seq
 ;;
 
-let draw_window (vg : NVG.t) (title : string) x y w h =
-    let open NVG in
+let draw_window (vg : Gv.t) (title : string) x y w h =
+    let open Gv in
     let open FloatOps in
 
     let corner_radius = 3.0 in
@@ -93,8 +93,8 @@ let draw_window (vg : NVG.t) (title : string) x y w h =
     restore vg;
 ;;
 
-let draw_eyes (vg : NVG.t) x y w h mx my t =
-    let open NVG in
+let draw_eyes (vg : Gv.t) x y w h mx my t =
+    let open Gv in
     let open FloatOps in
     let ex = w * 0.23 in
     let ey = h * 0.5 in
@@ -168,8 +168,8 @@ let draw_eyes (vg : NVG.t) x y w h mx my t =
 let icon_search = 0x1F50D
 let icon_circled_cross = 0x2716
 
-let draw_search_box (vg : NVG.t) text x y w h =
-    let open NVG in
+let draw_search_box (vg : Gv.t) text x y w h =
+    let open Gv in
     let open FloatOps in
 
     let corner_radius = h / 2. - 1. in
@@ -204,8 +204,8 @@ let draw_search_box (vg : NVG.t) text x y w h =
 
 let icon_chevron_right = 0xE75E
 
-let draw_drop_down (vg : NVG.t) text x y w h =
-    let open NVG in
+let draw_drop_down (vg : Gv.t) text x y w h =
+    let open Gv in
     let open FloatOps in
 
     let corner_radius = 4. in
@@ -237,8 +237,8 @@ let draw_drop_down (vg : NVG.t) text x y w h =
     Text.text vg ~x:(x+w-h*0.5) ~y:(y+h*0.5) (to_utf8 icon_chevron_right);
 ;;
 
-let draw_label (vg : NVG.t) text x y _w h =
-    let open NVG in
+let draw_label (vg : Gv.t) text x y _w h =
+    let open Gv in
     let open FloatOps in
     Text.set_size vg ~size:15.;
     Text.set_font_face vg ~name:"sans";
@@ -248,8 +248,8 @@ let draw_label (vg : NVG.t) text x y _w h =
     Text.text vg ~x ~y:(y+h*0.5) text;
 ;;
 
-let draw_edit_box_base (vg : NVG.t) x y w h =
-    let open NVG in
+let draw_edit_box_base (vg : Gv.t) x y w h =
+    let open Gv in
     let open FloatOps in
 
     let bg = Paint.box_gradient vg ~x:(x+1.) ~y:(y+1.+1.5) ~w:(w-2.) ~h:(h-2.)
@@ -269,8 +269,8 @@ let draw_edit_box_base (vg : NVG.t) x y w h =
     stroke vg;
 ;;
 
-let draw_edit_box (vg : NVG.t) text x y w h =
-    let open NVG in
+let draw_edit_box (vg : Gv.t) text x y w h =
+    let open Gv in
     let open FloatOps in
 
     draw_edit_box_base vg x y w h;
@@ -282,8 +282,8 @@ let draw_edit_box (vg : NVG.t) text x y w h =
     Text.text vg ~x:(x+h*0.3) ~y:(y+h*0.5) text;
 ;;
 
-let draw_edit_box_num (vg : NVG.t) text units x y w h =
-    let open NVG in
+let draw_edit_box_num (vg : Gv.t) text units x y w h =
+    let open Gv in
     let open FloatOps in
 
     draw_edit_box_base vg x y w h;
@@ -303,8 +303,8 @@ let draw_edit_box_num (vg : NVG.t) text units x y w h =
     Text.text vg ~x:(x+w-uw.advance-h*0.5) ~y:(y+h*0.5) text;
 ;;
 
-let draw_button (vg : NVG.t) preicon text x y w h col =
-    let open NVG in
+let draw_button (vg : Gv.t) preicon text x y w h col =
+    let open Gv in
     let open FloatOps in
 
     let corner_radius = 4. in
@@ -355,8 +355,8 @@ let draw_button (vg : NVG.t) preicon text x y w h col =
 
 let icon_check = "\xe2\x9c\x93"
 
-let draw_checkbox (vg : NVG.t) text x y _w h =
-    let open NVG in
+let draw_checkbox (vg : Gv.t) text x y _w h =
+    let open Gv in
     let open FloatOps in
 
     Text.set_size vg ~size:15.;
@@ -382,8 +382,8 @@ let draw_checkbox (vg : NVG.t) text x y _w h =
     Text.text vg ~x:(x+9.+2.) ~y:(y+h*0.5) (icon_check);
 ;;
 
-let draw_slider (vg : NVG.t) pos x y w h =
-    let open NVG in
+let draw_slider (vg : Gv.t) pos x y w h =
+    let open Gv in
     let open FloatOps in
 
     let cy = y + (h*0.5) in
@@ -432,8 +432,8 @@ let draw_slider (vg : NVG.t) pos x y w h =
     restore vg;
 ;;
 
-let draw_graph (vg : NVG.t) x y w h t =
-    let open NVG in
+let draw_graph (vg : Gv.t) x y w h t =
+    let open Gv in
     let open FloatOps in
     let samples = Array.make 6 0. in
 
@@ -539,8 +539,8 @@ let draw_graph (vg : NVG.t) x y w h t =
     set_stroke_width vg ~width:1.
 ;;
 
-let draw_lines (vg : NVG.t) x y w t =
-    let open NVG in
+let draw_lines (vg : Gv.t) x y w t =
+    let open Gv in
     let open FloatOps in
 
     let pad = 5. in
@@ -558,8 +558,8 @@ let draw_lines (vg : NVG.t) x y w t =
     pts.(6) <- s*0.25 + (Float.cos (~-.t*0.3))*s*0.5;
     pts.(7) <- (Float.sin (~-.t*0.3))*s*0.5;
 
-    let joins = NVG.LineJoin.[|Miter; Round; Bevel|] in
-    let caps = NVG.LineCap.[|Butt; Round; Square|] in
+    let joins = Gv.LineJoin.[|Miter; Round; Bevel|] in
+    let caps = Gv.LineCap.[|Butt; Round; Square|] in
 
     for i=0 to 2 do
         for j=0 to 2 do
@@ -595,8 +595,8 @@ let draw_lines (vg : NVG.t) x y w t =
     restore vg;
 ;;
 
-let draw_widths (vg : NVG.t) x y width =
-    let open NVG in
+let draw_widths (vg : Gv.t) x y width =
+    let open Gv in
     let open FloatOps in
 
     save vg;
@@ -617,10 +617,10 @@ let draw_widths (vg : NVG.t) x y width =
     restore vg;
 ;;
 
-let draw_caps (vg : NVG.t) x y width =
-    let open NVG in
+let draw_caps (vg : Gv.t) x y width =
+    let open Gv in
     let open FloatOps in
-    let caps = NVG.LineCap.[|Butt; Round; Square|] in
+    let caps = Gv.LineCap.[|Butt; Round; Square|] in
     let line_width = 8. in
 
     save vg;
@@ -648,8 +648,8 @@ let draw_caps (vg : NVG.t) x y width =
     restore vg;
 ;;
 
-let draw_color_wheel (vg : NVG.t) x y w h t =
-    let open NVG in
+let draw_color_wheel (vg : Gv.t) x y w h t =
+    let open Gv in
     let open FloatOps in
     let hue = Float.sin (t * 0.12) in
 
@@ -767,8 +767,8 @@ let draw_color_wheel (vg : NVG.t) x y w h t =
     restore vg;
 ;;
 
-let draw_scissor (vg : NVG.t) x y t =
-    let open NVG in
+let draw_scissor (vg : Gv.t) x y t =
+    let open Gv in
 
     save vg;
 
@@ -800,8 +800,8 @@ let draw_scissor (vg : NVG.t) x y t =
     restore vg;
 ;;
 
-let draw_spinner (vg : NVG.t) cx cy r t =
-    let open NVG in
+let draw_spinner (vg : Gv.t) cx cy r t =
+    let open Gv in
     let open FloatOps in
     
     let a0 = 0.0 + t*6. in
@@ -831,11 +831,11 @@ let draw_spinner (vg : NVG.t) cx cy r t =
 ;;
 
 type data = {
-    images : NVG.Image.image array;
+    images : Gv.Image.image array;
 }
 
-let draw_thumbnails (vg : NVG.t) x y w h images t =
-    let open NVG in
+let draw_thumbnails (vg : Gv.t) x y w h images t =
+    let open Gv in
     let open FloatOps in
 
     let corner_radius = 3. in
@@ -986,11 +986,11 @@ let draw_thumbnails (vg : NVG.t) x y w h images t =
 let text = "This is longer chunk of text.\n  \n  Would have used lorem ipsum but she    was busy jumping over the lazy dog with the fox and all the men who came to the aid of the party.🎉" 
 
 let hover_text = "Hover your mouse over the text to see calculated caret position" 
-let lines = NVG.Text.make_empty_rows 3
-let glyphs = Array.make (String.length text) NVG.Text.empty_glyph_position
+let lines = Gv.Text.make_empty_rows 3
+let glyphs = Array.make (String.length text) Gv.Text.empty_glyph_position
 
-let draw_paragraph (vg : NVG.t) x y width _height mx my =
-    let open NVG in
+let draw_paragraph (vg : Gv.t) x y width _height mx my =
+    let open Gv in
     let open FloatOps in
 
 
@@ -1120,11 +1120,11 @@ let draw_paragraph (vg : NVG.t) x y width _height mx my =
 let icon_login = 0xE740
 let icon_trash = 0xE729
 
-let render_demo (vg : NVG.t) mx my width height t blowup data =
-    let open NVG in
+let render_demo (vg : Gv.t) mx my width height t blowup data =
+    let open Gv in
     let open FloatOps in
     draw_eyes vg (width - 250.) 50. 150. 100. mx my t;
-    draw_paragraph vg (width - 450.) 50. 150. 100. mx my;
+    (*draw_paragraph vg (width - 450.) 50. 150. 100. mx my;*)
     draw_graph vg 0. (height/2.) width (height/2.) t;
     draw_color_wheel vg (width - 300.) (height - 300.) 250. 250. t;
 
@@ -1138,11 +1138,11 @@ let render_demo (vg : NVG.t) mx my width height t blowup data =
 
     draw_scissor vg 50. (height - 80.) t;
 
-    NVG.save vg;
+    Gv.save vg;
 
     if blowup then (
-        NVG.Transform.rotate vg ~angle:(Float.sin (t*0.3) * 5. / 180. * Float.pi);
-        NVG.Transform.scale vg ~x:2. ~y:2.;
+        Gv.Transform.rotate vg ~angle:(Float.sin (t*0.3) * 5. / 180. * Float.pi);
+        Gv.Transform.scale vg ~x:2. ~y:2.;
     );
 
     draw_window vg "Widgets 'n stuff" 50. 50. 300. 400.;
@@ -1179,6 +1179,6 @@ let render_demo (vg : NVG.t) mx my width height t blowup data =
     (* Thumbnails box *)
     draw_thumbnails vg 365. (popy - 30.) 160. 300. data.images t;
 
-    NVG.restore vg;
+    Gv.restore vg;
 ;;
 
