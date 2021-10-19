@@ -585,48 +585,60 @@ let%expect_test "Propagate ease - serial" =
     let anim = serial ~ease:((+.) 0.1) ~complete:(complete "Serial") [
         basic 1. "Basic 1";
     ] in
-    run_simple_test anim [0.5];
+    run_simple_test anim 
+        ~expected_pending:1
+        ~expected_active:1
+        [0.5];
     [%expect {|
       Starting 0
       Basic 1 Update 0.60
-      Active 1 = 0
-      Pending 1 = 0 |}]
+      Active 1 = 1
+      Pending 1 = 1 |}]
 ;;
 
 let%expect_test "Propagate direction - serial" =
     let anim = serial ~direction:Backward ~complete:(complete "Serial") [
         basic 1. "Basic 1";
     ] in
-    run_simple_test anim [0.25];
+    run_simple_test anim 
+        ~expected_pending:1
+        ~expected_active:1
+        [0.25];
     [%expect {|
       Starting 0
       Basic 1 Update 0.75
-      Active 1 = 0
-      Pending 1 = 0 |}]
+      Active 1 = 1
+      Pending 1 = 1 |}]
 ;;
 
 let%expect_test "Propagate ease - parallel" =
     let anim = parallel ~ease:((+.) 0.1) ~complete:(complete "Serial") [
         basic 1. "Basic 1";
     ] in
-    run_simple_test anim [0.5];
+    run_simple_test anim 
+        ~expected_pending:1
+        ~expected_active:1
+        [0.5];
     [%expect {|
       Starting 0
       Basic 1 Update 0.60
-      Active 1 = 0
-      Pending 1 = 0 |}]
+      Active 1 = 1
+      Pending 1 = 1 |}]
 ;;
 
 let%expect_test "Propagate direction - parallel" =
     let anim = parallel ~direction:Backward ~complete:(complete "Serial") [
         basic 1. "Basic 1";
     ] in
-    run_simple_test anim [0.25];
+    run_simple_test anim 
+        ~expected_pending:1
+        ~expected_active:1
+        [0.25];
     [%expect {|
       Starting 0
       Basic 1 Update 0.75
-      Active 1 = 0
-      Pending 1 = 0 |}]
+      Active 1 = 1
+      Pending 1 = 1 |}]
 ;;
 
 let%expect_test "Cancel all" =
