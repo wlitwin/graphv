@@ -638,5 +638,29 @@ let%expect_test "Cancel all" =
     Driver.tick driver 0.5;
     Driver.cancel_all driver;
     print_end_results driver;
-    [%expect {||}]
+    [%expect {|
+      Active 0 = 0
+      Pending 10 = 10
+      Basic 0 Update 0.50
+      Basic 1 Update 0.50
+      Basic 2 Update 0.50
+      Basic 3 Update 0.50
+      Basic 4 Update 0.50
+      Basic 5 Update 0.50
+      Basic 6 Update 0.50
+      Basic 7 Update 0.50
+      Basic 8 Update 0.50
+      Basic 9 Update 0.50
+      Basic 0 Complete 0 Canceled
+      Basic 1 Complete 1 Canceled
+      Basic 2 Complete 2 Canceled
+      Basic 3 Complete 3 Canceled
+      Basic 4 Complete 4 Canceled
+      Basic 5 Complete 5 Canceled
+      Basic 6 Complete 6 Canceled
+      Basic 7 Complete 7 Canceled
+      Basic 8 Complete 8 Canceled
+      Basic 9 Complete 9 Canceled
+      Active 0 = 0
+      Pending 0 = 0 |}]
 ;;
