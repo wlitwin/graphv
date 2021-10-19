@@ -15,7 +15,7 @@ let complete str id status =
 
 let print_end_results ?(expected_active=0) ?(expected_pending=0) (t : Driver.t) =
     Printf.printf "Active %d = %d\n%!" (Driver.active_count t) expected_active;
-    Printf.printf "Pending %d = %d\n%!" (Driver.active_count t) expected_pending;
+    Printf.printf "Pending %d = %d\n%!" (Driver.pending_count t) expected_pending;
 ;;
 
 let run_simple_test ?expected_active ?expected_pending (anim : anim) (ticks : float list) =
@@ -24,7 +24,7 @@ let run_simple_test ?expected_active ?expected_pending (anim : anim) (ticks : fl
     List.iter (fun tick ->
         Driver.tick driver tick;
     ) ticks;
-    print_end_results ?expected_active ?expected_pending driver 
+    print_end_results ?expected_active ?expected_pending driver
 ;;
 
 let basic time prefix =
@@ -32,7 +32,7 @@ let basic time prefix =
         (update (prefix ^ " Update"))
 ;;
 
-let%expect_test "Create 1s no repeat" = 
+let%expect_test "Create 1s no repeat" =
     let anim = create 1. ~complete:(complete "Complete") (update "Update") in
     run_simple_test anim [1.];
     [%expect {|
@@ -45,7 +45,7 @@ let%expect_test "Create 1s no repeat" =
 
 let%expect_test "Create serial 1s no repeat one animation" =
     let anim = serial
-        ~complete:(complete "Serial Complete") 
+        ~complete:(complete "Serial Complete")
     [
         basic 1. "Basic"
     ] in
@@ -133,7 +133,7 @@ let%expect_test "Multiple nested serial" =
 ;;
 
 let%expect_test "Basic repeat" =
-    let anim = create 1. 
+    let anim = create 1.
         ~repeat:(Count 2)
         ~complete:(complete "Basic complete")
         (update "Basic update")
@@ -176,7 +176,7 @@ let%expect_test "Basic backward repeat" =
         (update "Basic update")
     in
     run_simple_test anim [
-        0.; 0.25; 0.25; 0.25; 0.25; 
+        0.; 0.25; 0.25; 0.25; 0.25;
         0.25; 0.25; 0.25; 0.25; 0.25;
     ];
     [%expect {|
@@ -326,7 +326,7 @@ let%expect_test "Basic infinite" =
         ~complete:(complete "Basic complete")
         (update "Basic update")
     in
-    run_simple_test anim [
+    run_simple_test ~expected_pending:1 anim [
         0.; 0.25; 0.25; 0.25; 0.25;
         0.; 0.25; 0.25; 0.25; 0.25;
         0.; 0.25; 0.25; 0.25; 0.25;
@@ -359,7 +359,7 @@ let%expect_test "Basic infinite" =
       Basic update 1.00
       Basic complete 0 Done
       Active 0 = 0
-      Pending 0 = 0 |}]
+      Pending 1 = 1 |}]
 ;;
 
 let%expect_test "Simple parallel" =
@@ -436,7 +436,8 @@ let%expect_test "Serial culls infinite" =
         create 1. ~repeat:Infinite ~complete:(complete "Basic 2") (update "Basic 2");
         create 1. ~complete:(complete "Basic 3") (update "Basic 3");
     ] in
-    run_simple_test anim 
+    run_simple_test anim
+        ~expected_pending:1
         [0.5; 0.5; 0.5; 0.5];
     [%expect {|
       Starting 0
@@ -448,7 +449,7 @@ let%expect_test "Serial culls infinite" =
       Basic 2 1.00
       Basic 2 0 Done
       Active 0 = 0
-      Pending 0 = 0 |}]
+      Pending 1 = 1 |}]
 ;;
 ;;
 
@@ -458,7 +459,8 @@ let%expect_test "Parallel does not cull infinite" =
         create 1. ~repeat:Infinite ~complete:(complete "Basic 2") (update "Basic 2");
         create 1. ~complete:(complete "Basic 3") (update "Basic 3");
     ] in
-    run_simple_test anim 
+    run_simple_test anim
+        ~expected_pending:1
         [0.5; 0.5; 0.5; 0.5; 0.5; 0.5];
     [%expect {|
       Starting 0
@@ -478,5 +480,163 @@ let%expect_test "Parallel does not cull infinite" =
       Basic 2 1.00
       Basic 2 0 Done
       Active 0 = 0
+      Pending 1 = 1 |}]
+;;
+
+let%expect_test "Cancel anim" =
+    let anim1 = basic 1. "Basic 1" in
+    let anim2 = create ~delay:1. 1. ~complete:(complete "Basic 2") (update "Basic 2") in
+    let driver = Driver.create() in
+    print_end_results  driver;
+    let id1 = Driver.start driver anim1 in
+    let id2 = Driver.start driver anim2 in
+    Printf.printf "ID1 = %d\n%!" id1;
+    Printf.printf "ID2 = %d\n%!" id2;
+    Driver.tick driver 0.5;
+    Driver.cancel driver id2;
+    print_end_results ~expected_active:1 ~expected_pending:1 driver;
+    Driver.tick driver 0.5;
+    Driver.tick driver 0.5;
+    print_end_results ~expected_active:0 ~expected_pending:0 driver;
+    [%expect {|
+      Active 0 = 0
+      Pending 0 = 0
+      ID1 = 0
+      ID2 = 1
+      Basic 1 Update 0.50
+      Basic 2 1 Canceled
+      Active 1 = 1
+      Pending 0 = 1
+      Basic 1 Update 1.00
+      Basic 1 Complete 0 Done
+      Active 0 = 0
       Pending 0 = 0 |}]
+;;
+
+let%expect_test "Cancel serial" =
+    let anim = serial ~complete:(complete "Serial") [
+        basic 1. "Basic 1";
+        basic 1. "Basic 2";
+    ] in
+    let driver = Driver.create() in
+    let id = Driver.start driver anim in
+    Driver.tick driver 0.5;
+    Driver.cancel driver id;
+    Driver.tick driver 0.5;
+    print_end_results driver;
+    [%expect {|
+      Basic 1 Update 0.50
+      Basic 1 Complete 0 Canceled
+      Basic 2 Complete 0 Canceled
+      Serial 0 Canceled
+      Active 0 = 0
+      Pending 0 = 0 |}]
+;;
+
+let%expect_test "Cancel parallel" =
+    let anim = serial ~complete:(complete "Parallel") [
+        basic 1. "Basic 1";
+        basic 1. "Basic 2";
+    ] in
+    let driver = Driver.create() in
+    let id = Driver.start driver anim in
+    print_end_results ~expected_pending:2 ~expected_active:0 driver;
+    Driver.tick driver 0.5;
+    Driver.cancel driver id;
+    Driver.tick driver 0.5;
+    print_end_results driver;
+    [%expect {|
+      Active 0 = 0
+      Pending 3 = 2
+      Basic 1 Update 0.50
+      Basic 1 Complete 0 Canceled
+      Basic 2 Complete 0 Canceled
+      Parallel 0 Canceled
+      Active 0 = 0
+      Pending 0 = 0 |}]
+;;
+
+let%expect_test "Filter infinite serial nested" =
+    let anim =
+        serial ~complete:(complete "Outer Serial") [
+            basic 1. "Basic 0";
+            serial ~complete:(complete "Inner Serial") [
+                basic 1. "Basic 1";
+                basic 1. "Basic 2";
+                create 1. ~repeat:Infinite ~complete:(complete "Basic 3") (update "Basic 3");
+                basic 1. "Basic 4";
+                basic 1. "Basic 5";
+        ]
+    ] in
+    let driver = Driver.create() in
+    Driver.start_ driver anim;
+    print_end_results ~expected_pending:4 ~expected_active:0 driver;
+    Driver.tick driver 0.5;
+    print_end_results ~expected_pending:3 ~expected_active:1 driver;
+    [%expect {|
+      Active 0 = 0
+      Pending 4 = 4
+      Basic 0 Update 0.50
+      Active 1 = 1
+      Pending 3 = 3 |}]
+;;
+
+let%expect_test "Propagate ease - serial" =
+    let anim = serial ~ease:((+.) 0.1) ~complete:(complete "Serial") [
+        basic 1. "Basic 1";
+    ] in
+    run_simple_test anim [0.5];
+    [%expect {|
+      Starting 0
+      Basic 1 Update 0.60
+      Active 1 = 0
+      Pending 1 = 0 |}]
+;;
+
+let%expect_test "Propagate direction - serial" =
+    let anim = serial ~direction:Backward ~complete:(complete "Serial") [
+        basic 1. "Basic 1";
+    ] in
+    run_simple_test anim [0.25];
+    [%expect {|
+      Starting 0
+      Basic 1 Update 0.75
+      Active 1 = 0
+      Pending 1 = 0 |}]
+;;
+
+let%expect_test "Propagate ease - parallel" =
+    let anim = parallel ~ease:((+.) 0.1) ~complete:(complete "Serial") [
+        basic 1. "Basic 1";
+    ] in
+    run_simple_test anim [0.5];
+    [%expect {|
+      Starting 0
+      Basic 1 Update 0.60
+      Active 1 = 0
+      Pending 1 = 0 |}]
+;;
+
+let%expect_test "Propagate direction - parallel" =
+    let anim = parallel ~direction:Backward ~complete:(complete "Serial") [
+        basic 1. "Basic 1";
+    ] in
+    run_simple_test anim [0.25];
+    [%expect {|
+      Starting 0
+      Basic 1 Update 0.75
+      Active 1 = 0
+      Pending 1 = 0 |}]
+;;
+
+let%expect_test "Cancel all" =
+    let driver = Driver.create() in
+    for i=0 to 9 do
+        Driver.start_ driver (basic 1. (Printf.sprintf "Basic %d" i))
+    done;
+    print_end_results ~expected_pending:10 driver;
+    Driver.tick driver 0.5;
+    Driver.cancel_all driver;
+    print_end_results driver;
+    [%expect {||}]
 ;;

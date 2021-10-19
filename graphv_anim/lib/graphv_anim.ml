@@ -79,7 +79,7 @@ let rec has_infinite desc =
 let has_infinite_lst =
     List.exists has_infinite
 
-let filter_infinite_serial =
+let filter_infinite_serial lst =
     let seen = ref false in
     List.filter (fun desc ->
         if !seen then false
@@ -87,7 +87,7 @@ let filter_infinite_serial =
             seen := has_infinite desc;
             true (* keep the first infinite *)
         )
-    )
+    ) lst
 ;;
 
 let mk_desc
@@ -125,6 +125,23 @@ let create
     mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration update Leaf
 ;;
 
+let propagate_ease lst = function
+    | None -> lst
+    | Some ease ->
+        let rec replace = function
+            | { ease=None; _ } as r ->
+                {r with
+                    ease=Some ease;
+                    kind = match r.kind with
+                         | Leaf -> Leaf
+                         | Serial (b, lst) -> Serial (b, List.map replace lst)
+                         | Parallel (b, lst) -> Parallel (b, List.map replace lst)
+                }
+            | anim -> anim
+        in
+        List.map replace lst
+;;
+
 let propagate_direction lst = function
     | None -> lst
     | Some direction ->
@@ -158,6 +175,7 @@ let serial
     ) 0. lst in
     (* Propagate our repeat to children if not none *)
     let lst = propagate_direction lst direction in
+    let lst = propagate_ease lst ease in
     mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore (Serial (inf, lst))
 ;;
 
@@ -177,6 +195,7 @@ let parallel
         ) Float.min_float lst
     in
     let lst = propagate_direction lst direction in
+    let lst = propagate_ease lst ease in
     mk_desc ?delay ?ease ?complete ?repeat ?repeat_delay ?direction duration ignore (Parallel (inf, lst))
 ;;
 
