@@ -1,0 +1,14 @@
+(executable
+ (modes byte js)
+ (name main)
+ (js_of_ocaml (flags --pretty --opt 3))
+ (ocamlc_flags (:standard))
+ (preprocess (pps js_of_ocaml-ppx))
+ (libraries 
+ js_of_ocaml
+ graphv_webgl2
+ ))
+
+(alias
+  (name default)
+  (deps index.html))
