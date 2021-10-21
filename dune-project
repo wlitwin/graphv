@@ -55,7 +55,7 @@
   (conf-gles2 (>= 1))
   (graphv_core_lib (= 0.1.1))))
 (package
- (name graphv_gles3_native)
+ (name graphv_gles3_native_impl)
  (synopsis
   "Native GLES3 implementation of the backend renderer for the Graphv library")
  (depends
@@ -72,7 +72,7 @@
   (js_of_ocaml (>= 3.9.0))
   (graphv_core_lib (= 0.1.1))))
 (package
- (name graphv_webgl2)
+ (name graphv_webgl2_impl)
  (synopsis
   "WebGL implementation of the backend renderer for the Graphv library")
  (depends
@@ -98,6 +98,16 @@
   (graphv_core (= 0.1.1))
   ))
 (package
+ (name graphv_gles3_native)
+ (synopsis "Full version of the Graphv library based on native GLES2")
+ (depends
+  (ppx_expect (and (>= v0.14.1) :with-test))
+  (graphv_font (= 0.1.1))
+  (graphv_font_stb_truetype (= 0.1.1))
+  (graphv_gles3_native_impl (= 0.1.1))
+  (graphv_core (= 0.1.1))
+  ))
+(package
  (name graphv_webgl)
  (synopsis "Full version of the Graphv library based on WebGL")
  (depends
@@ -106,6 +116,15 @@
   (graphv_font_js (= 0.1.1))
   (graphv_webgl_impl (= 0.1.1))
   (graphv_gles2 (= 0.1.1))
+  (graphv_core (= 0.1.1))))
+(package
+ (name graphv_webgl2)
+ (synopsis "Full version of the Graphv library based on WebGL")
+ (depends
+  (ppx_expect (and (>= v0.14.1) :with-test))
+  (graphv_font (= 0.1.1))
+  (graphv_font_js (= 0.1.1))
+  (graphv_webgl2_impl (= 0.1.1))
   (graphv_core (= 0.1.1))))
 (package
  (name graphv)

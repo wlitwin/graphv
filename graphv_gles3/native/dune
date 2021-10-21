@@ -1,5 +1,5 @@
 (library
- (public_name graphv_gles3_native)
+ (public_name graphv_gles3_native_impl)
  (foreign_stubs (language c) 
     (names gles3_stubs)
     (flags :standard -O2)
@@ -17,7 +17,7 @@
   )
 
 (rule
-  (target graphv_gles3_native.ml)
+  (target graphv_gles3_native_impl.ml)
   (deps ../common/graphv_gles3.ml)
   (action
     (copy %{deps} %{target}))

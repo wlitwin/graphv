@@ -1,5 +1,5 @@
 (library
- (public_name graphv_webgl2)
+ (public_name graphv_webgl2_impl)
  (preprocess (pps js_of_ocaml-ppx))
  (libraries js_of_ocaml graphv_core_lib)
 )
@@ -12,7 +12,7 @@
   )
 
 (rule
-  (target graphv_webgl2.ml)
+  (target graphv_webgl2_impl.ml)
   (deps ../common/graphv_gles3.ml)
   (action
     (copy %{deps} %{target}))

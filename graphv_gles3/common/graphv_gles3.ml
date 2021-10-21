@@ -12,6 +12,9 @@ module Matrix = Graphv_core_lib.Matrix
 module FloatOps = Graphv_core_lib.FloatOps
 module Bounds = Graphv_core_lib.Bounds
 module VertexBuffer = Gl.VertexBuffer
+module Buffer = Buffer
+module Path = Gl.Path
+module Dyn = Gl.Dyn
 
 type gl = Gl.t
 
