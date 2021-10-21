@@ -3,3 +3,17 @@
  (preprocess (pps js_of_ocaml-ppx))
  (libraries js_of_ocaml graphv_core_lib)
 )
+
+(rule
+  (target fragUniforms.ml)
+  (deps ../common/fragUniforms.ml)
+  (action
+   (copy %{deps} %{target}))
+  )
+
+(rule
+  (target graphv_webgl2.ml)
+  (deps ../common/graphv_gles3.ml)
+  (action
+    (copy %{deps} %{target}))
+  )

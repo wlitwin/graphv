@@ -1,49 +1,11 @@
 open Js_of_ocaml
-open! Graphv_core_lib
+
+module Winding = Graphv_core_lib.Winding
+module Utils = Graphv_core_lib.Utils
 
 type t = WebGL.renderingContext Js.t
 type arg = WebGL.renderingContext Js.t
 let create (t : t) : t = t
-
-module Buffer = struct
-    module UByte = struct
-        type t = Typed_array.uint8Array Js.t
-
-        let set = Typed_array.set
-        let get = Typed_array.unsafe_get
-        let [@inline always] length (t : t) : int = t##.length
-        let [@inline always] sub (t : t) (start : int) (len : int) : t =
-            t##subarray start len
-
-        let create size =
-            new%js Typed_array.uint8Array size
-
-        let empty = create 0
-    end
-
-    module Float = struct
-        type t = Typed_array.float32Array Js.t
-
-        let set : t -> int -> float -> unit = Typed_array.set
-        let get : t -> int -> float  = Typed_array.unsafe_get
-        let [@inline always] length (t : t) : int = t##.length
-
-        let fill (t : t) (value : float) =
-            let len : int = Js.Unsafe.get t "length" - 1 in
-            for i=0 to len do
-                Typed_array.set t i value
-            done
-
-        let blit ~(src : t) ~(s_off : int) ~(dst : t) ~(d_off : int) ~(len : int) : unit =
-            let len : int = len-1 in
-            for i=0 to len do
-                Typed_array.set dst (d_off+i) (Typed_array.unsafe_get src (s_off+i))
-            done
-        ;;
-
-        let create size = new%js Typed_array.float32Array size
-    end
-end
 
 module Dyn = struct
     type underlying = Buffer.Float.t
