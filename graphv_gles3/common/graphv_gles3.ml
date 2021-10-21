@@ -11,11 +11,13 @@ module Scissor = Graphv_core_lib.Scissor
 module Matrix = Graphv_core_lib.Matrix
 module FloatOps = Graphv_core_lib.FloatOps
 module Bounds = Graphv_core_lib.Bounds
-module VertexBuffer = Gl.VertexBuffer
+                  (*
+module VertexBuffer = VertexBuffer
 module Buffer = Buffer
 module Path = Gl.Path
 module Dyn = Gl.Dyn
 
+                     *)
 type gl = Gl.t
 
 module Texture = struct
@@ -184,6 +186,8 @@ type t = {
     shader : Gl.program;
     locs : Gl.locs;
     vert_buf : Gl.buffer_id;
+    frag_buf : Gl.buffer_id;
+    frag_size : int;
     mutable edge_antialias : bool;
     (* textures *)
     textures : (int, Texture.t) Hashtbl.t;
@@ -334,17 +338,25 @@ let create_texture t ~type_ ~w ~h ~flags ~data =
 let create ~(flags : CreateFlags.t) impl = 
     check_error "init";
 
-    (* TODO - check for anti-alias *)
     match Gl.create_program impl with
     | None -> None
     | Some (shader, locs) ->
         check_error "create done";
+
+        Gl.uniform_block_binding impl shader locs.frag 0;
+        let align = Gl.get_integer impl Gl.uniform_buffer_offset_alignment in
+        let frag_size = FragUniforms.count * 4 in
+        let frag_size = frag_size + align - (frag_size mod align) in
+
         Gl.finish impl;
+
         let t = {
             impl;
             shader;
             locs;
+            frag_size;
             vert_buf = locs.vert_buf;
+            frag_buf = locs.frag_buf;
             stencil_mask = 0;
             edge_antialias = CreateFlags.has flags ~flag:CreateFlags.antialias;
             (* textures *)
@@ -430,7 +442,7 @@ let update_texture t ~image ~x:_ ~y ~w:_ ~h ~data =
         true
 ;;
 
-let max_vertex_count (paths : Gl.Path.t DynArray.t) =
+let max_vertex_count (paths : Path.t DynArray.t) =
     let count = ref 0 in
     DynArray.iter paths ~f:(fun path ->
         let fill = VertexBuffer.Sub.(num_verts path.fill) in
@@ -527,7 +539,7 @@ let convert_paint t frag (paint : Paint.t) (scissor : Scissor.t) width fringe st
         invxform.m4 invxform.m5 1. 0.;
 ;;
 
-let render_fill t (paint : Paint.t) composite_op scissor fringe (bounds : Bounds.t) (paths : Gl.Path.t DynArray.t) (verts : VertexBuffer.t) =
+let render_fill t (paint : Paint.t) composite_op scissor fringe (bounds : Bounds.t) (paths : Path.t DynArray.t) (verts : VertexBuffer.t) =
     let call = DynArray.steal t.calls Call.empty in
     Call.reset call Call.Fill;
 
@@ -607,7 +619,7 @@ let render_fill t (paint : Paint.t) composite_op scissor fringe (bounds : Bounds
     )
 ;;
 
-let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (paths : Gl.Path.t DynArray.t) =
+let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (paths : Path.t DynArray.t) =
     let call = DynArray.steal t.calls Call.empty in
     Call.reset call Call.Stroke;
 
@@ -636,8 +648,8 @@ let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (
     )
 ;;
 
-let set_uniforms t uniforms image =
-    Gl.uniform4fv t.impl t.locs.frag (FragUniforms.as_array uniforms);
+let set_uniforms t offset image =
+    Gl.bind_buffer_range t.impl Gl.uniform_buffer 0 t.frag_buf offset (FragUniforms.count*4);
     
     let tex = 
         if Int.(not (equal image 0)) then (
@@ -666,14 +678,14 @@ let stroke t (call : Call.t) =
         (* Fill the stroke base without overlap *)
         stencil_func t Gl.equal 0x0 0xff;
         Gl.stencil_op t.impl Gl.keep Gl.keep Gl.incr;
-        set_uniforms t call.uniforms2 call.image;
+        set_uniforms t (call.uniform_offset + t.frag_size) call.image;
         check_error "stroke fill 0";
         DynArray.iter call.paths ~f:(fun path ->
             Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count;
         );
 
         (* Draw anti-aliased pixels *)
-        set_uniforms t call.uniforms call.image;
+        set_uniforms t call.uniform_offset call.image;
         stencil_func t Gl.equal 0x0 0xff;
         Gl.stencil_op t.impl Gl.keep Gl.keep Gl.keep;
         DynArray.iter call.paths ~f:(fun path ->
@@ -692,7 +704,7 @@ let stroke t (call : Call.t) =
 
         Gl.disable t.impl Gl.stencil_test;
     ) else (
-        set_uniforms t call.uniforms call.image;
+        set_uniforms t call.uniform_offset call.image;
         check_error "stroke fill";
         DynArray.iter call.paths ~f:(fun path ->
             Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count
@@ -709,7 +721,7 @@ let fill t (call : Call.t) =
     Gl.color_mask t.impl false false false false;
 
     (* Set bindpoint for solid loc *)
-    set_uniforms t call.uniforms 0;
+    set_uniforms t call.uniform_offset 0;
     check_error "fill simple";
 
     Gl.stencil_op_separate t.impl Gl.front Gl.keep Gl.keep Gl.incr_wrap;
@@ -723,7 +735,7 @@ let fill t (call : Call.t) =
     (* Draw anti-aliased pixels *)
     Gl.color_mask t.impl true true true true;
 
-    set_uniforms t call.uniforms2 call.image;
+    set_uniforms t (call.uniform_offset + t.frag_size) call.image;
     check_error "fill fill";
 
     if CreateFlags.(has t.flags ~flag:antialias) then (
@@ -745,7 +757,7 @@ let fill t (call : Call.t) =
 ;;
 
 let convex_fill t (call : Call.t) =
-    set_uniforms t call.uniforms call.image;
+    set_uniforms t call.uniform_offset call.image;
     check_error "convex fill";
 
     DynArray.iter call.paths ~f:(fun path ->
@@ -758,7 +770,7 @@ let convex_fill t (call : Call.t) =
 ;;
 
 let triangles t (call : Call.t) =
-    set_uniforms t call.uniforms call.image;
+    set_uniforms t call.uniform_offset call.image;
     Gl.draw_arrays t.impl Gl.triangles call.triangle_offset call.triangle_count;
     check_error "triangles fill";
 ;;
@@ -810,6 +822,11 @@ let flush t verts =
         (* TODO - don't bother using a hashtable, store them directly *)
         Gl.uniform1i t.impl t.locs.tex 0;
         Gl.uniform2fv t.impl t.locs.view_size t.view;
+
+        (* Upload uniforms *)
+        (* TODO - *)
+        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
+        (* Gl.buffer_data t.impl Gl.uniform_buffer ( *)
 
         DynArray.iter t.calls ~f:(fun call ->
             blend_func_separate t call.blend_func;

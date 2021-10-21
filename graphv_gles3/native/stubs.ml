@@ -114,75 +114,81 @@ let array_buffer : buffer_target = 0x8892
 let triangles : begin_mode = 0x4
 let stream_draw : buffer_usage = 0x88E0
 let invalid_enum : error_code = 0x500
+let uniform_buffer_offset_alignment : enum = 0x8A34
+let uniform_buffer : enum = 0x8A11
 
-external cull_face : cull_face_mode -> unit = "gles2_cull_face"[@@noalloc]
-external clear_color : float -> float -> float -> float -> unit = "gles2_clear_color"[@@noalloc]
-external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles2_uniform4fv"[@@noalloc]
-external uniform2fv : [`vec2] uniform_location -> float_buffer -> unit = "gles2_uniform2fv"[@@noalloc]
-external buffer_data : buffer_target -> float_buffer -> buffer_usage -> unit = "gles2_buffer_data"[@@noalloc]
-external enable : enable_cap -> unit = "gles2_enable"[@@noalloc]
-external disable : enable_cap -> unit = "gles2_disable"[@@noalloc]
-external finish : unit -> unit = "gles2_finish"[@@noalloc]
-external draw_arrays : begin_mode -> int -> int -> unit = "gles2_draw_arrays"[@@noalloc]
-external color_mask : bool -> bool -> bool -> bool -> unit = "gles2_color_mask"[@@noalloc]
-external front_face : front_face_dir -> unit = "gles2_front_face"[@@noalloc]
-external active_texture : enum -> unit = "gles2_active_texture"[@@noalloc]
-external stencil_mask : int -> unit = "gles2_stencil_mask"[@@noalloc]
-external uniform1i : int uniform_location -> int -> unit = "gles2_uniform1i"[@@noalloc]
-external stencil_func : depth_function -> int -> int -> unit = "gles2_stencil_func"[@@noalloc]
-external stencil_op : stencil_op -> stencil_op -> stencil_op -> unit = "gles2_stencil_op"[@@noalloc]
-external stencil_op_separate : cull_face_mode -> stencil_op -> stencil_op -> stencil_op -> unit = "gles2_stencil_op_separate"[@@noalloc]
-external blend_func_separate : blending_factor -> blending_factor -> blending_factor -> blending_factor -> unit = "gles2_blend_func_separate"[@@noalloc]
-external pixel_storei : pixel_store_param -> int -> unit = "gles2_pixel_storei"[@@noalloc]
-external enable_vertex_attrib_array : int -> unit = "gles2_enable_vaa"[@@noalloc]
-external disable_vertex_attrib_array : int -> unit = "gles2_disable_vaa"[@@noalloc]
-external bind_buffer : buffer_target -> buffer_id -> unit = "gles2_bind_buffer"[@@noalloc]
-external tex_parameteri_1 : texture_target -> tex_param_filter -> tex_param_filter_param -> unit = "gles2_tex_parameteri"[@@noalloc]
-external tex_parameteri_2 : texture_target -> tex_param_wrap -> tex_param_wrap_param -> unit = "gles2_tex_parameteri"[@@noalloc]
-external create_program : unit -> int = "gles2_create_program"[@@noalloc]
+external cull_face : cull_face_mode -> unit = "gles3_cull_face"[@@noalloc]
+external clear_color : float -> float -> float -> float -> unit = "gles3_clear_color"[@@noalloc]
+external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles3_uniform4fv"[@@noalloc]
+external uniform2fv : [`vec2] uniform_location -> float_buffer -> unit = "gles3_uniform2fv"[@@noalloc]
+external buffer_data : buffer_target -> float_buffer -> buffer_usage -> unit = "gles3_buffer_data"[@@noalloc]
+external enable : enable_cap -> unit = "gles3_enable"[@@noalloc]
+external disable : enable_cap -> unit = "gles3_disable"[@@noalloc]
+external finish : unit -> unit = "gles3_finish"[@@noalloc]
+external draw_arrays : begin_mode -> int -> int -> unit = "gles3_draw_arrays"[@@noalloc]
+external color_mask : bool -> bool -> bool -> bool -> unit = "gles3_color_mask"[@@noalloc]
+external front_face : front_face_dir -> unit = "gles3_front_face"[@@noalloc]
+external active_texture : enum -> unit = "gles3_active_texture"[@@noalloc]
+external stencil_mask : int -> unit = "gles3_stencil_mask"[@@noalloc]
+external uniform1i : int uniform_location -> int -> unit = "gles3_uniform1i"[@@noalloc]
+external stencil_func : depth_function -> int -> int -> unit = "gles3_stencil_func"[@@noalloc]
+external stencil_op : stencil_op -> stencil_op -> stencil_op -> unit = "gles3_stencil_op"[@@noalloc]
+external stencil_op_separate : cull_face_mode -> stencil_op -> stencil_op -> stencil_op -> unit = "gles3_stencil_op_separate"[@@noalloc]
+external blend_func_separate : blending_factor -> blending_factor -> blending_factor -> blending_factor -> unit = "gles3_blend_func_separate"[@@noalloc]
+external pixel_storei : pixel_store_param -> int -> unit = "gles3_pixel_storei"[@@noalloc]
+external enable_vertex_attrib_array : int -> unit = "gles3_enable_vaa"[@@noalloc]
+external disable_vertex_attrib_array : int -> unit = "gles3_disable_vaa"[@@noalloc]
+external bind_buffer : buffer_target -> buffer_id -> unit = "gles3_bind_buffer"[@@noalloc]
+external tex_parameteri_1 : texture_target -> tex_param_filter -> tex_param_filter_param -> unit = "gles3_tex_parameteri"[@@noalloc]
+external tex_parameteri_2 : texture_target -> tex_param_wrap -> tex_param_wrap_param -> unit = "gles3_tex_parameteri"[@@noalloc]
+external create_program : unit -> int = "gles3_create_program"[@@noalloc]
 
 type program = int
-external get_uniform_location : program -> string -> 'a uniform_location = "gles2_uniform_loc"[@@noalloc]
+external get_uniform_location : program -> string -> 'a uniform_location = "gles3_uniform_loc"[@@noalloc]
 
-external use_program : program -> unit = "gles2_use_program"[@@noalloc]
+external use_program : program -> unit = "gles3_use_program"[@@noalloc]
 
-external generate_mipmap : texture_target -> unit = "gles2_generate_mipmap"[@@noalloc]
+external generate_mipmap : texture_target -> unit = "gles3_generate_mipmap"[@@noalloc]
 
-external gen_textures : int array -> unit = "gles2_gen_textures"[@@noalloc]
+external gen_textures : int array -> unit = "gles3_gen_textures"[@@noalloc]
 
-external delete_textures : int array -> unit = "gles2_delete_textures"[@@noalloc]
+external delete_textures : int array -> unit = "gles3_delete_textures"[@@noalloc]
 
 external vertex_attrib_pointer : int -> int -> data_type -> bool -> int -> int -> unit = 
-    "gles2_vertex_attrib_pointer_byte" "gles2_vertex_attrib_pointer"[@@noalloc]
+    "gles3_vertex_attrib_pointer_byte" "gles3_vertex_attrib_pointer"[@@noalloc]
 
-external get_error : unit -> enum = "gles2_get_error"[@@noalloc]
+external get_error : unit -> enum = "gles3_get_error"[@@noalloc]
 
-external create_shader : shader_type -> shader = "gles2_create_shader"[@@noalloc]
+external create_shader : shader_type -> shader = "gles3_create_shader"[@@noalloc]
 
-external shader_source : shader -> string -> unit = "gles2_shader_source"[@@noalloc]
+external shader_source : shader -> string -> unit = "gles3_shader_source"[@@noalloc]
 
-external compile_shader : shader -> unit = "gles2_compile_shader"[@@noalloc]
+external compile_shader : shader -> unit = "gles3_compile_shader"[@@noalloc]
 
-external attach_shader : program -> shader -> unit = "gles2_attach_shader"[@@noalloc]
+external attach_shader : program -> shader -> unit = "gles3_attach_shader"[@@noalloc]
 
-external get_shaderiv : shader -> shader_param -> int = "gles2_get_shaderiv"[@@noalloc]
+external get_shaderiv : shader -> shader_param -> int = "gles3_get_shaderiv"[@@noalloc]
 
-external link_program : program -> unit = "gles2_link_program"[@@noalloc]
+external link_program : program -> unit = "gles3_link_program"[@@noalloc]
 
-external get_programiv : program -> program_param -> int = "gles2_get_programiv"[@@noalloc]
+external get_programiv : program -> program_param -> int = "gles3_get_programiv"[@@noalloc]
 
-external bind_attrib_location : program -> int -> string -> unit = "gles2_bind_attrib_location"[@@noalloc]
+external bind_attrib_location : program -> int -> string -> unit = "gles3_bind_attrib_location"[@@noalloc]
 
-external delete_program : program -> unit = "gles2_delete_program"[@@noalloc]
+external delete_program : program -> unit = "gles3_delete_program"[@@noalloc]
 
-external delete_shader : shader -> unit = "gles2_delete_shader"[@@noalloc]
+external delete_shader : shader -> unit = "gles3_delete_shader"[@@noalloc]
 
-external get_shader_info_log : shader -> string = "gles2_get_shader_info_log"
-external get_program_info_log : program -> string = "gles2_get_program_info_log"
+external get_shader_info_log : shader -> string = "gles3_get_shader_info_log"
+external get_program_info_log : program -> string = "gles3_get_program_info_log"
 
-external gen_buffers : int array -> unit = "gles2_gen_buffers"[@@noalloc]
+external gen_buffers : int array -> unit = "gles3_gen_buffers"[@@noalloc]
 
-external bind_texture : texture_target -> texture -> unit = "gles2_bind_texture"[@@noalloc]
+external bind_texture : texture_target -> texture -> unit = "gles3_bind_texture"[@@noalloc]
+
+external get_integer : enum -> int = "gles3_get_integer"[@@noalloc]
+external uniform_block_binding : program -> int -> int -> unit = "gles3_uniform_block_binding"[@@noalloc]
+external bind_buffer_range : enum -> int -> int -> int -> int -> unit = "gles3_bind_buffer_range"[@@noalloc]
 
 (*
 
@@ -203,7 +209,7 @@ type locs = {
 
 external tex_image2d : texture_target -> int -> pixel_format 
     -> int -> int -> int -> pixel_format -> pixel_type -> Buffer.UByte.t -> unit =
-        "gles2_tex_image2d_byte" "gles2_tex_image2d"[@@noalloc]
+        "gles3_tex_image2d_byte" "gles3_tex_image2d"[@@noalloc]
 
 external tex_sub_image2d : texture_target -> int -> int -> int -> int -> int -> pixel_format -> pixel_type -> Buffer.UByte.t -> unit = 
-    "gles2_tex_subimage2d_byte" "gles2_tex_subimage2d"[@@noalloc]
+    "gles3_tex_subimage2d_byte" "gles3_tex_subimage2d"[@@noalloc]

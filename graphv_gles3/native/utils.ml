@@ -35,12 +35,6 @@ let dump_program_error program name =
     dump_gl_error program name Gl.get_program_info_log "%s error %s\n%!"
 ;;
 
-let gen_buffers () =
-    let bufs = [|0|] in
-    Gl.gen_buffers bufs;
-    bufs.(0)
-;;
-
 module Shader = struct
     type t = {
         prog : int;
