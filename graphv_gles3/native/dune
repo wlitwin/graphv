@@ -1,0 +1,24 @@
+(library
+ (public_name graphv_gles3_native)
+ (foreign_stubs (language c) 
+    (names gles3_stubs)
+    (flags :standard -O2)
+  )
+ (libraries
+   graphv_core_lib
+  )
+ )
+
+(rule
+  (target fragUniforms.ml)
+  (deps ../common/fragUniforms.ml)
+  (action
+   (copy %{deps} %{target}))
+  )
+
+(rule
+  (target graphv_gles3_native.ml)
+  (deps ../common/graphv_gles3.ml)
+  (action
+    (copy %{deps} %{target}))
+  )

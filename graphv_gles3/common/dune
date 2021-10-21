@@ -1,0 +1,7 @@
+(library
+  (name gles3_common)
+  (libraries
+    graphv_core_lib
+     )
+  (enabled_if false)
+ )
