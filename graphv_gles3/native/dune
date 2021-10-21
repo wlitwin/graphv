@@ -29,3 +29,24 @@
   (action
     (copy %{deps} %{target}))
   )
+
+(rule
+  (target path.ml)
+  (deps ../common/path.ml)
+  (action
+    (copy %{deps} %{target}))
+  )
+
+(rule
+  (target dyn.ml)
+  (deps ../common/dyn.ml)
+  (action
+    (copy %{deps} %{target}))
+  )
+
+(rule
+  (target vertexBuffer.ml)
+  (deps ../common/vertexBuffer.ml)
+  (action
+    (copy %{deps} %{target}))
+  )
