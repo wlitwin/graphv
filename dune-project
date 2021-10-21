@@ -60,7 +60,7 @@
   "Native GLES3 implementation of the backend renderer for the Graphv library")
  (depends
   (ppx_expect (and (>= v0.14.1) :with-test))
-  (conf-gles3 (>= 1))
+  (conf-gles2 (>= 1))
   (graphv_core_lib (= 0.1.1))))
 (package
  (name graphv_webgl_impl)
