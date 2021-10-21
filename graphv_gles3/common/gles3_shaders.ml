@@ -1,27 +1,13 @@
-let fill_vert = {|#version 100
-
-uniform vec2 viewSize;
-attribute vec2 vertex;
-attribute vec2 tcoord;
-varying vec2 ftcoord;
-varying vec2 fpos;
-
-void main(void) {
-	ftcoord = tcoord;
-	fpos = vertex;
-	gl_Position = vec4(2.0*vertex.x/viewSize.x - 1.0, 1.0 - 2.0*vertex.y/viewSize.y, 0, 1);
-}
-|}
-
-let fill_frag = {|#version 100
+let fill_frag = {|#version 300 es
 precision highp float;
 
 #define EDGE_AA 1
 #define UNIFORMARRAY_SIZE 11
 uniform vec4 frag[UNIFORMARRAY_SIZE];
 uniform sampler2D tex;
-varying vec2 ftcoord;
-varying vec2 fpos;
+in vec2 ftcoord;
+in vec2 fpos;
+out vec4 fragColor;
 
 #define scissorMat mat3(frag[0].xyz, frag[1].xyz, frag[2].xyz)
 #define paintMat mat3(frag[3].xyz, frag[4].xyz, frag[5].xyz)
@@ -77,7 +63,7 @@ void main(void) {
 		// Calculate color fron texture
 
 		vec2 pt = (paintMat * vec3(fpos,1.0)).xy / extent;
-		vec4 color = texture2D(tex, pt);
+		vec4 color = texture(tex, pt);
 
 		if (texType == 1) color = vec4(color.xyz*color.w,color.w);
 		if (texType == 2) color = vec4(color.x);
@@ -89,12 +75,28 @@ void main(void) {
 	} else if (type == 2) {		// Stencil fill
 		result = vec4(1,1,1,1);
 	} else if (type == 3) {		// Textured tris
-		vec4 color = texture2D(tex, ftcoord);
+		vec4 color = texture(tex, ftcoord);
 		if (texType == 1) color = vec4(color.xyz*color.w,color.w);
 		if (texType == 2) color = vec4(color.x);
 		color *= scissor;
 		result = color * innerCol;
 	}
-	gl_FragColor = result;
+	fragColor = result;
 }
 |}
+
+let fill_vert = {|#version 300 es
+
+uniform vec2 viewSize;
+in vec2 vertex;
+in vec2 tcoord;
+out vec2 ftcoord;
+out vec2 fpos;
+
+void main(void) {
+	ftcoord = tcoord;
+	fpos = vertex;
+	gl_Position = vec4(2.0*vertex.x/viewSize.x - 1.0, 1.0 - 2.0*vertex.y/viewSize.y, 0, 1);
+}
+|}
+

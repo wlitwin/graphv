@@ -445,14 +445,18 @@ let create_shader (c : t) vshader fshader =
         c##compileShader vert;
         let status = c##getShaderParameter vert c##._COMPILE_STATUS_ in
         if not Js.(to_bool status) then (
+            let log = c##getShaderInfoLog vert in
             print_endline "failed to compile vertex shader";
+            print_endline Js.(to_string log);
             r.return None
         );
 
         c##compileShader frag;
         let status = c##getShaderParameter frag c##._COMPILE_STATUS_ in
         if not Js.(to_bool status) then (
+            let log = c##getShaderInfoLog frag in
             print_endline "failed to compile fragment shader";
+            print_endline Js.(to_string log);
             r.return None
         );
 
