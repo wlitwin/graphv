@@ -75,6 +75,17 @@ CAMLprim value gles3_buffer_data(value v1, value v2, value size, value v3)
     CAMLreturn (Val_unit);
 }
 
+CAMLprim value gles3_buffer_sub_data(value target, value offset, value size, value data)
+{
+    CAMLparam4 (target, offset, size, data);
+
+    // GLsizei size = Caml_ba_array_val(v2)->dim[0] * 4;
+    float* float_data = (float*)Caml_ba_data_val(data);
+    glBufferSubData(Int_val(target), Int_val(offset), Int_val(size), float_data);
+
+    CAMLreturn (Val_unit);
+}
+
 CAMLprim value gles3_enable(value v1)
 {
     CAMLparam1 (v1);

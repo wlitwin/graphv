@@ -52,6 +52,10 @@ let buffer_data (_t : t) target buffer how =
     buffer_data target buffer how
 ;;
 
+let buffer_sub_data (_t : t) target offset size data =
+    buffer_sub_data target offset size data
+;;
+
 let check_error () = Utils.check_error
 
 let enable (_t : t) a = enable a

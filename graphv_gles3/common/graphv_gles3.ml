@@ -170,6 +170,8 @@ type t = {
     vert_buf : Gl.buffer_id;
     frag_buf : Gl.buffer_id;
     frag_size : int;
+    mutable last_vbo_size : int;
+    mutable last_ubo_size : int;
     mutable edge_antialias : bool;
     (* textures *)
     textures : (int, Texture.t) Hashtbl.t;
@@ -346,6 +348,8 @@ let create ~(flags : CreateFlags.t) impl =
             frag_size;
             vert_buf = locs.vert_buf;
             frag_buf = locs.frag_buf;
+            last_vbo_size = 0;
+            last_ubo_size = 0;
             stencil_mask = 0;
             edge_antialias = CreateFlags.has flags ~flag:CreateFlags.antialias;
             (* textures *)
@@ -810,12 +814,24 @@ let flush t verts =
         (* Upload vertex data *)
         Gl.bind_buffer t.impl Gl.array_buffer t.vert_buf;
 
-        Gl.buffer_data 
-            t.impl
-            Gl.array_buffer 
-            (VertexBuffer.unsafe_array verts)
-            (VertexBuffer.num_bytes verts)
-            Gl.stream_draw;
+        let vert_size = VertexBuffer.num_bytes verts in
+
+        if t.last_vbo_size < vert_size then (
+            t.last_vbo_size <- vert_size;
+            Gl.buffer_data
+                t.impl
+                Gl.array_buffer
+                (VertexBuffer.unsafe_array verts)
+                vert_size
+                Gl.stream_draw
+        ) else (
+            Gl.buffer_sub_data 
+                t.impl
+                Gl.array_buffer 
+                0
+                vert_size
+                (VertexBuffer.unsafe_array verts)
+        );
 
         Gl.bind_vertex_array_object t.impl t.vao;
 
@@ -826,11 +842,25 @@ let flush t verts =
 
         (* Uniforms *)
         Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
-        Gl.buffer_data t.impl 
-            Gl.uniform_buffer 
-            (FragUniforms.as_array t.frag_uniforms)
-            (Dyn.length t.frag_uniforms * 4)
-            Gl.stream_draw;
+
+        let ubo_size = Dyn.length t.frag_uniforms * 4 in
+
+        if t.last_ubo_size < ubo_size then (
+            t.last_ubo_size <- ubo_size;
+            Gl.buffer_data 
+                t.impl
+                Gl.uniform_buffer
+                (FragUniforms.as_array t.frag_uniforms)
+                ubo_size        
+                Gl.stream_draw
+        ) else (
+            Gl.buffer_sub_data 
+                t.impl 
+                Gl.uniform_buffer 
+                0
+                ubo_size        
+                (FragUniforms.as_array t.frag_uniforms)
+        );
 
         DynArray.iter t.calls ~f:(fun call ->
             blend_func_separate t call.blend_func;

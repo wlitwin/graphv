@@ -129,6 +129,7 @@ external clear_color : float -> float -> float -> float -> unit = "gles3_clear_c
 external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles3_uniform4fv"[@@noalloc]
 external uniform2fv : [`vec2] uniform_location -> float_buffer -> unit = "gles3_uniform2fv"[@@noalloc]
 external buffer_data : buffer_target -> float_buffer -> int -> buffer_usage -> unit = "gles3_buffer_data"[@@noalloc]
+external buffer_sub_data : buffer_target -> (*offset*) int -> (*size*) int -> float_buffer -> unit = "gles3_buffer_sub_data"[@@noalloc]
 external enable : enable_cap -> unit = "gles3_enable"[@@noalloc]
 external disable : enable_cap -> unit = "gles3_disable"[@@noalloc]
 external finish : unit -> unit = "gles3_finish"[@@noalloc]
