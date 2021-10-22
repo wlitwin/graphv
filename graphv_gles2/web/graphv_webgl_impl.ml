@@ -28,10 +28,10 @@ module Buffer = struct
         let get : t -> int -> float  = Typed_array.unsafe_get
         let [@inline always] length (t : t) : int = t##.length
 
-        let fill (t : t) (value : float) =
+        let zero (t : t) =
             let len : int = Js.Unsafe.get t "length" - 1 in
             for i=0 to len do
-                Typed_array.set t i value
+                Typed_array.set t i 0.
             done
 
         let blit ~(src : t) ~(s_off : int) ~(dst : t) ~(d_off : int) ~(len : int) : unit =

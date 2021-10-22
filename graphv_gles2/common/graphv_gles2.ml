@@ -174,8 +174,8 @@ module Call = struct
         t.triangle_count <- 0;
         t.uniform_offset <- 0;
         t.blend_func <- Blend.empty;
-        Gl.Buffer.Float.fill t.uniforms 0.;
-        Gl.Buffer.Float.fill t.uniforms2 0.;
+        Gl.Buffer.Float.zero t.uniforms;
+        Gl.Buffer.Float.zero t.uniforms2;
         DynArray.clear t.paths;
     ;;
 end

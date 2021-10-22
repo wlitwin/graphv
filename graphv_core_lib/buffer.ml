@@ -21,7 +21,7 @@ module type S = sig
         val get : t -> int -> float
         val create : int -> t
         val blit : src:t -> s_off:int -> dst:t -> d_off:int -> len:int -> unit
-        val fill : t -> float -> unit
+        val zero : t -> unit
     end
 end
 

@@ -116,10 +116,10 @@ end
 
 module Call = struct
 
-    type type_ = Fill
-               | Convex_fill
-               | Stroke
-               | Triangles
+    type type_ = Fill : type_
+               | Convex_fill : type_
+               | Stroke : type_
+               | Triangles : type_
 
     type t = {
         mutable type_ : type_;
@@ -467,7 +467,7 @@ let cancel t =
     DynArray.clear t.calls;
     (* Reset the uniform buffer *)
     let frag_arr = FragUniforms.as_array t.frag_uniforms in
-    Buffer.Float.fill frag_arr 0.;
+    Buffer.Float.zero frag_arr;
     Dyn.clear t.frag_uniforms;
 ;;
 

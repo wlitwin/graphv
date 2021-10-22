@@ -369,29 +369,29 @@ module Make
     let rec tesselate_bezier t x1 y1 x2 y2 x3 y3 x4 y4 level typ =
         let open FloatOps in
         if level <. 10 then (
-            let dx = x4 - x1 in
-            let dy = y4 - y1 in
-            let d2 = fabs ((x2 - x4)*dy - (y2 - y4)*dx) in
-            let d3 = fabs ((x3 - x4)*dy - (y3 - y4)*dx) in
+            let [@inlined] dx = x4 - x1 in
+            let [@inlined] dy = y4 - y1 in
+            let [@inlined] d2 = fabs ((x2 - x4)*dy - (y2 - y4)*dx) in
+            let [@inlined] d3 = fabs ((x3 - x4)*dy - (y3 - y4)*dx) in
 
             if (d2+d3)*(d2+d3) < t.tess_tol * (dx*dx + dy*dy) then (
                 add_point t x4 y4 typ
             ) else (
-                let x23 = (x2+x3)*0.5 in
-                let x34 = (x3+x4)*0.5 in
-                let x234 = (x23 + x34)*0.5 in
+                let [@inlined] x23 = (x2+x3)*0.5 in
+                let [@inlined] x34 = (x3+x4)*0.5 in
+                let [@inlined] x234 = (x23 + x34)*0.5 in
 
-                let x12 = (x1+x2)*0.5 in
-                let x123 = (x12+x23)*0.5 in
-                let x1234 = (x123 + x234)*0.5 in
+                let [@inlined] x12 = (x1+x2)*0.5 in
+                let [@inlined] x123 = (x12+x23)*0.5 in
+                let [@inlined] x1234 = (x123 + x234)*0.5 in
 
-                let y23 = (y2+y3)*0.5 in
-                let y34 = (y3+y4)*0.5 in
-                let y234 = (y23 + y34)*0.5 in
+                let [@inlined] y23 = (y2+y3)*0.5 in
+                let [@inlined] y34 = (y3+y4)*0.5 in
+                let [@inlined] y234 = (y23 + y34)*0.5 in
 
-                let y12 = (y1+y2)*0.5 in
-                let y123 = (y12+y23)*0.5 in
-                let y1234 = (y123 + y234)*0.5 in
+                let [@inlined] y12 = (y1+y2)*0.5 in
+                let [@inlined] y123 = (y12+y23)*0.5 in
+                let [@inlined] y1234 = (y123 + y234)*0.5 in
 
                 tesselate_bezier t x1 y1 x12 y12 x123 y123 x1234 y1234 (level +. 1) PointFlags.no_flags;
                 tesselate_bezier t x1234 y1234 x234 y234 x34 y34 x4 y4 (level +. 1) typ;
@@ -779,10 +779,10 @@ module Make
                     | Winding w -> path_winding t w
                 );
 
-                let xmin = ref 1e6 in
-                let ymin = ref 1e6 in
-                let xmax = ref ~-.1e6 in
-                let ymax = ref ~-.1e6 in
+                let [@inlined] xmin = ref 1e6 in
+                let [@inlined] ymin = ref 1e6 in
+                let [@inlined] xmax = ref ~-.1e6 in
+                let [@inlined] ymax = ref ~-.1e6 in
 
                 let points = t.cache.points in
                 (* Wish we had sub arrays for DynArray *)
@@ -812,13 +812,13 @@ module Make
                         );
                     );
 
-                    let p1_off = ref 0 in
+                    let [@inlined] p1_off = ref 0 in
                     p0 := get (path.count -. 1);
                     for _=0 to path.count-.1 do
                         let open FloatOps in
                         (* Calc segment directions *)
                         (* This calc is good *)
-                        let p1 = get !p1_off in
+                        let [@inlined] p1 = get !p1_off in
                         !p0.dx <- p1.x - !p0.x;
                         !p0.dy <- p1.y - !p0.y;
 
@@ -1152,20 +1152,20 @@ module Make
                 let ru = 1. in
                 dst := !verts;
 
-                let p1_off = ref 0 in
-                let p0_off = ref (path.count -. 1) in
+                let [@inlined] p1_off = ref 0 in
+                let [@inlined] p0_off = ref (path.count -. 1) in
                 for _=0 to path.count-.1 do
-                    let p0 = get_pt !p0_off in
-                    let p1 = get_pt !p1_off in
+                    let [@inlined] p0 = get_pt !p0_off in
+                    let [@inlined] p1 = get_pt !p1_off in
                     if PointFlags.has p1.flags ~flag then (
                         dst := bevel_join t.cache.verts !dst p0 p1 lw rw lu ru
                     ) else (
-                        let x = p1.x + p1.dmx*lw in
-                        let y = p1.y + p1.dmy*lw in
+                        let [@inlined] x = p1.x + p1.dmx*lw in
+                        let [@inlined] y = p1.y + p1.dmy*lw in
                         VertexBuffer.set t.cache.verts !dst x y lu 1.;
                         incr dst;
-                        let x = p1.x - p1.dmx*rw in
-                        let y = p1.y - p1.dmy*rw in
+                        let [@inlined] x = p1.x - p1.dmx*rw in
+                        let [@inlined] y = p1.y - p1.dmy*rw in
                         VertexBuffer.set t.cache.verts !dst x y ru 1.;
                         incr dst;
                     );
@@ -1174,8 +1174,8 @@ module Make
                 done;
 
                 (* Loop it *)
-                let v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
-                let v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
+                let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
+                let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
                 VertexBuffer.set t.cache.verts !dst v0_x v0_y lu 1.;
                 incr dst;
                 VertexBuffer.set t.cache.verts !dst v1_x v1_y ru 1.;

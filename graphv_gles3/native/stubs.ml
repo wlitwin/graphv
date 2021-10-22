@@ -197,7 +197,6 @@ external get_integer : enum -> int = "gles3_get_integer"[@@noalloc]
 external uniform_block_binding : program -> int -> int -> unit = "gles3_uniform_block_binding"[@@noalloc]
 external bind_buffer_range : enum -> int -> int -> int -> int -> unit = "gles3_bind_buffer_range"[@@noalloc]
 
-external fast_ba_fill : float_buffer -> float -> unit = "fast_ba_fill"[@@noalloc]
 external create_vertex_array_object : unit -> vertex_array_object = "gles3_create_vertex_array_object"[@@noalloc]
 external bind_vertex_array_object : vertex_array_object -> unit = "gles3_bind_vertex_array_object"[@@noalloc]
 

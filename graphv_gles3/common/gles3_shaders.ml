@@ -91,8 +91,8 @@ void main(void) {
 let fill_vert = {|#version 300 es
 
 uniform vec2 viewSize;
-in vec2 vertex;
-in vec2 tcoord;
+layout(location = 0) in vec2 vertex;
+layout(location = 1) in vec2 tcoord;
 out vec2 ftcoord;
 out vec2 fpos;
 

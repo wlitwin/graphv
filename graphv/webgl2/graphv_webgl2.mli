@@ -148,8 +148,8 @@ module Buffer : sig
         val blit :
           src:t -> s_off:int -> dst:t -> d_off:int -> len:int -> unit
 
-        (** Fill the buffer with the given value. *)
-        val fill : t -> float -> unit
+        (** Zero the buffer. *)
+        val zero : t -> unit
     end
 end
 
