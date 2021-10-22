@@ -791,7 +791,7 @@ module Make
                         DynArray.get points (path.first +. i)
                     in
                     (* If first and last points are the same, remove last, mark as closed *)
-                    let p0 = get (path.count -. 1) |> ref in
+                    let [@inlined] p0 = get (path.count -. 1) |> ref in
                     let p1 = get 0 in
                     if Point.equals !p0.x !p0.y p1.x p1.y t.dist_tol then (
                         path.count <- path.count -. 1;
@@ -1083,7 +1083,7 @@ module Make
         let dst = ref !verts in
         DynArray.iter t.cache.paths ~f:(fun path ->
             dst := !verts;
-            let get_pt idx =
+            let [@inline always] get_pt idx =
                 DynArray.get t.cache.points (path.first +. idx)
             in
             if fringe then (

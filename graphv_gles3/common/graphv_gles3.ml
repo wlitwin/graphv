@@ -811,6 +811,27 @@ let flush t verts =
 
         t.blend_func <- Blend.empty;
 
+        (* Upload UBO data *)
+        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
+
+        let ubo_size = Dyn.length t.frag_uniforms * 4 in
+        if t.last_ubo_size < ubo_size then (
+            t.last_ubo_size <- ubo_size;
+            Gl.buffer_data 
+                t.impl
+                Gl.uniform_buffer
+                (FragUniforms.as_array t.frag_uniforms)
+                ubo_size        
+                Gl.dynamic_draw
+        ) else (
+            Gl.buffer_sub_data 
+                t.impl 
+                Gl.uniform_buffer 
+                0
+                ubo_size        
+                (FragUniforms.as_array t.frag_uniforms)
+        );
+
         (* Upload vertex data *)
         Gl.bind_buffer t.impl Gl.array_buffer t.vert_buf;
 
@@ -823,7 +844,7 @@ let flush t verts =
                 Gl.array_buffer
                 (VertexBuffer.unsafe_array verts)
                 vert_size
-                Gl.stream_draw
+                Gl.dynamic_draw
         ) else (
             Gl.buffer_sub_data 
                 t.impl
@@ -838,29 +859,8 @@ let flush t verts =
         Gl.uniform1i t.impl t.locs.tex 0;
         Gl.uniform2fv t.impl t.locs.view_size t.view;
 
-        (* Upload uniforms *)
-
         (* Uniforms *)
         Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
-
-        let ubo_size = Dyn.length t.frag_uniforms * 4 in
-
-        if t.last_ubo_size < ubo_size then (
-            t.last_ubo_size <- ubo_size;
-            Gl.buffer_data 
-                t.impl
-                Gl.uniform_buffer
-                (FragUniforms.as_array t.frag_uniforms)
-                ubo_size        
-                Gl.stream_draw
-        ) else (
-            Gl.buffer_sub_data 
-                t.impl 
-                Gl.uniform_buffer 
-                0
-                ubo_size        
-                (FragUniforms.as_array t.frag_uniforms)
-        );
 
         DynArray.iter t.calls ~f:(fun call ->
             blend_func_separate t call.blend_func;

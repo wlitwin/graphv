@@ -114,6 +114,7 @@ let float : data_type = 0x1406
 let array_buffer : buffer_target = 0x8892
 let triangles : begin_mode = 0x4
 let stream_draw : buffer_usage = 0x88E0
+let dynamic_draw : buffer_usage = 0x88E8 
 let invalid_enum : error_code = 0x500
 let uniform_buffer_offset_alignment : enum = 0x8A34
 let uniform_buffer : buffer_target = 0x8A11
