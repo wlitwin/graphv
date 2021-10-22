@@ -2,24 +2,22 @@ let fill_frag = {|#version 300 es
 precision highp float;
 
 #define EDGE_AA 1
-layout(std140) uniform frag {
-    mat3 scissorMat;
-    mat3 paintMat;
-    vec4 innerCol;
-    vec4 outerCol;
-    vec2 scissorExt;
-    vec2 scissorScale;
-    vec2 extent;
-    float radius;
-    float feather;
-    float strokeMult;
-    float strokeThr;
-    float texType_;
-    float type_;
-};
+#define UNIFORMARRAY_SIZE 11
+uniform vec4 frag[UNIFORMARRAY_SIZE];
 
-#define type int(type_)
-#define texType int(texType_)
+#define scissorMat mat3(frag[0].xyz, frag[1].xyz, frag[2].xyz)
+#define paintMat mat3(frag[3].xyz, frag[4].xyz, frag[5].xyz)
+#define innerCol frag[6]
+#define outerCol frag[7]
+#define scissorExt frag[8].xy
+#define scissorScale frag[8].zw
+#define extent frag[9].xy
+#define radius frag[9].z
+#define feather frag[9].w
+#define strokeMult frag[10].x
+#define strokeThr frag[10].y
+#define texType int(frag[10].z)
+#define type int(frag[10].w)
 
 uniform sampler2D tex;
 in vec2 ftcoord;

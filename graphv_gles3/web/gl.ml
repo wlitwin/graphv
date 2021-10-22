@@ -200,6 +200,10 @@ let uniform4fv (c : t) loc (values : Buffer.Float.t) =
     c##uniform4fv_typed loc values
 ;;
 
+let uniform4fv_offset (c : t) loc (values : Buffer.Float.t) (offset : int) (size : int) =
+    c##uniform4fv_typed loc (values##subarray (offset) (offset + size))
+;;
+
 let temp_array = Js.array [|0.; 0.|]
 let uniform2fv (c : t) loc values =
     let v1 = Buffer.Float.get values 0 in

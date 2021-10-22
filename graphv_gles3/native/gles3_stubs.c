@@ -37,6 +37,17 @@ CAMLprim value gles3_uniform4fv(value v1, value v2)
     CAMLreturn (Val_unit);
 }
 
+CAMLprim value gles3_uniform4fv_offset(value loc, value buf, value off, value sz)
+{
+    CAMLparam4 (loc, buf, off, sz);
+
+    float* data = (float*)Caml_ba_data_val(buf);
+    int start = Int_val(off);
+    glUniform4fv(Int_val(loc), Int_val(sz), (data + start));
+
+    CAMLreturn (Val_unit);
+}
+
 CAMLprim value fast_ba_zero(value buffer)
 {
     CAMLparam1 (buffer);

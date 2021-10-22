@@ -128,6 +128,7 @@ let null_vao : vertex_array_object = 0
 external cull_face : cull_face_mode -> unit = "gles3_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles3_clear_color"[@@noalloc]
 external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles3_uniform4fv"[@@noalloc]
+external uniform4fv_offset : [`vec4] uniform_location -> float_buffer -> int -> int -> unit = "gles3_uniform4fv_offset"[@@noalloc]
 external uniform2fv : [`vec2] uniform_location -> float_buffer -> unit = "gles3_uniform2fv"[@@noalloc]
 external buffer_data : buffer_target -> float_buffer -> int -> buffer_usage -> unit = "gles3_buffer_data"[@@noalloc]
 external buffer_sub_data : buffer_target -> (*offset*) int -> (*size*) int -> float_buffer -> unit = "gles3_buffer_sub_data"[@@noalloc]

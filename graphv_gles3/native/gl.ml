@@ -32,6 +32,10 @@ let uniform4fv (_t : t) loc buffer =
     uniform4fv loc buffer
 ;;
 
+let uniform4fv_offset (_t : t) loc buffer off size =
+    uniform4fv_offset loc buffer off size
+;;
+
 let create_program (_t : t) =
     let shader = Utils.create_shaders() in
     match shader with
