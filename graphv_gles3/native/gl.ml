@@ -81,6 +81,8 @@ let gen_textures a = gen_textures a
 let get_integer (_t : t) b = get_integer b
 let uniform_block_binding (_t : t) b c = uniform_block_binding b c
 let bind_buffer_range (_t : t) b c d e f = bind_buffer_range b c d e f
+let create_vertex_array_object (_t : t) = create_vertex_array_object()
+let bind_vertex_array_object (_t : t) vao = bind_vertex_array_object vao
 
 let bind_texture (_t : t) (target : texture_target) value =
     let value =

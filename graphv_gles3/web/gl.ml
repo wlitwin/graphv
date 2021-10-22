@@ -34,6 +34,7 @@ type data_type = WebGL.dataType
 type buffer = Buffer.Float.t
 type 'a uniform_location = 'a WebGL.uniformLocation Js.t
 type buffer_id = WebGL.buffer Js.t
+type vertex_array_object = int Js.opt
 
 let zero : blending_factor = Js.Unsafe.pure_js_expr "0"
 let zero_ : stencil_op = Js.Unsafe.pure_js_expr "0"
@@ -92,6 +93,7 @@ let unpack_skip_rows : pixel_store_param = Js.Unsafe.pure_js_expr "0x0CF3"
 let unpack_skip_pixels : pixel_store_param = Js.Unsafe.pure_js_expr "0x0CF4"
 let red : pixel_format = Js.Unsafe.pure_js_expr "0x1903"
 let r8 : pixel_format = Js.Unsafe.pure_js_expr "0x8229"
+let null_vao : vertex_array_object = Js.null
 
 let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
     match a, b with
@@ -118,6 +120,16 @@ let stencil_op (c : t) a b d = c##stencilOp a b d
 let stencil_op_separate (c : t) a b e d = c##stencilOpSeparate a b e d
 
 type program = WebGL.program Js.t
+
+let create_vertex_array_object (c : t) : vertex_array_object =
+  let open Js.Unsafe in
+  (coerce c)##createVertexArray
+;;
+
+let bind_vertex_array_object (c : t) (vao : vertex_array_object) : unit =
+  let open Js.Unsafe in
+  (coerce c)##bindVertexArray(vao)
+;;
 
 let uniform_block_binding (c : t) (p : program) (a : 'a WebGL.uniformLocation Js.t) (b : int) : unit =
     let open Js.Unsafe in

@@ -166,6 +166,7 @@ type t = {
     impl : Gl.t;
     shader : Gl.program;
     locs : Gl.locs;
+    vao : Gl.vertex_array_object;
     vert_buf : Gl.buffer_id;
     frag_buf : Gl.buffer_id;
     frag_size : int;
@@ -325,6 +326,15 @@ let create ~(flags : CreateFlags.t) impl =
         let frag_size = frag_size + align - (frag_size mod align) in
         Printf.printf "Frag size %d\n%!" frag_size;
 
+        let vao = Gl.create_vertex_array_object impl in
+        Gl.bind_vertex_array_object impl vao;
+        Gl.bind_buffer impl Gl.array_buffer locs.vert_buf;
+        Gl.enable_vertex_attrib_array impl 0;
+        Gl.enable_vertex_attrib_array impl 1;
+        Gl.vertex_attrib_pointer impl 0 2 Gl.float false 16 0; (* Or data 0? *)
+        Gl.vertex_attrib_pointer impl 1 2 Gl.float false 16 (0 + 2*4);
+        Gl.bind_vertex_array_object impl Gl.null_vao;
+
         Gl.finish impl;
         let frag_uniforms = FragUniforms.create() in
 
@@ -332,6 +342,7 @@ let create ~(flags : CreateFlags.t) impl =
             impl;
             shader;
             locs;
+            vao;
             frag_size;
             vert_buf = locs.vert_buf;
             frag_buf = locs.frag_buf;
@@ -454,6 +465,10 @@ let viewport t ~width ~height ~dpi:_ =
 let cancel t =
     DynArray.clear t.paths;
     DynArray.clear t.calls;
+    (* Reset the uniform buffer *)
+    let frag_arr = FragUniforms.as_array t.frag_uniforms in
+    Buffer.Float.fill frag_arr 0.;
+    Dyn.clear t.frag_uniforms;
 ;;
 
 let convert_paint t frag (paint : Paint.t) (scissor : Scissor.t) width fringe stroke_thr =
@@ -802,17 +817,12 @@ let flush t verts =
             (VertexBuffer.num_bytes verts)
             Gl.stream_draw;
 
-        Gl.enable_vertex_attrib_array t.impl 0;
-        Gl.enable_vertex_attrib_array t.impl 1;
-        Gl.vertex_attrib_pointer t.impl 0 2 Gl.float false 16 0; (* Or data 0? *)
-        Gl.vertex_attrib_pointer t.impl 1 2 Gl.float false 16 (0 + 2*4);
+        Gl.bind_vertex_array_object t.impl t.vao;
 
-        (* TODO - don't bother using a hashtable, store them directly *)
         Gl.uniform1i t.impl t.locs.tex 0;
         Gl.uniform2fv t.impl t.locs.view_size t.view;
 
         (* Upload uniforms *)
-(*        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf; *)
 
         (* Uniforms *)
         Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
@@ -831,17 +841,9 @@ let flush t verts =
             | Triangles -> triangles t call
         );
 
-        Gl.disable_vertex_attrib_array t.impl 0;
-        Gl.disable_vertex_attrib_array t.impl 1;
+        Gl.bind_vertex_array_object t.impl Gl.null_vao;
         Gl.disable t.impl Gl.cull_face_enum;
 
-        (* Reset the uniform buffer *)
-        let frag_arr = FragUniforms.as_array t.frag_uniforms in
-        Buffer.Float.fill frag_arr 0.;
-        Dyn.clear t.frag_uniforms;
-
-        (*Gl.bind_buffer Gl.array_buffer 0;
-        Gl.use_program Gl.null_program;*)
         bind_texture t None;
     );
 

@@ -457,3 +457,18 @@ CAMLprim value gles3_bind_buffer_range(value target, value index, value buffer, 
     glBindBufferRange(Int_val(target), Int_val(index), Int_val(buffer), Int_val(offset), Int_val(size));
     CAMLreturn(Val_unit);
 }
+
+CAMLprim value gles3_create_vertex_array_object()
+{
+    CAMLparam0();
+    GLuint vao = 0;
+    glGenVertexArrays(1, &vao);
+    CAMLreturn(Val_int(vao));
+}
+
+CAMLprim value gles3_bind_vertex_array_object(value vao)
+{
+    CAMLparam1 (vao);
+    glBindVertexArray(Int_val(vao));
+    CAMLreturn(Val_unit);
+}

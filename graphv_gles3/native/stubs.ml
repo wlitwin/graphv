@@ -30,6 +30,7 @@ type shader_type = int
 type shader = int
 type shader_param = int
 type program_param = int
+type vertex_array_object = int
 
 type enum = int
 
@@ -121,6 +122,7 @@ let unpack_skip_rows : pixel_store_param = 0x0CF3
 let unpack_skip_pixels : pixel_store_param = 0x0CF4
 let red : pixel_format = 0x1903
 let r8 : pixel_format = 0x8229
+let null_vao : vertex_array_object = 0
 
 external cull_face : cull_face_mode -> unit = "gles3_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles3_clear_color"[@@noalloc]
@@ -196,6 +198,8 @@ external uniform_block_binding : program -> int -> int -> unit = "gles3_uniform_
 external bind_buffer_range : enum -> int -> int -> int -> int -> unit = "gles3_bind_buffer_range"[@@noalloc]
 
 external fast_ba_fill : float_buffer -> float -> unit = "fast_ba_fill"[@@noalloc]
+external create_vertex_array_object : unit -> vertex_array_object = "gles3_create_vertex_array_object"[@@noalloc]
+external bind_vertex_array_object : vertex_array_object -> unit = "gles3_bind_vertex_array_object"[@@noalloc]
 
 (*
 
