@@ -87,6 +87,11 @@ let triangles : begin_mode = Js.Unsafe.pure_js_expr "0x4"
 let stream_draw : buffer_usage = Js.Unsafe.pure_js_expr "0x88E0"
 let invalid_enum : error_code = Js.Unsafe.pure_js_expr "0x500"
 let uniform_buffer_offset_alignment : int WebGL.parameter = Js.Unsafe.pure_js_expr "0x8A34"
+let unpack_row_length : pixel_store_param = Js.Unsafe.pure_js_expr "0x0CF2"
+let unpack_skip_rows : pixel_store_param = Js.Unsafe.pure_js_expr "0x0CF3"
+let unpack_skip_pixels : pixel_store_param = Js.Unsafe.pure_js_expr "0x0CF4"
+let red : pixel_format = Js.Unsafe.pure_js_expr "0x1903"
+let r8 : pixel_format = Js.Unsafe.pure_js_expr "0x8229"
 
 let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
     match a, b with

@@ -1,5 +1,6 @@
 #define CAML_NAME_SPACE
 #include <caml/fail.h>
+#include <string.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
@@ -34,6 +35,15 @@ CAMLprim value gles3_uniform4fv(value v1, value v2)
     glUniform4fv(Int_val(v1), size, data);
 
     CAMLreturn (Val_unit);
+}
+
+CAMLprim value fast_ba_fill(value buffer, value num)
+{
+    CAMLparam2 (buffer, num);
+    GLsizei size = Caml_ba_array_val(buffer)->dim[0] * 4;
+    float* data = (float*)Caml_ba_data_val(buffer);
+    memset(data, 0, size);
+    CAMLreturn(Val_unit);
 }
 
 CAMLprim value gles3_uniform2fv(value v1, value v2)

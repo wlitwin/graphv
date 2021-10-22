@@ -116,6 +116,11 @@ let stream_draw : buffer_usage = 0x88E0
 let invalid_enum : error_code = 0x500
 let uniform_buffer_offset_alignment : enum = 0x8A34
 let uniform_buffer : buffer_target = 0x8A11
+let unpack_row_length : pixel_store_param = 0x0CF2
+let unpack_skip_rows : pixel_store_param = 0x0CF3
+let unpack_skip_pixels : pixel_store_param = 0x0CF4
+let red : pixel_format = 0x1903
+let r8 : pixel_format = 0x8229
 
 external cull_face : cull_face_mode -> unit = "gles3_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles3_clear_color"[@@noalloc]
@@ -189,6 +194,8 @@ external bind_texture : texture_target -> texture -> unit = "gles3_bind_texture"
 external get_integer : enum -> int = "gles3_get_integer"[@@noalloc]
 external uniform_block_binding : program -> int -> int -> unit = "gles3_uniform_block_binding"[@@noalloc]
 external bind_buffer_range : enum -> int -> int -> int -> int -> unit = "gles3_bind_buffer_range"[@@noalloc]
+
+external fast_ba_fill : float_buffer -> float -> unit = "fast_ba_fill"[@@noalloc]
 
 (*
 

@@ -17,6 +17,8 @@ module UByte = struct
     let empty : t = create 0
 end
 
+external fast_ba_fill : float_buffer -> float -> unit = "fast_ba_fill"[@@noalloc]
+
 module Float = struct
     type t = float_buffer
 
@@ -30,7 +32,7 @@ module Float = struct
     let get : t -> int -> float = Bigarray.Array1.unsafe_get
     let set : t -> int -> float -> unit = Bigarray.Array1.unsafe_set
     let length : t -> int  = Bigarray.Array1.dim
-    let fill : t -> float -> unit  = Bigarray.Array1.fill
+    let fill : t -> float -> unit  = (*Bigarray.Array1.fill*) fast_ba_fill
     let blit ~(src : t) ~(s_off : int) ~(dst : t) ~(d_off : int) ~(len : int) : unit = 
         let a = Bigarray.Array1.sub src s_off len in
         let b = Bigarray.Array1.sub dst d_off len in

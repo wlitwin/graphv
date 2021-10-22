@@ -46,17 +46,6 @@ module Texture = struct
         t.flags <- ImageFlags.no_flags;
 end
 
-let nearest_pow2 num =
-    let n = if num > 0 then num - 1 else 0 in
-    let n = n lor n lsr 1 in
-    let n = n lor n lsr 2 in
-    let n = n lor n lsr 4 in
-    let n = n lor n lsr 8 in
-    let n = n lor n lsr 16 in
-    let n = n + 1 in
-    n
-;;
-
 let convert_blend_factor = function
     | BlendFactor.Zero -> Gl.zero
     | One -> Gl.one
@@ -258,19 +247,6 @@ let create_texture t type_ width height flags (data : Buffer.UByte.t) =
     let tex = alloc_texture t in
     tex.flags <- flags;
 
-    if nearest_pow2 width <> width || nearest_pow2 height <> height then (
-        if ImageFlags.has tex.flags ~flag:ImageFlags.repeat_x
-            || ImageFlags.has tex.flags ~flag:ImageFlags.repeat_y then (
-            Printf.printf "Error: non-power of two texture, repeat X/Y unsupported\n%!";
-            tex.flags <- ImageFlags.remove tex.flags ~flag:ImageFlags.repeat_x; 
-            tex.flags <- ImageFlags.remove tex.flags ~flag:ImageFlags.repeat_y; 
-        );
-        if ImageFlags.has tex.flags ~flag:ImageFlags.generate_mipmaps then (
-            Printf.printf "Error: non-power of two texture, mipmaps unsupported\n%!";
-            tex.flags <- ImageFlags.remove tex.flags ~flag:ImageFlags.generate_mipmaps
-        )
-    );
-
     let v = (Gl.gen_textures t.impl 1).(0) in
 
     tex.tex <- Some v;
@@ -281,12 +257,15 @@ let create_texture t type_ width height flags (data : Buffer.UByte.t) =
     bind_texture t tex.tex;
 
     Gl.pixel_storei t.impl Gl.unpack_alignment 1;
+    Gl.pixel_storei t.impl Gl.unpack_row_length tex.width;
+    Gl.pixel_storei t.impl Gl.unpack_skip_pixels 0;
+    Gl.pixel_storei t.impl Gl.unpack_skip_rows 0;
 
     begin match tex.type_ with
     | `RGBA ->
         Gl.tex_image2d t.impl Gl.texture_2d 0 Gl.rgba width height 0 Gl.rgba Gl.unsigned_byte data
     | `Alpha ->
-        Gl.tex_image2d t.impl Gl.texture_2d 0 Gl.luminance width height 0 Gl.luminance Gl.unsigned_byte data
+        Gl.tex_image2d t.impl Gl.texture_2d 0 Gl.r8 width height 0 Gl.red Gl.unsigned_byte data
     end;
 
     let mipmaps = ImageFlags.has tex.flags ~flag:ImageFlags.generate_mipmaps in
@@ -313,6 +292,9 @@ let create_texture t type_ width height flags (data : Buffer.UByte.t) =
     Gl.tex_parameteri_2 t.impl Gl.texture_2d Gl.texture_wrap_t wrap_t;
 
     Gl.pixel_storei t.impl Gl.unpack_alignment 4;
+    Gl.pixel_storei t.impl Gl.unpack_row_length 0;
+    Gl.pixel_storei t.impl Gl.unpack_skip_pixels 0;
+    Gl.pixel_storei t.impl Gl.unpack_skip_rows 0;
 
     if mipmaps then (
         Gl.generate_mipmap t.impl Gl.texture_2d;
@@ -401,7 +383,7 @@ let delete_texture t ~image =
             true
 ;;
 
-let update_texture t ~image ~x:_ ~y ~w:_ ~h ~data = 
+let update_texture t ~image ~x ~y ~w ~h ~data = 
     let tex = find_texture_by_id t image in
     match tex with
     | None -> 
@@ -410,7 +392,11 @@ let update_texture t ~image ~x:_ ~y ~w:_ ~h ~data =
     | Some tex ->
         bind_texture t tex.tex;
         Gl.pixel_storei t.impl Gl.unpack_alignment 1;
+        Gl.pixel_storei t.impl Gl.unpack_row_length tex.width;
+        Gl.pixel_storei t.impl Gl.unpack_skip_pixels x;
+        Gl.pixel_storei t.impl Gl.unpack_skip_rows y;
         
+        (*
         let index =
             match tex.type_ with
             | `RGBA -> y*tex.width*4
@@ -423,15 +409,19 @@ let update_texture t ~image ~x:_ ~y ~w:_ ~h ~data =
         (* Should not copy *)
         let len = Buffer.UByte.length data - index in
         let data = Buffer.UByte.sub data index len in
+        *)
 
         begin match tex.type_ with
         | `RGBA -> 
             Gl.tex_sub_image2d t.impl Gl.texture_2d 0 x y w h Gl.rgba Gl.unsigned_byte data
         | `Alpha ->
-            Gl.tex_sub_image2d t.impl Gl.texture_2d 0 x y w h Gl.luminance Gl.unsigned_byte data
+            Gl.tex_sub_image2d t.impl Gl.texture_2d 0 x y w h Gl.red Gl.unsigned_byte data
         end;
 
         Gl.pixel_storei t.impl Gl.unpack_alignment 4;
+        Gl.pixel_storei t.impl Gl.unpack_row_length 0;
+        Gl.pixel_storei t.impl Gl.unpack_skip_pixels 0;
+        Gl.pixel_storei t.impl Gl.unpack_skip_rows 0;
         bind_texture t None;
 
         check_error "update_texture_2";
