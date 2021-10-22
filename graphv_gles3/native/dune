@@ -2,7 +2,7 @@
  (public_name graphv_gles3_native_impl)
  (foreign_stubs (language c) 
     (names gles3_stubs)
-    (flags :standard -O2)
+    (flags :standard -O3)
   )
  (libraries
    graphv_core_lib

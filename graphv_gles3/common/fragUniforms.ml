@@ -7,10 +7,10 @@ let count = 44
 let byte_size = count*4
 
 let set t i i2 v = 
-  Dyn.set t (i*count*4 + i2) v
+  Dyn.set t (i + i2) v
 
 let get t i i2 = 
-  Dyn.get t (i*count*4 + i2)
+  Dyn.get t (i + i2)
 
 let create () =
   Dyn.create (count*4*100)
@@ -79,7 +79,7 @@ let get_extent1 t i =
 
 let reset t z =
   for i=0 to (count*4) do
-    Dyn.set t (z*count*4 + i) 0.
+    Dyn.set t (z + i) 0.
   done
 ;;
 
@@ -93,7 +93,4 @@ let set_type t i typ      = set t i 43 typ
 let as_array t = Dyn.unsafe_array t
 
 let make_slot t num align =
-  let len = Dyn.length t in
-  let offset = (len / align + 1) * align in
-  Dyn.set t (offset + num*align) 0.;
-  offset
+  Dyn.add_range t (num * align)

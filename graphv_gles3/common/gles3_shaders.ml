@@ -14,9 +14,12 @@ layout(std140) uniform frag {
     float feather;
     float strokeMult;
     float strokeThr;
-    float texType;
-    float type;
+    float texType_;
+    float type_;
 };
+
+#define type int(type_)
+#define texType int(texType_)
 
 uniform sampler2D tex;
 in vec2 ftcoord;
@@ -51,7 +54,7 @@ void main(void) {
 #else
 	float strokeAlpha = 1.0;
 #endif
-	if (type == 0.) {			// Gradient
+	if (type == 0) {			// Gradient
 		// Calculate gradient color using box gradient
 		vec2 pt = (paintMat * vec3(fpos,1.0)).xy;
 		float d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);
@@ -59,25 +62,25 @@ void main(void) {
 		// Combine alpha
 		color *= strokeAlpha * scissor;
 		result = color;
-	} else if (type == 1.) {		// Image
+	} else if (type == 1) {		// Image
 		// Calculate color fron texture
 
 		vec2 pt = (paintMat * vec3(fpos,1.0)).xy / extent;
 		vec4 color = texture(tex, pt);
 
-		if (texType == 1.) color = vec4(color.xyz*color.w,color.w);
-		if (texType == 2.) color = vec4(color.x);
+		if (texType == 1) color = vec4(color.xyz*color.w,color.w);
+		if (texType == 2) color = vec4(color.x);
 		// Apply color tint and alpha.
 		color *= innerCol;
 		// Combine alpha
 		color *= strokeAlpha * scissor;
 		result = color;
-	} else if (type == 2.) {		// Stencil fill
+	} else if (type == 2) {		// Stencil fill
 		result = vec4(1,1,1,1);
-	} else if (type == 3.) {		// Textured tris
+	} else if (type == 3) {		// Textured tris
 		vec4 color = texture(tex, ftcoord);
-		if (texType == 1.) color = vec4(color.xyz*color.w,color.w);
-		if (texType == 2.) color = vec4(color.x);
+		if (texType == 1) color = vec4(color.xyz*color.w,color.w);
+		if (texType == 2) color = vec4(color.x);
 		color *= scissor;
 		result = color * innerCol;
 	}

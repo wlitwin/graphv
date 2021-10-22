@@ -143,35 +143,29 @@ module Call = struct
         paths : IPath.t DynArray.t;
     }
 
-    let create uniforms align type_ = {
+    let create type_ = {
         type_ = type_;
         image = 0;
         path_count = 0;
         triangle_offset = 0;
         triangle_count = 0;
-        uniform_offset = FragUniforms.make_slot uniforms align 2;
+        uniform_offset = -1;
         blend_func = Blend.empty;
         (* TODO - could pool these globally and steal into individual arrays? *)
         paths = DynArray.create 10 IPath.empty;
     }
 
-    let empty uniforms align () =
-        create uniforms align Stroke
+    let empty () =
+        create Stroke
 
-    let reset (frag_uniforms : FragUniforms.t) t type_ =
+    let reset t type_ =
         t.type_ <- type_;
         t.image <- 0;
         t.path_count <- 0;
         t.triangle_offset <- 0;
         t.triangle_count <- 0;
-        t.uniform_offset <- 0;
+        t.uniform_offset <- -1; 
         t.blend_func <- Blend.empty;
-        FragUniforms.reset frag_uniforms t.uniform_offset;
-        FragUniforms.reset frag_uniforms (t.uniform_offset+1);
-        (*
-        Buffer.Float.fill t.uniform_offset 0.;
-        Buffer.Float.fill (t.uniforms_offset+1) 0.;
-           *)
         DynArray.clear t.paths;
     ;;
 end
@@ -379,7 +373,7 @@ let create ~(flags : CreateFlags.t) impl =
 
             (*verts = VertexBuffer.create();*)
             paths = DynArray.create 128 IPath.empty;
-            calls = DynArray.init 128 (Call.empty frag_uniforms frag_size);
+            calls = DynArray.init 128 Call.empty;
         } in
 
         t.dummy_tex <-
@@ -542,8 +536,8 @@ let convert_paint t frag (paint : Paint.t) (scissor : Scissor.t) width fringe st
 ;;
 
 let render_fill t (paint : Paint.t) composite_op scissor fringe (bounds : Bounds.t) (paths : Path.t DynArray.t) (verts : VertexBuffer.t) =
-    let call = DynArray.steal t.calls (Call.empty t.frag_uniforms t.frag_size) in
-    Call.reset t.frag_uniforms call Call.Fill;
+    let call = DynArray.steal t.calls Call.empty in
+    Call.reset call Call.Fill;
 
     let npaths = DynArray.length paths in
     call.triangle_count <- 4;
@@ -611,19 +605,22 @@ let render_fill t (paint : Paint.t) composite_op scissor fringe (bounds : Bounds
             0.5
             1.;
 
+        call.uniform_offset <- FragUniforms.make_slot t.frag_uniforms 2 t.frag_size;
+
         FragUniforms.set_type t.frag_uniforms call.uniform_offset ShaderType.simple;
         FragUniforms.set_stroke_thr t.frag_uniforms call.uniform_offset ~-.1.;
         (* Fill shader *)
-        convert_paint t (call.uniform_offset+1) paint scissor fringe fringe ~-.1.;
+        convert_paint t (call.uniform_offset+t.frag_size) paint scissor fringe fringe ~-.1.;
     ) else (
+        call.uniform_offset <- FragUniforms.make_slot t.frag_uniforms 1 t.frag_size;
         (* Fill shader *)
         convert_paint t call.uniform_offset paint scissor fringe fringe ~-.1.;
     )
 ;;
 
 let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (paths : Path.t DynArray.t) =
-    let call = DynArray.steal t.calls (Call.empty t.frag_uniforms t.frag_size) in
-    Call.reset t.frag_uniforms call Call.Stroke;
+    let call = DynArray.steal t.calls Call.empty in
+    Call.reset call Call.Stroke;
 
     call.image <- paint.image; 
     call.blend_func <- Blend.of_composite_op_state composite_op;
@@ -643,15 +640,17 @@ let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (
     );
 
     if CreateFlags.has t.flags ~flag:CreateFlags.stencil_strokes then (
+        call.uniform_offset <- FragUniforms.make_slot t.frag_uniforms 2 t.frag_size;
         convert_paint t call.uniform_offset paint scissor stroke_width fringe ~-.1.;
-        convert_paint t (call.uniform_offset+1) paint scissor stroke_width fringe (1. -. 0.5/.255.);
+        convert_paint t (call.uniform_offset+t.frag_size) paint scissor stroke_width fringe (1. -. 0.5/.255.);
     ) else (
+        call.uniform_offset <- FragUniforms.make_slot t.frag_uniforms 1 t.frag_size;
         convert_paint t call.uniform_offset paint scissor stroke_width fringe ~-.1.
     )
 ;;
 
 let set_uniforms t offset image =
-    Gl.bind_buffer_range t.impl Gl.uniform_buffer 0 t.frag_buf offset FragUniforms.byte_size;
+    Gl.bind_buffer_range t.impl Gl.uniform_buffer 0 t.frag_buf (offset*4) FragUniforms.byte_size;
     
     let tex = 
         if Int.(not (equal image 0)) then (
@@ -811,6 +810,13 @@ let flush t verts =
 
         t.blend_func <- Blend.empty;
 
+        (* Uniforms *)
+        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
+        Gl.buffer_data t.impl 
+            Gl.uniform_buffer 
+            (FragUniforms.as_array t.frag_uniforms)
+            Gl.stream_draw;
+
         (* Upload vertex data *)
         Gl.bind_buffer t.impl Gl.array_buffer t.vert_buf;
 
@@ -828,10 +834,6 @@ let flush t verts =
         (* Upload uniforms *)
         (* TODO - *)
         Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
-        Gl.buffer_data t.impl 
-            Gl.uniform_buffer 
-            (FragUniforms.as_array t.frag_uniforms)
-            Gl.stream_draw;
 
         DynArray.iter t.calls ~f:(fun call ->
             blend_func_separate t call.blend_func;
@@ -845,6 +847,12 @@ let flush t verts =
         Gl.disable_vertex_attrib_array t.impl 0;
         Gl.disable_vertex_attrib_array t.impl 1;
         Gl.disable t.impl Gl.cull_face_enum;
+
+        (* Reset the uniform buffer *)
+        let frag_arr = FragUniforms.as_array t.frag_uniforms in
+        Buffer.Float.fill frag_arr 0.;
+        Dyn.clear t.frag_uniforms;
+
         (*Gl.bind_buffer Gl.array_buffer 0;
         Gl.use_program Gl.null_program;*)
         bind_texture t None;
@@ -855,8 +863,8 @@ let flush t verts =
 ;;
 
 let render_triangles (t : t) (paint : Paint.t) composite_op scissor fringe verts =
-    let call = DynArray.steal t.calls (Call.empty t.frag_uniforms t.frag_size) in
-    Call.reset t.frag_uniforms call Call.Triangles;
+    let call = DynArray.steal t.calls Call.empty in
+    Call.reset call Call.Triangles;
 
     call.image <- paint.image;
     call.blend_func <- Blend.of_composite_op_state composite_op;
@@ -866,6 +874,7 @@ let render_triangles (t : t) (paint : Paint.t) composite_op scissor fringe verts
     call.triangle_count <- VertexBuffer.Sub.length verts;
 
     (* Fill shader *)
+    call.uniform_offset <- FragUniforms.make_slot t.frag_uniforms 1 t.frag_size;
     convert_paint t call.uniform_offset paint scissor 1. fringe ~-.1.;
     FragUniforms.set_type t.frag_uniforms call.uniform_offset ShaderType.img;
 
