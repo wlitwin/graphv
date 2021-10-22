@@ -115,7 +115,7 @@ let triangles : begin_mode = 0x4
 let stream_draw : buffer_usage = 0x88E0
 let invalid_enum : error_code = 0x500
 let uniform_buffer_offset_alignment : enum = 0x8A34
-let uniform_buffer : enum = 0x8A11
+let uniform_buffer : buffer_target = 0x8A11
 
 external cull_face : cull_face_mode -> unit = "gles3_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles3_clear_color"[@@noalloc]

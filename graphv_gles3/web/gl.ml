@@ -82,9 +82,11 @@ let scissor_test : enable_cap = Js.Unsafe.pure_js_expr "0xC11"
 let texture0 : enum = Js.Unsafe.pure_js_expr "0x84C0"
 let float : data_type = Js.Unsafe.pure_js_expr "0x1406"
 let array_buffer : buffer_target = Js.Unsafe.pure_js_expr "0x8892"
+let uniform_buffer : buffer_target = Js.Unsafe.pure_js_expr "0x8A11"
 let triangles : begin_mode = Js.Unsafe.pure_js_expr "0x4"
 let stream_draw : buffer_usage = Js.Unsafe.pure_js_expr "0x88E0"
 let invalid_enum : error_code = Js.Unsafe.pure_js_expr "0x500"
+let uniform_buffer_offset_alignment : int WebGL.parameter = Js.Unsafe.pure_js_expr "0x8A34"
 
 let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
     match a, b with
@@ -109,6 +111,22 @@ let stencil_mask (c : t) m = c##stencilMask m
 let stencil_func (c : t) m a b = c##stencilFunc m a b
 let stencil_op (c : t) a b d = c##stencilOp a b d
 let stencil_op_separate (c : t) a b e d = c##stencilOpSeparate a b e d
+
+type program = WebGL.program Js.t
+
+let uniform_block_binding (c : t) (p : program) (a : 'a WebGL.uniformLocation Js.t) (b : int) : unit =
+    let open Js.Unsafe in
+    (coerce c)##uniformBlockBinding p a b
+;;
+
+let get_integer (c : t) p =
+    c##getParameter p
+;;
+
+let bind_buffer_range (c : t) (target : buffer_target) (index : int) (buffer : buffer_id) (offset : int) (size : int) : unit =
+    let open Js.Unsafe in
+    (coerce c)##bindBufferRange target index buffer offset size
+;;
 
 let blend_func_separate (c : t) a b e d = c##blendFuncSeparate a b e d
 let pixel_storei (c : t) t v =
@@ -180,7 +198,6 @@ let color_mask (c : t) a b z d =
     c##colorMask a b z d
 ;;
 
-type program = WebGL.program Js.t
 let use_program (c : t) p = c##useProgram p
 
 let uniform1i (c : t) idx v = c##uniform1i idx v
@@ -194,6 +211,7 @@ type locs = {
     tex : int uniform_location;
     view_size : [`vec2] uniform_location;
     vert_buf : buffer_id;
+    frag_buf : buffer_id;
 }
 
 let create_shader (c : t) vshader fshader =
@@ -247,5 +265,6 @@ let create_program (c : t) =
         let tex = c##getUniformLocation prog Js.(string "tex") in
         let frag = c##getUniformLocation prog Js.(string "frag") in
         let vert_buf = c##createBuffer in
-        Some (prog, { frag; tex; view_size; vert_buf})
+        let frag_buf = c##createBuffer in
+        Some (prog, { frag; tex; view_size; vert_buf; frag_buf })
 ;;
