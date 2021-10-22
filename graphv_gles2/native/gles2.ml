@@ -226,8 +226,8 @@ let create_program (_t : t) =
         })
     ;;
 
-let buffer_data (_t : t) target buffer how =
-    buffer_data target buffer how
+let buffer_data (_t : t) target buffer size how =
+    buffer_data target buffer size how
 ;;
 
 let check_error () = Utils.check_error

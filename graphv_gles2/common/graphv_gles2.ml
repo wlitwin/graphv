@@ -772,6 +772,7 @@ end
             t.impl
             Gl.array_buffer 
             (VertexBuffer.unsafe_array verts)
+            (VertexBuffer.num_bytes verts)
             Gl.stream_draw;
     ;;
 

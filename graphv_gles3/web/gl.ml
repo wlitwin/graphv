@@ -145,8 +145,9 @@ let vertex_attrib_pointer (c : t) a b g d e f =
 let tex_parameteri_1 (c : t) t a b = c##texParameteri t a b
 let tex_parameteri_2 (c : t) t a b = c##texParameteri t a b
 
-let buffer_data (c : t) t (buffer : buffer) b =
-    c##bufferData t buffer b
+let buffer_data (c : t) (t : buffer_target) (buffer : buffer) (size : int) (b : buffer_usage) : unit =
+    let open Js.Unsafe in
+    (coerce c)##bufferData t buffer b 0 (size/4)
 
 let tex_image2d (c : t) q w e r t y u i o =
     c##texImage2D_fromView q w e r t y u i o

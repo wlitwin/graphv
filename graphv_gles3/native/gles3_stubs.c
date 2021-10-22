@@ -42,7 +42,7 @@ CAMLprim value fast_ba_fill(value buffer, value num)
     CAMLparam2 (buffer, num);
     GLsizei size = Caml_ba_array_val(buffer)->dim[0] * 4;
     float* data = (float*)Caml_ba_data_val(buffer);
-    memset(data, 0, size);
+    memset(data, Double_val(num), size);
     CAMLreturn(Val_unit);
 }
 
@@ -64,13 +64,13 @@ CAMLprim value gles3_uniform1i(value v1, value v2)
     CAMLreturn (Val_unit);
 }
 
-CAMLprim value gles3_buffer_data(value v1, value v2, value v3)
+CAMLprim value gles3_buffer_data(value v1, value v2, value size, value v3)
 {
-    CAMLparam3 (v1, v2, v3);
+    CAMLparam4 (v1, v2, size, v3);
 
-    GLsizei size = Caml_ba_array_val(v2)->dim[0] * 4;
+    // GLsizei size = Caml_ba_array_val(v2)->dim[0] * 4;
     float* data = (float*)Caml_ba_data_val(v2);
-    glBufferData(Int_val(v1), size, data, Int_val(v3));
+    glBufferData(Int_val(v1), Int_val(size), data, Int_val(v3));
 
     CAMLreturn (Val_unit);
 }

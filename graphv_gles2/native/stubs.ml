@@ -119,7 +119,7 @@ external cull_face : cull_face_mode -> unit = "gles2_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles2_clear_color"[@@noalloc]
 external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles2_uniform4fv"[@@noalloc]
 external uniform2fv : [`vec2] uniform_location -> float_buffer -> unit = "gles2_uniform2fv"[@@noalloc]
-external buffer_data : buffer_target -> float_buffer -> buffer_usage -> unit = "gles2_buffer_data"[@@noalloc]
+external buffer_data : buffer_target -> float_buffer -> int -> buffer_usage -> unit = "gles2_buffer_data"[@@noalloc]
 external enable : enable_cap -> unit = "gles2_enable"[@@noalloc]
 external disable : enable_cap -> unit = "gles2_disable"[@@noalloc]
 external finish : unit -> unit = "gles2_finish"[@@noalloc]
@@ -201,6 +201,8 @@ type locs = {
     vert_buf : buffer_id;
 }
 
+external fast_ba_fill : float_buffer -> float -> unit = "fast_ba_fill"[@@noalloc]
+
 module Buffer = struct
     module UByte = struct
         type t = (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
@@ -232,7 +234,7 @@ module Buffer = struct
         let get : t -> int -> float = Bigarray.Array1.unsafe_get
         let set : t -> int -> float -> unit = Bigarray.Array1.unsafe_set
         let length : t -> int  = Bigarray.Array1.dim
-        let fill : t -> float -> unit  = Bigarray.Array1.fill
+        let fill : t -> float -> unit = (*Bigarray.Array1.fill*) fast_ba_fill
         let blit ~(src : t) ~(s_off : int) ~(dst : t) ~(d_off : int) ~(len : int) : unit = 
             let a = Bigarray.Array1.sub src s_off len in
             let b = Bigarray.Array1.sub dst d_off len in

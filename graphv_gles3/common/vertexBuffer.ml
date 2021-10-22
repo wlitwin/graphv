@@ -6,7 +6,7 @@ type t = {
 }
 
 let create () =
-    let arr = Dyn.create 100000 in
+    let arr = Dyn.create 10000 in
     {
         arr;
         size = 0;
@@ -18,13 +18,13 @@ let clear t =
     t.size <- 0;
 ;;
 
-let iteri t ~f =
+let [@inline always] iteri t ~f =
     for i=0 to t.size-.1 do
         f i Dyn.(get t.arr i)
     done
 ;;
 
-let iter t ~f =
+let [@inline always] iter t ~f =
     for i=0 to t.size-.1 do
         f Dyn.(get t.arr i)
     done
@@ -38,7 +38,7 @@ let capacity t =
     Dyn.capacity t.arr /. 4
 ;;
 
-let iterv t ~f =
+let [@inline always] iterv t ~f =
     let len = num_verts t -. 1 in
     let rec loop i =
         if (*i >= len*) len <. i then ()
@@ -63,9 +63,9 @@ let [@inline always] check_size t idx =
 ;;
 
 
-let [@inline always] set t idx x y u v =
+let set t idx x y u v =
     t.size <- imax (idx+.1) t.size;
-    (*check_size t idx;*)
+    check_size t idx;
     let off = idx*.4 in
     Dyn.set t.arr off x;
     Dyn.set t.arr (off+.1) y;

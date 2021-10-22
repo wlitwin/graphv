@@ -766,14 +766,6 @@ let triangles t (call : Call.t) =
     check_error "triangles fill";
 ;;
 
-let upload t verts =
-    Gl.buffer_data 
-        t.impl
-        Gl.array_buffer 
-        (VertexBuffer.unsafe_array verts)
-        Gl.stream_draw;
-;;
-
 let flush t verts =
     if FloatOps.(DynArray.length t.calls >. 0) then (
         (* Setup OpenGL state *)
@@ -800,17 +792,15 @@ let flush t verts =
 
         t.blend_func <- Blend.empty;
 
-        (* Uniforms *)
-        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
-        Gl.buffer_data t.impl 
-            Gl.uniform_buffer 
-            (FragUniforms.as_array t.frag_uniforms)
-            Gl.stream_draw;
-
         (* Upload vertex data *)
         Gl.bind_buffer t.impl Gl.array_buffer t.vert_buf;
 
-        upload t verts;
+        Gl.buffer_data 
+            t.impl
+            Gl.array_buffer 
+            (VertexBuffer.unsafe_array verts)
+            (VertexBuffer.num_bytes verts)
+            Gl.stream_draw;
 
         Gl.enable_vertex_attrib_array t.impl 0;
         Gl.enable_vertex_attrib_array t.impl 1;
@@ -822,8 +812,15 @@ let flush t verts =
         Gl.uniform2fv t.impl t.locs.view_size t.view;
 
         (* Upload uniforms *)
-        (* TODO - *)
+(*        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf; *)
+
+        (* Uniforms *)
         Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
+        Gl.buffer_data t.impl 
+            Gl.uniform_buffer 
+            (FragUniforms.as_array t.frag_uniforms)
+            (Dyn.length t.frag_uniforms * 4)
+            Gl.stream_draw;
 
         DynArray.iter t.calls ~f:(fun call ->
             blend_func_separate t call.blend_func;
