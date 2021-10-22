@@ -3,8 +3,34 @@ module type S = sig
 
     module Buffer : Buffer.S 
 
-    module Dyn : Sigs.DynArrayS
-        with type underlying = Buffer.Float.t
+    module Dyn : sig
+        type t = private {
+            mutable arr : Buffer.Float.t;
+            mutable size : int; 
+        }
+        type underlying = Buffer.Float.t
+        val create : int -> t
+        val clear : t -> unit
+        val get : t -> int -> float
+        val set : t -> int -> float -> unit
+        val capacity : t -> int
+        val length : t -> int
+        val add_range : t -> int -> int
+        val unsafe_array : t -> underlying
+
+        module Sub : sig
+            type sub = private {
+                off : int;
+                len : int;
+                t : t
+            }
+
+            val sub : t -> int -> int -> sub
+            val offset : sub -> int
+            val length : sub -> int
+            val blit : src:sub -> dst:t -> src_start:int -> dst_start:int -> len:int -> unit
+        end
+      end
 
     module VertexBuffer : sig
         type t = { arr : Dyn.t; mutable size : int }

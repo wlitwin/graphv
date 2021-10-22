@@ -4,11 +4,11 @@ type 'a t = {
     mutable size : int;
 }
 
-let empty t = t.size = 0
+let [@inline always] empty t = t.size = 0
 
 let remove t idx =
     for i=idx to t.size-2 do
-        t.arr.(i) <- t.arr.(i+1)
+        Array.unsafe_set t.arr i (Array.unsafe_get t.arr (i+1))
     done;
     t.size <- max (t.size - 1) 0;
 ;;
@@ -25,13 +25,13 @@ let init cap f = {
     size = 0;
 }
 
-let get t idx =
+let [@inline always] get t idx =
     (*assert (idx >= 0 && idx < t.size);*)
     Array.unsafe_get t.arr idx
 
 let copy (t : 'a t) (copy : 'a -> 'a) : 'a t =
     let arr = Array.init (Array.length t.arr) (fun idx ->
-        copy t.arr.(idx)
+        copy (Array.unsafe_get t.arr idx)
     ) in
     {
         empty_value = t.empty_value;
@@ -45,11 +45,11 @@ let add t value =
     if t.size >= len then (
         let new_arr = Array.init
             (len * 3 / 2)
-            (fun i -> if i < (*t.size*) len then t.arr.(i) else t.empty_value)
+            (fun i -> if i < (*t.size*) len then Array.unsafe_get t.arr i else t.empty_value)
         in
         t.arr <- new_arr;
     );
-    t.arr.(t.size) <- value;
+    Array.unsafe_set t.arr t.size value;
     t.size <- t.size + 1;
 ;;
 
@@ -60,9 +60,9 @@ let append_steal ~dst ~src create =
             (d_len * 3 / 2)
             (fun i ->
                 if i < dst.size then (
-                    dst.arr.(i)
+                    Array.unsafe_get dst.arr i
                 ) else if (i - dst.size) < src.size then (
-                    src.arr.(i - dst.size)
+                    Array.unsafe_get src.arr (i - dst.size)
                 ) else (
                     create()
                 )
@@ -71,7 +71,7 @@ let append_steal ~dst ~src create =
         dst.arr <- new_arr;
     ) else (
         for i=dst.size to (dst.size+src.size) do
-            dst.arr.(i) <- src.arr.(i-dst.size)
+            Array.unsafe_set dst.arr i (Array.unsafe_get src.arr (i-dst.size))
         done;
     );
     dst.size <- dst.size + src.size
@@ -83,11 +83,11 @@ let steal t create =
         let new_arr = Array.init
             (len * 3 / 2)
             (* WARN - We can use len because the array should have been made with init *)
-            (fun i -> if i < (*t.size*) len then t.arr.(i) else create())
+            (fun i -> if i < (*t.size*) len then Array.unsafe_get t.arr i else create())
         in
         t.arr <- new_arr;
     );
-    let v = t.arr.(t.size) in
+    let v = Array.unsafe_get t.arr t.size in
     t.size <- t.size + 1;
     v
 ;;
@@ -95,14 +95,14 @@ let steal t create =
 let insert (t : 'a t) (idx : int) (value : 'a) : unit =
     add t value;
     for i=t.size-1 downto idx+1 do
-        t.arr.(i) <- t.arr.(i - 1);
+        Array.unsafe_set t.arr i (Array.unsafe_get t.arr (i - 1));
     done;
-    t.arr.(idx) <- value
+    Array.unsafe_set t.arr idx value
 ;;
 
 let [@inline] length t = t.size
 
-let iter (t : 'a t) ~(f : 'a -> unit) : unit =
+let [@inline always] iter (t : 'a t) ~(f : 'a -> unit) : unit =
     let len = t.size-1 in
     for i=0 to len do
         f (Array.unsafe_get t.arr i)
@@ -111,26 +111,26 @@ let iter (t : 'a t) ~(f : 'a -> unit) : unit =
 let clear ?(free=false) t =
     if free then (
         for i=0 to t.size-1 do
-            t.arr.(i) <- t.empty_value
+            Array.unsafe_set t.arr i t.empty_value
         done
     );
     t.size <- 0
 
-let last t =
-    t.arr.(t.size-1)
+let [@inline always] last t =
+    Array.unsafe_get t.arr (t.size-1)
 ;;
 
-let first t =
-    t.arr.(0)
+let [@inline always] first t =
+    Array.unsafe_get t.arr 0
 ;;
 
-let last_opt t =
+let [@inline always] last_opt t =
     if t.size = 0 then None
     else Some (last t)
 ;;
 
-let pop_back t =
+let [@inline always] pop_back t =
     t.size <- max (t.size - 1) 0
 ;;
 
-let unsafe_array t = t.arr
+let [@inline always] unsafe_array t = t.arr

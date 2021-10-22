@@ -787,7 +787,7 @@ module Make
                 let points = t.cache.points in
                 (* Wish we had sub arrays for DynArray *)
                 DynArray.iter t.cache.paths ~f:(fun path ->
-                    let get i =
+                    let [@inline always] get i =
                         DynArray.get points (path.first +. i)
                     in
                     (* If first and last points are the same, remove last, mark as closed *)

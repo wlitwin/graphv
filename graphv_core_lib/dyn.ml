@@ -1,6 +1,4 @@
-module Make(B : Buffer.S)
-    : Sigs.DynArrayS with type underlying = B.Float.t
-= struct
+module Make(B : Buffer.S) = struct
     type underlying = B.Float.t
 
     type t = {
