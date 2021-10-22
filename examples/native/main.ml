@@ -129,7 +129,7 @@ let _ =
         GLFW.swapBuffers ~window;
         GLFW.pollEvents();
 
-        (*continue := false;*)
+        (*continue := now < 5.;*)
     done;
 
     Printf.printf "MIN %.2f\n" !min_fps;

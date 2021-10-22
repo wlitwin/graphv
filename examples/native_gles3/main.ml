@@ -66,6 +66,7 @@ let _ =
     GLFW.windowHint ~hint:GLFW.ClientApi ~value:GLFW.OpenGLESApi;
     GLFW.windowHint ~hint:GLFW.ContextVersionMajor ~value:3;
     GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:2;
+    GLFW.windowHint ~hint:GLFW.OpenGLProfile ~value:GLFW.CoreProfile;
 
     let window = GLFW.createWindow ~width:1000 ~height:600 ~title:"window" () in
     (* Make the window's context current *)
@@ -129,7 +130,7 @@ let _ =
         GLFW.swapBuffers ~window;
         GLFW.pollEvents();
 
-        (*continue := false;*)
+        (*continue := now < 5.;*)
     done;
 
     Printf.printf "MIN %.2f\n" !min_fps;

@@ -1,10 +1,15 @@
 .PHONY: all release server test perf
 
-all:
-	dune build
-	./_build/default/examples/native/main.exe
+gles3:
+	dune build --profile release
+	./_build/default/examples/native_gles3/main.exe
 
-release:
+trace:
+	dune build --profile release
+	MEMTRACE=trace.ctf ./_build/default/examples/native_gles3/main.exe 1
+	MEMTRACE=trace2.ctf ./_build/default/examples/native/main.exe 1
+
+gles2:
 	dune build --profile release
 	./_build/default/examples/native/main.exe
 

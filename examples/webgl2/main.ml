@@ -139,7 +139,7 @@ let _ =
         end;
         if lst##.length > 1 then Js._true else Js._false
     )) Js._false |> ignore;
-    let vg = Gv.create ~flags:Gv.CreateFlags.(antialias lor stencil_strokes) ctx_webgl in
+    let vg = Gv.create ~flags:Gv.CreateFlags.(antialias lor stencil_strokes lor tesselate_afd) ctx_webgl in
 
     let _ = Gv.Text.create vg ~name:"mono" ~file:"mono" in
     let _ = Gv.Text.create vg ~name:"icons" ~file:"icons" in
