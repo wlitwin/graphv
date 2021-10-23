@@ -175,8 +175,6 @@ type t = {
     vert_buf : Gl.buffer_id;
     frag_buf : Gl.buffer_id;
     frag_size : int;
-    mutable last_vbo_size : int;
-    mutable last_ubo_size : int;
     mutable edge_antialias : bool;
     (* textures *)
     textures : (int, Texture.t) Hashtbl.t;
@@ -342,6 +340,7 @@ let create ~(flags : CreateFlags.t) impl =
         Printf.printf "Frag size before %d\n%!" frag_size;
         let frag_size = frag_size + align - (frag_size mod align) in
         Printf.printf "Frag size %d\n%!" frag_size;
+        let frag_size = frag_size / 4 in
 
         Gl.finish impl;
         let frag_uniforms = FragUniforms.create() in
@@ -354,8 +353,6 @@ let create ~(flags : CreateFlags.t) impl =
             frag_size;
             vert_buf = locs.vert_buf;
             frag_buf = locs.frag_buf;
-            last_vbo_size = 0;
-            last_ubo_size = 0;
             stencil_mask = 0;
             edge_antialias = CreateFlags.has flags ~flag:CreateFlags.antialias;
             (* textures *)
@@ -821,53 +818,26 @@ let flush t verts =
 
         (* Upload UBO data *)
         Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
-
         let ubo_size = Dyn.length t.frag_uniforms * 4 in
-        (* if t.last_ubo_size < ubo_size then ( *)
-            t.last_ubo_size <- ubo_size;
-            Gl.buffer_data
-                t.impl
-                Gl.uniform_buffer
-                (FragUniforms.as_array t.frag_uniforms)
-                ubo_size
-                Gl.dynamic_draw
-            ;
-                (*
-        ) else (
-            Gl.buffer_sub_data
-                t.impl
-                Gl.uniform_buffer
-                0
-                ubo_size
-                (FragUniforms.as_array t.frag_uniforms)
-        );
-                   *)
+        Gl.buffer_data
+            t.impl
+            Gl.uniform_buffer
+            (FragUniforms.as_array t.frag_uniforms)
+            ubo_size
+            Gl.stream_draw
+        ;
 
         (* Upload vertex data *)
         Gl.bind_buffer t.impl Gl.array_buffer t.vert_buf;
 
         let vert_size = VertexBuffer.num_bytes verts in
-
-        (*if t.last_vbo_size < vert_size then (
-            t.last_vbo_size <- vert_size;
-          *)
-            Gl.buffer_data
-                t.impl
-                Gl.array_buffer
-                (VertexBuffer.unsafe_array verts)
-                vert_size
-                Gl.stream_draw
-            ;
-            (*
-        ) else (
-            Gl.buffer_sub_data 
-                t.impl
-                Gl.array_buffer 
-                0
-                vert_size
-                (VertexBuffer.unsafe_array verts)
-        );
-               *)
+        Gl.buffer_data
+            t.impl
+            Gl.array_buffer
+            (VertexBuffer.unsafe_array verts)
+            vert_size
+            Gl.stream_draw
+        ;
 
         Gl.bind_vertex_array_object t.impl t.vao;
 

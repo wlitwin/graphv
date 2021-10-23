@@ -54,7 +54,6 @@ let [@inline always] iterv t ~f =
     loop 0
 ;;
 
-(*
 let check_size t idx =
     let len = (Dyn.length t.arr lsr 2) -. 1 in
     let idx = idx +. 1 in
@@ -83,7 +82,8 @@ let set t idx x y u v =
     Dyn.set t.arr (off+.2) u;
     Dyn.set t.arr (off+.3) v;
 ;;
-   *)
+
+(*
 let [@inline always] check_size t idx =
     let len = (Dyn.length t.arr lsr 2) -. 1 in
     if (*idx >= len*) len <. idx then (
@@ -101,6 +101,7 @@ let set t idx x y u v =
     Dyn.set t.arr (off+.2) u;
     Dyn.set t.arr (off+.3) v;
 ;;
+   *)
 
 let [@inline always] unsafe_set t idx x y u v =
     let off = idx*.4 in

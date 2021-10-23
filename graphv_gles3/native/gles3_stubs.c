@@ -86,6 +86,13 @@ CAMLprim value gles3_buffer_data(value v1, value v2, value size, value v3)
     CAMLreturn (Val_unit);
 }
 
+CAMLprim value gles3_buffer_data_null(value target, value size, value hint)
+{
+    CAMLparam3 (target, size, hint);
+    glBufferData(Int_val(target), Int_val(size), NULL, Int_val(hint));
+    CAMLreturn(Val_unit);
+}
+
 CAMLprim value gles3_buffer_sub_data(value target, value offset, value size, value data)
 {
     CAMLparam4 (target, offset, size, data);

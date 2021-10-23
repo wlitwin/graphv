@@ -1107,10 +1107,10 @@ module Make
                             let ly0 = p1.y + dly0*woff in
                             let lx1 = p1.x + dlx1*woff in
                             let ly1 = p1.y + dly1*woff in
-                            VertexBuffer.set t.cache.verts !dst lx0 ly0 0.5 1.;
-                            incr dst;
-                            VertexBuffer.set t.cache.verts !dst lx1 ly1 0.5 1.;
-                            incr dst;
+                            VertexBuffer.check_size t.cache.verts (!dst+.1);
+                            (VertexBuffer.unsafe_set[@cold]) t.cache.verts !dst lx0 ly0 0.5 1.;
+                            (VertexBuffer.unsafe_set[@cold]) t.cache.verts (!dst+.1) lx1 ly1 0.5 1.;
+                            dst := !dst +. 2;
                         )
                     ) else (
                         (* these are right *)
@@ -1942,6 +1942,9 @@ module Make
         ;;
 
         let transform_points verts (xm : Matrix.t) (q : FontContext.Quad.t) inv_scale =
+            let at = VertexBuffer.num_verts verts in
+            VertexBuffer.check_size verts (at+5);
+
             let open FloatOps in
             (* Transform corners *)
             let qx0 = q.x0*inv_scale in
@@ -1950,26 +1953,24 @@ module Make
             let c0 = qx0*xm.m0 + qy0*xm.m2 + xm.m4 in
             let c1 = qx0*xm.m1 + qy0*xm.m3 + xm.m5 in
 
-            let at = VertexBuffer.num_verts verts in
-            VertexBuffer.set verts at c0 c1 q.s0 q.t0;
-
             let qx1 = q.x1*inv_scale in
             let qy1 = q.y1*inv_scale in
             let c4 = qx1*xm.m0 + qy1*xm.m2 + xm.m4 in
             let c5 = qx1*xm.m1 + qy1*xm.m3 + xm.m5 in
-            VertexBuffer.set verts (at+.1) c4 c5 q.s1 q.t1;
 
             let c2 = qx1*xm.m0 + qy0*xm.m2 + xm.m4 in
             let c3 = qx1*xm.m1 + qy0*xm.m3 + xm.m5 in
-            VertexBuffer.set verts (at+.2) c2 c3 q.s1 q.t0;
-            VertexBuffer.set verts (at+.3) c0 c1 q.s0 q.t0;
 
             let c6 = qx0*xm.m0 + qy1*xm.m2 + xm.m4 in
             let c7 = qx0*xm.m1 + qy1*xm.m3 + xm.m5 in
 
             (* Create triangles *)
-            VertexBuffer.set verts (at+.4) c6 c7 q.s0 q.t1;
-            VertexBuffer.set verts (at+.5) c4 c5 q.s1 q.t1;
+            VertexBuffer.unsafe_set verts at c0 c1 q.s0 q.t0;
+            VertexBuffer.unsafe_set verts (at+.1) c4 c5 q.s1 q.t1;
+            VertexBuffer.unsafe_set verts (at+.2) c2 c3 q.s1 q.t0;
+            VertexBuffer.unsafe_set verts (at+.3) c0 c1 q.s0 q.t0;
+            VertexBuffer.unsafe_set verts (at+.4) c6 c7 q.s0 q.t1;
+            VertexBuffer.unsafe_set verts (at+.5) c4 c5 q.s1 q.t1;
         ;;
 
         let quad = FontContext.Quad.empty()

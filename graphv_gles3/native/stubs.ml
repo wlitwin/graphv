@@ -133,6 +133,7 @@ external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles3_
 external uniform4fv_offset : [`vec4] uniform_location -> float_buffer -> int -> int -> unit = "gles3_uniform4fv_offset"[@@noalloc]
 external uniform2fv : [`vec2] uniform_location -> float_buffer -> unit = "gles3_uniform2fv"[@@noalloc]
 external buffer_data : buffer_target -> float_buffer -> int -> buffer_usage -> unit = "gles3_buffer_data"[@@noalloc]
+external buffer_data_null : buffer_target -> int -> buffer_usage -> unit = "gles3_buffer_data_null"[@@noalloc]
 external buffer_sub_data : buffer_target -> (*offset*) int -> (*size*) int -> float_buffer -> unit = "gles3_buffer_sub_data"[@@noalloc]
 external enable : enable_cap -> unit = "gles3_enable"[@@noalloc]
 external disable : enable_cap -> unit = "gles3_disable"[@@noalloc]

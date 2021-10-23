@@ -167,6 +167,10 @@ let buffer_data (c : t) (t : buffer_target) (buffer : buffer) (size : int) (b : 
     let open Js.Unsafe in
     (coerce c)##bufferData t buffer b 0 (size/4)
 
+let buffer_data_null (c : t) (t : buffer_target) (size : int) (b : buffer_usage) : unit =
+    let open Js.Unsafe in
+    (coerce c)##bufferData t Js.null b 0 (size/4)
+
 let buffer_sub_data (c : t) (t : buffer_target) (offset : int) (size : int) (data : buffer) : unit =
     let open Js.Unsafe in
     (coerce c)##bufferSubData t offset data offset (size/4)
