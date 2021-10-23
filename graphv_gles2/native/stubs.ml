@@ -115,6 +115,8 @@ let triangles : begin_mode = 0x4
 let stream_draw : buffer_usage = 0x88E0
 let invalid_enum : error_code = 0x500
 
+let blending_factor_equal = Int.equal
+
 external cull_face : cull_face_mode -> unit = "gles2_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles2_clear_color"[@@noalloc]
 external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles2_uniform4fv"[@@noalloc]

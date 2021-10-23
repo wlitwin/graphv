@@ -41,6 +41,7 @@ module type S = sig
         val iterv : t -> f:(float -> float -> float -> float -> unit) -> unit
         val check_size : t -> int -> unit
         val set : t -> int -> float -> float -> float -> float -> unit
+        val unsafe_set : t -> int -> float -> float -> float -> float -> unit
         val get : t -> int -> float * float * float * float
         val num_bytes : t -> int
         val num_floats : t -> int
@@ -175,6 +176,7 @@ module type S = sig
     val stencil_op : t -> stencil_op -> stencil_op -> stencil_op -> unit
     val stencil_op_separate : t -> cull_face_mode -> stencil_op -> stencil_op -> stencil_op -> unit
 
+    val blending_factor_equal : blending_factor -> blending_factor -> bool
     val blend_func_separate : t -> blending_factor -> blending_factor -> blending_factor -> blending_factor -> unit
 
     val gen_textures : t -> int -> texture array

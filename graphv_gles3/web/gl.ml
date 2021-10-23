@@ -96,6 +96,11 @@ let red : pixel_format = Js.Unsafe.pure_js_expr "0x1903"
 let r8 : pixel_format = Js.Unsafe.pure_js_expr "0x8229"
 let null_vao : vertex_array_object = Js.null
 
+let blending_factor_equal : blending_factor -> blending_factor -> bool =
+    let open Js.Unsafe in
+    Js.Unsafe.pure_js_expr "function(a,b){return a==b}"
+;;
+
 let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
     match a, b with
     | None, None -> true

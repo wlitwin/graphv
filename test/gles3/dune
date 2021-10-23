@@ -1,10 +1,11 @@
 (executable
- (name graphv_gles2_tests)
+ (name graphv_gles3_tests)
  (ocamlopt_flags (:standard -inline 10000 -O3 -unboxed-types))
  (libraries
-    graphv_gles2_native
+    graphv_gles3_native
     glfw-ocaml
     tgls.tgles2
+    tgls.tgles3
     )
 ; (enabled_if (= %{profile} dev))
  )

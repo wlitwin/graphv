@@ -90,14 +90,19 @@ module Blend = struct
         dst_alpha = None;
     }
 
+    let blending_eq a b =
+      match a, b with
+      | None, None -> true
+      | Some a, Some b -> Gl.blending_factor_equal a b
+      | _ -> false
+
     let equal a b = 
-        Stdlib.(
-            a.src_rgb = b.src_rgb
-            && a.dst_rgb = b.dst_rgb
-            && a.src_alpha = b.src_alpha
-            && a.dst_alpha = b.dst_alpha
-        )
-    
+        (blending_eq a.src_rgb b.src_rgb)
+        && (blending_eq a.dst_rgb b.dst_rgb)
+        && (blending_eq a.src_alpha b.src_alpha)
+        && (blending_eq a.dst_alpha b.dst_alpha)
+    ;; 
+
     let of_composite_op_state (op : CompositeOperationState.t) = {
         src_rgb = Some (convert_blend_factor op.src_rgb);
         dst_rgb = Some (convert_blend_factor op.dst_rgb);

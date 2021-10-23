@@ -74,15 +74,20 @@ module Blend = struct
         src_alpha = None;
         dst_alpha = None;
     }
+    
+    let blending_eq a b =
+      match a, b with
+      | None, None -> true
+      | Some a, Some b -> Gl.blending_factor_equal a b
+      | _ -> false
 
     let equal a b = 
-        Stdlib.(
-            a.src_rgb = b.src_rgb
-            && a.dst_rgb = b.dst_rgb
-            && a.src_alpha = b.src_alpha
-            && a.dst_alpha = b.dst_alpha
-        )
-    
+        (blending_eq a.src_rgb b.src_rgb)
+        && (blending_eq a.dst_rgb b.dst_rgb)
+        && (blending_eq a.src_alpha b.src_alpha)
+        && (blending_eq a.dst_alpha b.dst_alpha)
+    ;; 
+
     let of_composite_op_state (op : CompositeOperationState.t) = {
         src_rgb = Some (convert_blend_factor op.src_rgb);
         dst_rgb = Some (convert_blend_factor op.dst_rgb);
@@ -329,6 +334,15 @@ let create ~(flags : CreateFlags.t) impl =
         Gl.vertex_attrib_pointer impl 1 2 Gl.float false 16 (0 + 2*4);
         Gl.bind_vertex_array_object impl Gl.null_vao;
 
+        Gl.bind_buffer impl Gl.array_buffer locs.frag_buf;
+        Gl.uniform_block_binding impl shader locs.frag 0;
+        let align = Gl.get_integer impl Gl.uniform_buffer_offset_alignment in
+        let frag_size = FragUniforms.byte_size in
+        Printf.printf "Alignment %d\n%!" align;
+        Printf.printf "Frag size before %d\n%!" frag_size;
+        let frag_size = frag_size + align - (frag_size mod align) in
+        Printf.printf "Frag size %d\n%!" frag_size;
+
         Gl.finish impl;
         let frag_uniforms = FragUniforms.create() in
 
@@ -337,7 +351,7 @@ let create ~(flags : CreateFlags.t) impl =
             shader;
             locs;
             vao;
-            frag_size = 176;
+            frag_size;
             vert_buf = locs.vert_buf;
             frag_buf = locs.frag_buf;
             last_vbo_size = 0;
@@ -651,7 +665,9 @@ let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (
 ;;
 
 let set_uniforms t offset image =
-    Gl.uniform4fv_offset t.impl t.locs.frag (FragUniforms.as_array t.frag_uniforms) offset t.frag_size;
+    Gl.bind_buffer_range t.impl Gl.uniform_buffer 0 t.frag_buf (offset*4) FragUniforms.byte_size;
+
+    (*Gl.uniform4fv_offset t.impl t.locs.frag (FragUniforms.as_array t.frag_uniforms) offset t.frag_size;*)
     
     let tex = 
         if Int.(not (equal image 0)) then (
@@ -803,19 +819,46 @@ let flush t verts =
 
         t.blend_func <- Blend.empty;
 
+        (* Upload UBO data *)
+        Gl.bind_buffer t.impl Gl.uniform_buffer t.frag_buf;
+
+        let ubo_size = Dyn.length t.frag_uniforms * 4 in
+        (* if t.last_ubo_size < ubo_size then ( *)
+            t.last_ubo_size <- ubo_size;
+            Gl.buffer_data
+                t.impl
+                Gl.uniform_buffer
+                (FragUniforms.as_array t.frag_uniforms)
+                ubo_size
+                Gl.dynamic_draw
+            ;
+                (*
+        ) else (
+            Gl.buffer_sub_data
+                t.impl
+                Gl.uniform_buffer
+                0
+                ubo_size
+                (FragUniforms.as_array t.frag_uniforms)
+        );
+                   *)
+
         (* Upload vertex data *)
         Gl.bind_buffer t.impl Gl.array_buffer t.vert_buf;
 
         let vert_size = VertexBuffer.num_bytes verts in
 
-        if t.last_vbo_size < vert_size then (
+        (*if t.last_vbo_size < vert_size then (
             t.last_vbo_size <- vert_size;
+          *)
             Gl.buffer_data
                 t.impl
                 Gl.array_buffer
                 (VertexBuffer.unsafe_array verts)
                 vert_size
-                Gl.dynamic_draw
+                Gl.stream_draw
+            ;
+            (*
         ) else (
             Gl.buffer_sub_data 
                 t.impl
@@ -824,6 +867,7 @@ let flush t verts =
                 vert_size
                 (VertexBuffer.unsafe_array verts)
         );
+               *)
 
         Gl.bind_vertex_array_object t.impl t.vao;
 

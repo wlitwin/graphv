@@ -43,6 +43,7 @@ module type S = sig
         val iterv : t -> f:(float -> float -> float -> float -> unit) -> unit
         val check_size : t -> int -> unit
         val set : t -> int -> float -> float -> float -> float -> unit
+        val unsafe_set : t -> int -> float -> float -> float -> float -> unit
         val get : t -> int -> float * float * float * float
         val num_bytes : t -> int
         val num_floats : t -> int

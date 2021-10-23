@@ -1,6 +1,6 @@
-open Tgles2
+open Tgles3
 
-module Gv = Graphv_gles2_native
+module Gv = Graphv_gles3_native
 
 type rect = {
     mutable x : float;
@@ -15,8 +15,8 @@ let _ =
     GLFW.init();
     at_exit GLFW.terminate;
     GLFW.windowHint ~hint:GLFW.ClientApi ~value:GLFW.OpenGLESApi;
-    GLFW.windowHint ~hint:GLFW.ContextVersionMajor ~value:2;
-    GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:0;
+    GLFW.windowHint ~hint:GLFW.ContextVersionMajor ~value:3;
+    GLFW.windowHint ~hint:GLFW.ContextVersionMinor ~value:2;
 
     let window =
         GLFW.createWindow ~width:400 ~height:400 ~title:"window" ()
@@ -137,9 +137,10 @@ let _ =
             Gv.Path.rect vg ~x:r.x ~y:r.y ~w:r.w ~h:r.h;
             Gv.fill vg;
 
-            (*Gv.Cache.begin_ vg;
+            (*
+            Gv.Cache.begin_ vg;
             Gv.Cache.draw vg tess ~x:r.x ~y:r.y;
-            *)
+               *)
         done;
 
         Gv.end_frame vg;

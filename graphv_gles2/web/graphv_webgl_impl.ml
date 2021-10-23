@@ -181,6 +181,14 @@ module VertexBuffer = struct
         Dyn.set t.arr (off+3) v;
     ;;
 
+    let unsafe_set t idx x y u v =
+        let off = idx*4 in
+        Dyn.set t.arr off x;
+        Dyn.set t.arr (off+1) y;
+        Dyn.set t.arr (off+2) u;
+        Dyn.set t.arr (off+3) v;
+    ;;
+
     let get (t : t) (idx : int) : float*float*float*float =
         let x = Dyn.get t.arr (idx*4+0) in
         let y = Dyn.get t.arr (idx*4+1) in
@@ -361,6 +369,11 @@ let array_buffer : buffer_target = Js.Unsafe.pure_js_expr "0x8892"
 let triangles : begin_mode = Js.Unsafe.pure_js_expr "0x4"
 let stream_draw : buffer_usage = Js.Unsafe.pure_js_expr "0x88E0"
 let invalid_enum : error_code = Js.Unsafe.pure_js_expr "0x500"
+
+let blending_factor_equal : blending_factor -> blending_factor -> bool =
+    let open Js.Unsafe in
+    Js.Unsafe.pure_js_expr "function(a,b){return a==b}"
+;;
 
 let texture_equal (_c : t) (a : texture option) (b : texture option) : bool =
     match a, b with

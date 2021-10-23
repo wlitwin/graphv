@@ -125,6 +125,8 @@ let red : pixel_format = 0x1903
 let r8 : pixel_format = 0x8229
 let null_vao : vertex_array_object = 0
 
+let blending_factor_equal = Int.equal
+
 external cull_face : cull_face_mode -> unit = "gles3_cull_face"[@@noalloc]
 external clear_color : float -> float -> float -> float -> unit = "gles3_clear_color"[@@noalloc]
 external uniform4fv : [`vec4] uniform_location -> float_buffer -> unit = "gles3_uniform4fv"[@@noalloc]

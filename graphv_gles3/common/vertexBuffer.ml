@@ -54,6 +54,36 @@ let [@inline always] iterv t ~f =
     loop 0
 ;;
 
+(*
+let check_size t idx =
+    let len = (Dyn.length t.arr lsr 2) -. 1 in
+    let idx = idx +. 1 in
+    if (*idx >= len*) len <. idx then (
+        let new_len = imax (idx -. len +. 2) 1 in
+        Dyn.add_range t.arr (new_len lsl 2) |> ignore;
+    );
+    t.size <- imax idx t.size;
+;;
+
+let grow_vertex t idx =
+    t.size <- idx+.1;
+    let len = Dyn.length t.arr in
+    let idx = t.size lsl 4 in
+    let new_len = imax (idx -. len) 16 in
+    Dyn.add_range t.arr new_len |> ignore
+;;
+
+let set t idx x y u v =
+    if Dyn.length t.arr <. ((idx+.1) lsl 4) then (
+        grow_vertex t idx;
+    );
+    let off = idx*.4 in
+    Dyn.set t.arr off x;
+    Dyn.set t.arr (off+.1) y;
+    Dyn.set t.arr (off+.2) u;
+    Dyn.set t.arr (off+.3) v;
+;;
+   *)
 let [@inline always] check_size t idx =
     let len = (Dyn.length t.arr lsr 2) -. 1 in
     if (*idx >= len*) len <. idx then (
@@ -62,10 +92,17 @@ let [@inline always] check_size t idx =
     );
 ;;
 
-
 let set t idx x y u v =
     t.size <- imax (idx+.1) t.size;
     check_size t idx;
+    let off = idx*.4 in
+    Dyn.set t.arr off x;
+    Dyn.set t.arr (off+.1) y;
+    Dyn.set t.arr (off+.2) u;
+    Dyn.set t.arr (off+.3) v;
+;;
+
+let [@inline always] unsafe_set t idx x y u v =
     let off = idx*.4 in
     Dyn.set t.arr off x;
     Dyn.set t.arr (off+.1) y;

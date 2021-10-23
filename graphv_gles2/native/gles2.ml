@@ -102,6 +102,14 @@ module VertexBuffer = struct
         Dyn.set t.arr (off+3) v;
     ;;
 
+    let unsafe_set t idx x y u v =
+        let off = idx*4 in
+        Dyn.set t.arr off x;
+        Dyn.set t.arr (off+1) y;
+        Dyn.set t.arr (off+2) u;
+        Dyn.set t.arr (off+3) v;
+    ;;
+
     let get t idx =
         let x = Dyn.get t.arr (idx*4+0) in
         let y = Dyn.get t.arr (idx*4+1) in
