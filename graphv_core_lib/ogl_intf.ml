@@ -31,7 +31,7 @@ module type S = sig
     end
 
     module VertexBuffer : sig
-        type t = { arr : Dyn.t; mutable size : int }
+        type t = { mutable arr : Buffer.Float.t; mutable size : int }
         val create : unit -> t
         val clear : t -> unit
         val iteri : t -> f:(int -> float -> unit) -> unit
@@ -49,7 +49,11 @@ module type S = sig
         module Sub :
           sig
             type parent = t
-            type t = Dyn.Sub.sub
+            type nonrec t = {
+              off : int;
+              len : int;
+              t : t;
+            }
             val empty : t
             val sub : parent -> int -> int -> t
             val vertex_offset : t -> int
