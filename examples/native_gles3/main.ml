@@ -77,7 +77,7 @@ let _ =
 
     Memtrace.trace_if_requested();
 
-    let ctx = NVG.create ~flags:NVG.CreateFlags.(antialias lor stencil_strokes) () in
+    let ctx = NVG.create ~flags:NVG.CreateFlags.(antialias lor stencil_strokes lor tesselate_afd) () in
 
     let graph = PerfGraph.init PerfGraph.FPS "Frame Time" in
     let t = GLFW.getTime() |> ref in
@@ -91,6 +91,8 @@ let _ =
         | GLFW.Space, GLFW.Release -> blowup := not !blowup
         | _ -> ()
     )) |> ignore;
+
+    let quit = Array.length Sys.argv > 1 in
 
     while not GLFW.(windowShouldClose ~window) && !continue do
 
@@ -130,13 +132,15 @@ let _ =
         GLFW.swapBuffers ~window;
         GLFW.pollEvents();
 
-        (*continue := now < 5.;*)
+        if quit then (
+            continue := now < 5.;
+        )
     done;
 
     Printf.printf "MIN %.2f\n" !min_fps;
     Printf.printf "MAX %.2f\n%!" !max_fps;
     
-    if Array.length Sys.argv = 1 then (
+    if not quit then (
         while not GLFW.(windowShouldClose ~window) do
             GLFW.pollEvents();
             Unix.sleepf 0.25

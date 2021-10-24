@@ -825,7 +825,6 @@ module Make
                         normalize_pt !p0;
 
                         (* Update bounds *)
-                        let open FloatOps in
                         xmin := min !xmin !p0.x;
                         ymin := min !ymin !p0.y;
                         xmax := max !xmax !p0.x;
