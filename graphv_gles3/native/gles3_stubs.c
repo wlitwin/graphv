@@ -60,8 +60,8 @@ CAMLprim value fast_ba_zero(value buffer)
 CAMLprim value fast_ba_blit(value src, value src_off, value dst, value dst_off, value len)
 {
     CAMLparam5 (src, src_off, dst, dst_off, len);
-    float* src_data = ((float*)Caml_ba_data_val(src)) + src_off;
-    float* dst_data = ((float*)Caml_ba_data_val(dst)) + dst_off;
+    float* src_data = ((float*)Caml_ba_data_val(src)) + Int_val(src_off);
+    float* dst_data = ((float*)Caml_ba_data_val(dst)) + Int_val(dst_off);
     memcpy((void*)dst_data, (void*)src_data, Int_val(len)*sizeof(float));
     CAMLreturn(Val_unit);
 }
