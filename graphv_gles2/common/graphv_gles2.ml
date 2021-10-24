@@ -468,8 +468,7 @@ end
     ;;
 
     let convert_paint t frag (paint : Paint.t) (scissor : Scissor.t) width fringe stroke_thr =
-        FragUniforms.set_inner_color frag Color.(premultiply paint.inner_color);
-        FragUniforms.set_outer_color frag Color.(premultiply paint.outer_color);
+        FragUniforms.set_colors_from_paint frag paint;
 
         let invxform = Matrix.create() in
 
@@ -492,28 +491,30 @@ end
             FragUniforms.set_scissor_scale frag scale0 scale1;
         );
 
-        let x0, x1 = paint.extent in
+        let x0 = paint.extent_x in
+        let x1 = paint.extent_y in
         FragUniforms.set_extent frag x0 x1;
 
         FragUniforms.set_stroke_mult frag ((width*.0.5 +. fringe*.0.5) /. fringe);
         FragUniforms.set_stroke_thr frag stroke_thr;
 
-        if paint.image <> 0 then (
-            match find_texture_by_id t paint.image with
+        let paint_xform = Paint.extract_xform paint in
+        if paint.image <> 0. then (
+            match find_texture_by_id t (int_of_float paint.image) with
             | None -> ()
             | Some tex ->
                 if ImageFlags.has tex.flags ~flag:ImageFlags.flip_y then (
                     let m1 = Matrix.create()
                     and m2 = Matrix.create() in
                     Matrix.translate m1 ~x:0. ~y:(x1 *. 0.5);
-                    Matrix.multiply ~dst:m1 ~src:paint.xform;
+                    Matrix.multiply ~dst:m1 ~src:paint_xform;
                     Matrix.scale m2 ~xs:1. ~ys:~-.1.;
                     Matrix.multiply ~dst:m2 ~src:m1;
                     Matrix.translate m1 ~x:0. ~y:(x1 *. 0.5);
                     Matrix.multiply ~dst:m1 ~src:m2;
                     Matrix.inverse ~dst:invxform ~src:m1;
                 ) else (
-                    Matrix.inverse ~dst:invxform ~src:paint.xform
+                    Matrix.inverse ~dst:invxform ~src:paint_xform
                 );
 
                 FragUniforms.set_type frag ShaderType.fill_img;
@@ -527,7 +528,7 @@ end
             FragUniforms.set_type frag ShaderType.fill_grad;
             FragUniforms.set_radius frag paint.radius;
             FragUniforms.set_feather frag paint.feather;
-            Matrix.inverse ~dst:invxform ~src:paint.xform
+            Matrix.inverse ~dst:invxform ~src:paint_xform
         );
 
         FragUniforms.set_paint_mat frag
@@ -543,7 +544,7 @@ end
         let npaths = DynArray.length paths in
         call.triangle_count <- 4;
         call.path_count <- npaths;
-        call.image <- paint.image;
+        call.image <- int_of_float paint.image;
         call.blend_func <- Blend.of_composite_op_state composite_op;
 
         if npaths = 1 && DynArray.(get paths 0).convex then (
@@ -620,7 +621,7 @@ end
         let call = DynArray.steal t.calls Call.empty in
         Call.reset call Call.Stroke;
 
-        call.image <- paint.image; 
+        call.image <- int_of_float paint.image; 
         call.blend_func <- Blend.of_composite_op_state composite_op;
 
         call.triangle_count <- ~-1;
@@ -846,7 +847,7 @@ end
         let call = DynArray.steal t.calls Call.empty in
         Call.reset call Call.Triangles;
 
-        call.image <- paint.image;
+        call.image <- int_of_float paint.image;
         call.blend_func <- Blend.of_composite_op_state composite_op;
 
         (* Allocate vertices *)

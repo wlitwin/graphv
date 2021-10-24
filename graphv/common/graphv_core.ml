@@ -1484,26 +1484,12 @@ module Make
         if !stroke_width < t.fringe_width then (
             let alpha = clamp (!stroke_width /. t.fringe_width) 0. 1. in
             let alpha = alpha*.alpha in
-            stroke_paint.inner_color <- Color.{
-                stroke_paint.inner_color with
-                a = stroke_paint.inner_color.a*.alpha;
-            };
-            stroke_paint.outer_color <- Color.{
-                stroke_paint.outer_color with
-                a = stroke_paint.outer_color.a*.alpha;
-            };
+            Paint.modify_alpha stroke_paint alpha;
             stroke_width := t.fringe_width;
         );
 
         (* Apply global alpha *)
-        stroke_paint.inner_color <- Color.{
-            stroke_paint.inner_color with
-            a = stroke_paint.inner_color.a*.state.alpha
-        };
-        stroke_paint.outer_color <- Color.{
-            stroke_paint.outer_color with
-            a = stroke_paint.outer_color.a*.state.alpha;
-        };
+        Paint.modify_alpha stroke_paint state.alpha;
 
         Impl.stroke t.impl
             ~paint:stroke_paint
@@ -1532,14 +1518,7 @@ module Make
 
     let fill_finish (t : t) (state : State.t) =
         let fill_paint = Paint.copy state.fill in
-        fill_paint.inner_color <- Color.{
-            fill_paint.inner_color with
-            a = fill_paint.inner_color.a *. state.alpha;
-        };
-        fill_paint.outer_color <- Color.{
-            fill_paint.outer_color with
-            a = fill_paint.outer_color.a *. state.alpha;
-        };
+        Paint.modify_alpha fill_paint state.alpha;
 
         Impl.fill t.impl
             ~paint:fill_paint
@@ -1754,11 +1733,7 @@ module Make
     ;;
 
     let set_paint_color (p : Paint.t) (color : Color.t) : unit =
-        Matrix.identity p.xform;
-        p.radius <- 0.;
-        p.feather <- 1.;
-        p.inner_color <- color;
-        p.outer_color <- color;
+        Paint.change_color_keep_extent p color
     ;;
 
     module Paint = struct
@@ -1768,7 +1743,8 @@ module Make
         let linear_gradient (_t : ctx) ~sx ~sy ~ex ~ey ~icol ~ocol : t =
             let open FloatOps in
             let paint = Paint.create() in
-            Matrix.identity paint.xform;
+            (*Matrix.identity paint.xform;*)
+            Paint.reset_xform paint;
             let dx = ex - sx in
             let dy = ey - sy in
             let d = Float.sqrt (dx*dx + dy*dy) in
@@ -1780,72 +1756,67 @@ module Make
                 )
             in
 
-            let xform =  paint.xform in
             let large = 1e5 in
-            xform.m0 <- dy;
-            xform.m1 <- ~-.dx;
-            xform.m2 <- dx;
-            xform.m3 <- dy;
-            xform.m4 <- (sx - dx*large);
-            xform.m5 <- (sy - dy*large);
+            paint.m0 <- dy;
+            paint.m1 <- ~-.dx;
+            paint.m2 <- dx;
+            paint.m3 <- dy;
+            paint.m4 <- (sx - dx*large);
+            paint.m5 <- (sy - dy*large);
 
-            paint.extent <- large, large + d*0.5;
+            paint.extent_x <- large;
+            paint.extent_y <- large + d*0.5;
             paint.radius <- 0.;
             paint.feather <- Float.max 1. d;
-            paint.inner_color <- icol;
-            paint.outer_color <- ocol;
+            Paint.set_only_inner_and_outer paint icol ocol;
             paint
         ;;
 
         let box_gradient (_t : ctx) ~x ~y ~w ~h ~r ~f ~icol ~ocol : t =
             let open FloatOps in
             let paint = Paint.create() in
-            Matrix.identity paint.xform;
-            let xform = paint.xform in
-            xform.m4 <- x+w*0.5;
-            xform.m5 <- y+h*0.5;
+            Paint.reset_xform paint;
+            paint.m4 <- x+w*0.5;
+            paint.m5 <- y+h*0.5;
 
-            paint.extent <- w*0.5, h*0.5;
+            paint.extent_x <- w*0.5;
+            paint.extent_y <- h*0.5;
             paint.radius <- r;
             paint.feather <- Float.max 1. f;
-            paint.inner_color <- icol;
-            paint.outer_color <- ocol;
+            Paint.set_only_inner_and_outer paint icol ocol;
             paint
         ;;
 
         let radial_gradient (_t : ctx) ~cx ~cy ~in_radius ~out_radius ~icol ~ocol : t =
             let open FloatOps in
             let paint = Paint.create() in
-            Matrix.identity paint.xform;
-            let xform = paint.xform in
-            xform.m4 <- cx;
-            xform.m5 <- cy;
+            Paint.reset_xform paint;
+            paint.m4 <- cx;
+            paint.m5 <- cy;
 
             let r = (in_radius + out_radius)*0.5 in
             let f = (out_radius - in_radius) in
 
-            paint.extent <- r, r;
+            paint.extent_x <- r;
+            paint.extent_y <- r;
             paint.radius <- r;
             paint.feather <- Float.max 1. f;
-            paint.inner_color <- icol;
-            paint.outer_color <- ocol;
+            Paint.set_only_inner_and_outer paint icol ocol;
             paint
         ;;
 
         let image_pattern (_t : ctx) ~cx ~cy ~w ~h ~angle ~image ~alpha : t =
             let paint = Paint.create() in
-            Matrix.rotate paint.xform ~angle;
+            Paint.rotate paint angle;
 
-            let xform = paint.xform in
-            xform.m4 <- cx;
-            xform.m5 <- cy;
+            paint.m4 <- cx;
+            paint.m5 <- cy;
 
-            paint.extent <- w, h;
-            paint.image <- image;
+            paint.extent_x <- w; 
+            paint.extent_y <- h;
+            paint.image <- float image;
 
-            let color = Color.rgbaf ~r:1. ~g:1. ~b:1. ~a:alpha in
-            paint.inner_color <- color;
-            paint.outer_color <- color;
+            Paint.reset_colors_with_alpha paint alpha;
 
             paint
         ;;
@@ -1859,7 +1830,7 @@ module Make
     let set_fill_paint t ~paint =
         let state = get_state t in
         state.fill <- Graphv_core_lib.Paint.copy paint;
-        Matrix.multiply ~dst:state.fill.xform ~src:state.xform
+        Graphv_core_lib.Paint.multiply state.fill state.xform;
     ;;
 
     let set_stroke_color t ~color =
@@ -1870,7 +1841,7 @@ module Make
     let set_stroke_paint t ~paint =
         let state = get_state t in
         state.stroke <- Graphv_core_lib.Paint.copy paint;
-        Matrix.multiply ~dst:state.stroke.xform ~src:state.xform
+        Graphv_core_lib.Paint.multiply state.stroke state.xform;
     ;;
 
     let quantize a d =
@@ -1887,16 +1858,9 @@ module Make
         let state = get_state t in
         let paint = Graphv_core_lib.Paint.copy state.fill in
 
-        paint.image <- DynArray.get t.font_images t.font_image_idx;
+        paint.image <- float (DynArray.get t.font_images t.font_image_idx);
 
-        paint.inner_color <- Color.{
-            paint.inner_color with
-            a = paint.inner_color.a *. state.alpha;
-        };
-        paint.outer_color <- Color.{
-            paint.outer_color with
-            a = paint.outer_color.a *. state.alpha;
-        };
+        Graphv_core_lib.Paint.modify_alpha paint state.alpha;
 
         let len = VertexBuffer.num_verts verts - off in
         Impl.triangles t.impl

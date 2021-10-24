@@ -46,14 +46,6 @@ module Sub = struct
 
     let offset t = t.off
 
-    (*
-    let get t idx =
-        assert (t.off + idx < t.t.size);
-        get t.t (t.off + idx)
-    ;;
-    *)
-
     let blit ~src ~dst ~(src_start : int) ~(dst_start : int) ~len =
         Buffer.Float.blit ~src:src.t.arr ~s_off:(src_start+src.off) ~dst:dst.arr ~d_off:dst_start ~len
-    end
-
+end

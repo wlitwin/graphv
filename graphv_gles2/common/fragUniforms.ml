@@ -60,6 +60,20 @@ let set_outer_color t (color : Color.t) =
     set t 30 color.b;
     set t 31 color.a;
 ;;
+
+let set_colors_from_paint (t : t) (paint : Paint.t) =
+    let ia = paint.inner_color_a in
+    set t 24 (paint.inner_color_r*.ia);
+    set t 25 (paint.inner_color_g*.ia);
+    set t 26 (paint.inner_color_b*.ia);
+    set t 27 (paint.inner_color_a);
+
+    let oa = paint.outer_color_a in
+    set t 28 (paint.outer_color_r*.oa);
+    set t 29 (paint.outer_color_g*.oa);
+    set t 30 (paint.outer_color_b*.oa);
+    set t 31 (paint.outer_color_a);
+;;
     
 let set_scissor_ext t a b =
     set t 32 a;

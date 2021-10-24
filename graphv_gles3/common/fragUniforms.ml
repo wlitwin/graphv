@@ -83,6 +83,20 @@ let reset t z =
   done
 ;;
 
+let set_colors_from_paint (t : t) idx (paint : Graphv_core_lib.Paint.t) =
+    let ia = paint.inner_color_a in
+    set t idx 24 (paint.inner_color_r*.ia);
+    set t idx 25 (paint.inner_color_g*.ia);
+    set t idx 26 (paint.inner_color_b*.ia);
+    set t idx 27 (paint.inner_color_a);
+
+    let oa = paint.outer_color_a in
+    set t idx 28 (paint.outer_color_r*.oa);
+    set t idx 29 (paint.outer_color_g*.oa);
+    set t idx 30 (paint.outer_color_b*.oa);
+    set t idx 31 (paint.outer_color_a);
+;;
+
 let set_radius t i r      = set t i 38 r
 let set_feather t i f     = set t i 39 f
 let set_stroke_mult t i s = set t i 40 s
