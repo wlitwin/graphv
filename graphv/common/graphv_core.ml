@@ -1126,11 +1126,12 @@ module Make
                     incr p1_off;
                 done
             ) else (
+                VertexBuffer.check_size t.cache.verts (!dst +. path.count);
                 for j=0 to path.count-.1 do
                     let point = get_pt j in
-                    VertexBuffer.set t.cache.verts !dst point.x point.y 0.5 1.;
-                    incr dst;
-                done
+                    VertexBuffer.unsafe_set t.cache.verts (!dst+.j) point.x point.y 0.5 1.;
+                done;
+                dst := !dst +. path.count;
             );
 
             let nfill = (!dst -. !verts) in
@@ -1163,14 +1164,14 @@ module Make
                     if PointFlags.has p1.flags ~flag then (
                         dst := bevel_join t.cache.verts !dst p0 p1 lw rw lu ru
                     ) else (
+                        VertexBuffer.check_size t.cache.verts (!dst +. 2);
                         let [@inlined] x = p1.x + p1.dmx*lw in
                         let [@inlined] y = p1.y + p1.dmy*lw in
-                        VertexBuffer.set t.cache.verts !dst x y lu 1.;
-                        incr dst;
+                        VertexBuffer.unsafe_set t.cache.verts !dst x y lu 1.;
                         let [@inlined] x = p1.x - p1.dmx*rw in
                         let [@inlined] y = p1.y - p1.dmy*rw in
-                        VertexBuffer.set t.cache.verts !dst x y ru 1.;
-                        incr dst;
+                        VertexBuffer.unsafe_set t.cache.verts (!dst+.1) x y ru 1.;
+                        dst := !dst +. 2;
                     );
                     p0_off := !p1_off;
                     incr p1_off;
@@ -1179,10 +1180,10 @@ module Make
                 (* Loop it *)
                 let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
                 let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
+                VertexBuffer.check_size t.cache.verts (!dst +. 2);
                 VertexBuffer.set t.cache.verts !dst v0_x v0_y lu 1.;
-                incr dst;
-                VertexBuffer.set t.cache.verts !dst v1_x v1_y ru 1.;
-                incr dst;
+                VertexBuffer.set t.cache.verts (!dst+.1) v1_x v1_y ru 1.;
+                dst := !dst +. 2;
 
                 let nstroke = !dst -. !verts in
                 assert (nstroke >. 0);
