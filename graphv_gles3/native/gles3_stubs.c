@@ -57,6 +57,15 @@ CAMLprim value fast_ba_zero(value buffer)
     CAMLreturn(Val_unit);
 }
 
+CAMLprim value fast_ba_blit(value src, value src_off, value dst, value dst_off, value len)
+{
+    CAMLparam5 (src, src_off, dst, dst_off, len);
+    float* src_data = ((float*)Caml_ba_data_val(src)) + src_off;
+    float* dst_data = ((float*)Caml_ba_data_val(dst)) + dst_off;
+    memcpy((void*)dst_data, (void*)src_data, Int_val(len)*sizeof(float));
+    CAMLreturn(Val_unit);
+}
+
 CAMLprim value gles3_uniform2fv(value v1, value v2)
 {
     CAMLparam2 (v1, v2);
