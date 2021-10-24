@@ -441,13 +441,14 @@ end
 
     let max_vertex_count (paths : Path.t DynArray.t) =
         let count = ref 0 in
-        DynArray.iter paths ~f:(fun path ->
+        for i=0 to DynArray.length paths - 1 do
+            let path = DynArray.get paths i in
             let fill = VertexBuffer.Sub.(num_verts path.fill) in
             let stroke = VertexBuffer.Sub.(num_verts path.stroke) in
             count := !count
                 + fill
                 + stroke
-        );
+        done;
         !count
     ;;
 
@@ -553,7 +554,8 @@ end
         );
 
         (* Allocate vertices for all the paths *)
-        DynArray.iter paths ~f:(fun path ->
+        for i=0 to DynArray.length paths - 1 do
+            let path = DynArray.get paths i in
             let fill_offset = ref 0 in
             let fill_count = ref 0 in
             let stroke_offset = ref 0 in
@@ -576,9 +578,10 @@ end
                 stroke_offset = !stroke_offset;
                 stroke_count = !stroke_count;
             };
-        );
+        done;
 
-        if call.type_ = Call.Fill then (
+        begin match call.type_ with
+        | Fill ->
             (* Quad *)
             let offset = VertexBuffer.num_verts verts in
             call.triangle_offset <- offset;
@@ -611,10 +614,10 @@ end
             FragUniforms.set_stroke_thr call.uniforms ~-.1.;
             (* Fill shader *)
             convert_paint t call.uniforms2 paint scissor fringe fringe ~-.1.;
-        ) else (
+        | _ ->
             (* Fill shader *)
             convert_paint t call.uniforms paint scissor fringe fringe ~-.1.;
-        )
+        end;
     ;;
 
     let render_stroke t (paint : Paint.t) composite_op scissor fringe stroke_width (paths : Path.t DynArray.t) =
@@ -627,7 +630,8 @@ end
         call.triangle_count <- ~-1;
         call.triangle_offset <- ~-1;
 
-        DynArray.iter paths ~f:(fun path ->
+        for i=0 to DynArray.length paths - 1 do
+            let path = DynArray.get paths i in
             let count = VertexBuffer.Sub.num_verts path.stroke in
             if count > 0 then (
                 DynArray.add call.paths {
@@ -636,7 +640,7 @@ end
                     stroke_count = VertexBuffer.Sub.num_verts path.stroke;
                 };
             )
-        );
+        done;
 
         if CreateFlags.has t.flags ~flag:CreateFlags.stencil_strokes then (
             convert_paint t call.uniforms paint scissor stroke_width fringe ~-.1.;
@@ -678,35 +682,39 @@ end
             Gl.stencil_op t.impl Gl.keep Gl.keep Gl.incr;
             set_uniforms t call.uniforms2 call.image;
             check_error "stroke fill 0";
-            DynArray.iter call.paths ~f:(fun path ->
+            for i=0 to DynArray.length call.paths - 1 do
+                let path = DynArray.get call.paths i in
                 Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count;
-            );
+            done;
 
             (* Draw anti-aliased pixels *)
             set_uniforms t call.uniforms call.image;
             stencil_func t Gl.equal 0x0 0xff;
             Gl.stencil_op t.impl Gl.keep Gl.keep Gl.keep;
-            DynArray.iter call.paths ~f:(fun path ->
+            for i=0 to DynArray.length call.paths - 1 do
+                let path = DynArray.get call.paths i in
                 Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count;
-            );
+            done;
 
             (* Clear stencil buffer *)
             Gl.color_mask t.impl false false false false;
             stencil_func t Gl.always 0x0 0xff;
             Gl.stencil_op t.impl Gl.zero_ Gl.zero_ Gl.zero_;
             check_error "stroke fill 1";
-            DynArray.iter call.paths ~f:(fun path ->
+            for i=0 to DynArray.length call.paths - 1 do
+                let path = DynArray.get call.paths i in
                 Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count;
-            );
+            done;
             Gl.color_mask t.impl true true true true;
 
             Gl.disable t.impl Gl.stencil_test;
         ) else (
             set_uniforms t call.uniforms call.image;
             check_error "stroke fill";
-            DynArray.iter call.paths ~f:(fun path ->
+            for i=0 to DynArray.length call.paths - 1 do
+                let path = DynArray.get call.paths i in
                 Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count
-            )
+            done
         );
         check_error "stroke end";
     ;;
@@ -725,9 +733,10 @@ end
         Gl.stencil_op_separate t.impl Gl.front Gl.keep Gl.keep Gl.incr_wrap;
         Gl.stencil_op_separate t.impl Gl.back Gl.keep Gl.keep Gl.decr_wrap;
         Gl.disable t.impl Gl.cull_face_enum;
-        DynArray.iter call.paths ~f:(fun path ->
+        for i=0 to DynArray.length call.paths - 1 do
+            let path = DynArray.get call.paths i in
             Gl.draw_arrays t.impl Gl.triangle_fan path.fill_offset path.fill_count;
-        );
+        done;
         Gl.enable t.impl Gl.cull_face_enum;
 
         (* Draw anti-aliased pixels *)
@@ -740,9 +749,10 @@ end
             stencil_func t Gl.equal 0x0 0xff;
             Gl.stencil_op t.impl Gl.keep Gl.keep Gl.keep;
             (* Draw fringes *)
-            DynArray.iter call.paths ~f:(fun path ->
+            for i=0 to DynArray.length call.paths - 1 do
+                let path = DynArray.get call.paths i in
                 Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count;
-            );
+            done;
         );
 
         (* Draw fill *)
@@ -758,13 +768,14 @@ end
         set_uniforms t call.uniforms call.image;
         check_error "convex fill";
 
-        DynArray.iter call.paths ~f:(fun path ->
+        for i=0 to DynArray.length call.paths - 1 do
+            let path = DynArray.get call.paths i in
             Gl.draw_arrays t.impl Gl.triangle_fan path.fill_offset path.fill_count;
             (* Draw fringes *)
             if path.stroke_count > 0 then (
                 Gl.draw_arrays t.impl Gl.triangle_strip path.stroke_offset path.stroke_count;
             )
-        );
+        done;
     ;;
 
     let triangles t (call : Call.t) =
@@ -822,14 +833,15 @@ end
             Gl.uniform1i t.impl t.locs.tex 0;
             Gl.uniform2fv t.impl t.locs.view_size t.view;
 
-            DynArray.iter t.calls ~f:(fun call ->
+            for i=0 to DynArray.length t.calls - 1 do
+                let call = DynArray.get t.calls i in
                 blend_func_separate t call.blend_func;
                 match call.type_ with
                 | Fill -> fill t call
                 | Convex_fill -> convex_fill t call
                 | Stroke -> stroke t call
                 | Triangles -> triangles t call
-            );
+            done;
 
             Gl.disable_vertex_attrib_array t.impl 0;
             Gl.disable_vertex_attrib_array t.impl 1;

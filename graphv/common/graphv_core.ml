@@ -762,7 +762,8 @@ module Make
         let flatten t =
             let open FloatOps in
             if DynArray.length t.cache.paths =. 0 then (
-                DynArray.iter t.commands ~f:(function
+                for i=0 to DynArray.length t.commands -. 1 do
+                    match DynArray.get t.commands i with
                     | Move_to {x;y} ->
                         add_path t;
                         add_point t x y PointFlags.corner;
@@ -777,7 +778,7 @@ module Make
                         )
                     | Close -> close_path t
                     | Winding w -> path_winding t w
-                );
+                done;
 
                 let [@inlined] xmin = ref 1e6 in
                 let [@inlined] ymin = ref 1e6 in
@@ -786,7 +787,8 @@ module Make
 
                 let points = t.cache.points in
                 (* Wish we had sub arrays for DynArray *)
-                DynArray.iter t.cache.paths ~f:(fun path ->
+                for i=0 to DynArray.length t.cache.paths -. 1 do
+                    let path = DynArray.get t.cache.paths i in
                     let [@inline always] get i =
                         DynArray.get points (path.first +. i)
                     in
@@ -833,7 +835,7 @@ module Make
                         p0 := get !p1_off;
                         incr p1_off;
                     done;
-                );
+                done;
 
                 t.cache.bounds <- Bounds.{
                     xmin = !xmin;
@@ -903,7 +905,8 @@ module Make
             )
         in
 
-        DynArray.iter t.cache.paths ~f:(fun path ->
+        for i=0 to DynArray.length t.cache.paths -. 1 do
+            let path = DynArray.get t.cache.paths i in
             let [@inline always] get idx =
                 DynArray.get t.cache.points (path.first +. idx)
             in
@@ -976,7 +979,7 @@ module Make
             done;
 
             path.convex <- !left =. path.count;
-        )
+          done
     ;;
 
     let choose_bevel bevel (p0 : Point.t) (p1 : Point.t) w =
@@ -1080,7 +1083,8 @@ module Make
         let woff = 0.5*aa in
         let verts = ref VertexBuffer.(num_verts t.cache.verts) in
         let dst = ref !verts in
-        DynArray.iter t.cache.paths ~f:(fun path ->
+        for i=0 to DynArray.length t.cache.paths -. 1 do
+            let path = DynArray.get t.cache.paths i in
             dst := !verts;
             let [@inline always] get_pt idx =
                 DynArray.get t.cache.points (path.first +. idx)
@@ -1188,7 +1192,7 @@ module Make
             ) else (
                 path.stroke <- VertexBuffer.Sub.empty;
             );
-        );
+          done
     ;;
 
     let curve_divs r arc tol =
@@ -1369,7 +1373,8 @@ module Make
 
         let verts = ref (VertexBuffer.num_verts t.cache.verts) in
         let dst = ref !verts in
-        DynArray.iter t.cache.paths ~f:(fun path ->
+        for i=0 to DynArray.length t.cache.paths -. 1 do
+            let path = DynArray.get t.cache.paths i in
             let get idx =
                 DynArray.get t.cache.points (path.first +. idx)
             in
@@ -1449,7 +1454,7 @@ module Make
             path.stroke <- VertexBuffer.Sub.sub t.cache.verts !verts len;
 
             verts := !dst;
-        );
+          done
     ;;
 
     let stroke_calc_width (t : t) (state : State.t) =
@@ -1674,10 +1679,11 @@ module Make
 
         let total_path_length (paths : IPath.t DynArray.t) =
             let length = ref 0 in
-            DynArray.iter paths ~f:(fun path ->
+            for i=0 to DynArray.length paths - 1 do
+                let path = DynArray.get paths i in
                 length := !length + VertexBuffer.Sub.num_verts path.fill;
                 length := !length + VertexBuffer.Sub.num_verts path.stroke;
-            );
+            done;
             !length
         ;;
 
@@ -1693,7 +1699,10 @@ module Make
             let i = ref 0 in
             let off = ref 0 in
             let vbuff = VertexBuffer.unsafe_array t.cache.verts in
-            DynArray.iter t.cache.paths ~f:(fun path ->
+
+            let l = DynArray.length t.cache.paths - 1 in
+            for idx=0 to l do
+                let path = DynArray.get t.cache.paths idx in
                 let fill_length = VertexBuffer.Sub.num_verts path.fill in
                 let stroke_length = VertexBuffer.Sub.num_verts path.stroke in
 
@@ -1711,7 +1720,7 @@ module Make
                 off := !off + fill_length + stroke_length;
                 paths.(!i) <- path;
                 incr i;
-            );
+              done;
 
             {
                 values = buffer;

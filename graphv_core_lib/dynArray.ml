@@ -102,12 +102,6 @@ let insert (t : 'a t) (idx : int) (value : 'a) : unit =
 
 let [@inline] length t = t.size
 
-let [@inline always] iter (t : 'a t) ~(f : 'a -> unit) : unit =
-    let len = t.size-1 in
-    for i=0 to len do
-        f (Array.unsafe_get t.arr i)
-    done
-
 let clear ?(free=false) t =
     if free then (
         for i=0 to t.size-1 do

@@ -8,7 +8,6 @@ val get : 'a t -> int -> 'a
 val add : 'a t -> 'a -> unit
 val steal : 'a t -> (unit -> 'a) -> 'a
 val length : 'a t -> int
-val iter : 'a t -> f:('a -> unit) -> unit
 val clear : ?free:bool -> 'a t -> unit
 val first : 'a t -> 'a
 val last : 'a t -> 'a
