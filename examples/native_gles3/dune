@@ -1,5 +1,5 @@
 (executable
- (ocamlopt_flags (:standard -inline 10000 -O3 -unboxed-types))
+ (ocamlopt_flags (:standard -O3 -unboxed-types))
  (name main)
  (libraries 
     memtrace
