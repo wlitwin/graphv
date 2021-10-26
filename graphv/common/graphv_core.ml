@@ -222,30 +222,32 @@ module Make
 
     module Scissor = struct
         let scissor t ~x ~y ~w ~h =
+            let open FloatOps in
             let state = get_state t in
 
-            let w = Float.max w 0. in
-            let h = Float.max h 0. in
+            let w = max w 0. in
+            let h = max h 0. in
 
             Matrix.identity state.scissor.xform;
             let m = state.scissor.xform in
-            m.m4 <- x+.w*.0.5;
-            m.m5 <- y+.h*.0.5;
+            m.m4 <- x+w*0.5;
+            m.m5 <- y+h*0.5;
             Matrix.multiply ~dst:state.scissor.xform ~src:state.xform;
 
             state.scissor <- Scissor.{
                 state.scissor with
-                extent_0 = w*.0.5;
-                extent_1 = h*.0.5;
+                extent_0 = w*0.5;
+                extent_1 = h*0.5;
             };
         ;;
 
         let intersect_rects ax ay aw ah bx by bw bh =
-            let minx = Float.max ax bx in
-            let miny = Float.max ay by in
-            let maxx = Float.min (ax+.aw) (bx+.bw) in
-            let maxy = Float.min (ay+.ah) (by+.bh) in
-            minx, miny, Float.(max 0. (maxx-.minx)), Float.(max 0. (maxy -. miny))
+            let open FloatOps in
+            let minx = max ax bx in
+            let miny = max ay by in
+            let maxx = min (ax+aw) (bx+bw) in
+            let maxy = min (ay+ah) (by+bh) in
+            minx, miny, (max 0. (maxx-minx)), (max 0. (maxy - miny))
         ;;
 
         let intersect t ~x ~y ~w ~h =
@@ -772,9 +774,9 @@ module Make
                     | Bezier_to {c1x; c1y; c2x; c2y; x; y} ->
                         let last = last_point t in
                         if t.tesselate_afd then (
-                            tesselate_bezier_afd t last.x last.y c1x c1y c2x c2y x y PointFlags.corner
+                          tesselate_bezier_afd t last.x last.y c1x c1y c2x c2y x y PointFlags.corner
                         ) else (
-                            tesselate_bezier t last.x last.y c1x c1y c2x c2y x y 0 PointFlags.corner
+                          tesselate_bezier t last.x last.y c1x c1y c2x c2y x y 0 PointFlags.corner
                         )
                     | Close -> close_path t
                     | Winding w -> path_winding t w
@@ -953,7 +955,7 @@ module Make
                 );
 
                 (* Calculate if we should use bevel or miter for inner join *)
-                let limit = Float.max 1.01 ((Float.min p0.len p1.len) * iw) in
+                let limit = max 1.01 ((min p0.len p1.len) * iw) in
                 if (dmr2 * limit*limit) < 1. then (
                     p1.flags <- PointFlags.add p1.flags ~flag:PointFlags.inner_bevel
                 );
@@ -1157,12 +1159,12 @@ module Make
                 dst := !verts;
 
                 let [@inlined] p1_off = ref 0 in
-                let [@inlined] p0_off = ref (path.count -. 1) in
+                let [@inlined] p0 = ref (get_pt (path.count -. 1)) in
                 for _=0 to path.count-.1 do
-                    let [@inlined] p0 = get_pt !p0_off in
+                    (*let [@inlined] p0 = get_pt !p0_off in*)
                     let [@inlined] p1 = get_pt !p1_off in
                     if PointFlags.has p1.flags ~flag then (
-                        dst := bevel_join t.cache.verts !dst p0 p1 lw rw lu ru
+                        dst := bevel_join t.cache.verts !dst !p0 p1 lw rw lu ru
                     ) else (
                         VertexBuffer.check_size t.cache.verts (!dst +. 2);
                         let [@inlined] x = p1.x + p1.dmx*lw in
@@ -1173,15 +1175,16 @@ module Make
                         VertexBuffer.unsafe_set t.cache.verts (!dst+.1) x y ru 1.;
                         dst := !dst +. 2;
                     );
-                    p0_off := !p1_off;
+                    (*p0_off := !p1_off;*)
+                    p0 := p1;
                     incr p1_off;
                 done;
 
                 (* Loop it *)
-                let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
-                let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
                 VertexBuffer.check_size t.cache.verts (!dst +. 2);
+                let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
                 VertexBuffer.set t.cache.verts !dst v0_x v0_y lu 1.;
+                let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
                 VertexBuffer.set t.cache.verts (!dst+.1) v1_x v1_y ru 1.;
                 dst := !dst +. 2;
 
@@ -1776,7 +1779,7 @@ module Make
             paint.extent_x <- large;
             paint.extent_y <- large + d*0.5;
             paint.radius <- 0.;
-            paint.feather <- Float.max 1. d;
+            paint.feather <- max 1. d;
             Paint.set_only_inner_and_outer paint icol ocol;
             paint
         ;;
@@ -1791,7 +1794,7 @@ module Make
             paint.extent_x <- w*0.5;
             paint.extent_y <- h*0.5;
             paint.radius <- r;
-            paint.feather <- Float.max 1. f;
+            paint.feather <- max 1. f;
             Paint.set_only_inner_and_outer paint icol ocol;
             paint
         ;;
@@ -1809,7 +1812,7 @@ module Make
             paint.extent_x <- r;
             paint.extent_y <- r;
             paint.radius <- r;
-            paint.feather <- Float.max 1. f;
+            paint.feather <- max 1. f;
             Paint.set_only_inner_and_outer paint icol ocol;
             paint
         ;;
@@ -2306,8 +2309,8 @@ module Make
                     let pos = {
                         index = F.Iter.start iter;
                         x = F.Iter.x iter * inv_scale;
-                        min_x = (Float.min (F.Iter.x iter) quad.x0) * inv_scale;
-                        max_x = (Float.max (F.Iter.next_x iter) quad.x1) * inv_scale;
+                        min_x = (min (F.Iter.x iter) quad.x0) * inv_scale;
+                        max_x = (max (F.Iter.next_x iter) quad.x1) * inv_scale;
                     } in
                     glyphs.(idx) <- pos;
                     loop (idx+.1)
@@ -2383,10 +2386,10 @@ module Make
                         in
                         let rmin_x = x + line.minx + dx in
                         let rmax_x = x + line.maxx + dx in
-                        min_x := Float.min !min_x rmin_x;
-                        max_x := Float.max !max_x rmax_x;
-                        min_y := Float.min !min_y (!y + rmin_y);
-                        max_y := Float.max !max_y (!y + rmax_y);
+                        min_x := min !min_x rmin_x;
+                        max_x := max !max_x rmax_x;
+                        min_y := min !min_y (!y + rmin_y);
+                        max_y := max !max_y (!y + rmax_y);
 
                         y := !y + line_h * state.line_height;
                         start := line.next;
