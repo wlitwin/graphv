@@ -76,7 +76,7 @@ let _ =
         );
 
         let now = GLFW.getTime() in
-        let dt = now -. !time in
+        let dt = (*now -. !time*) 0.016 in
         time := now;
 
         if now -. !last_count >= 1. then (
@@ -96,14 +96,15 @@ let _ =
 
         let open Gv in
 
-        let win_w = float win_w in
-        let win_h = float win_h in
+        let win_w = float 400 in
+        let win_h = float 400 in
 
         Gv.set_stroke_width vg ~width:4.;
 
         let len = Array.length rects in
         for i=0 to len-1 do
             let r = rects.(i) in
+          (*
             r.x <- r.x +. r.vx*.dt;
             r.y <- r.y +. r.vy*.dt;
 
@@ -126,6 +127,7 @@ let _ =
                 r.y <- 0.;
                 r.vy <- ~-.(r.vy) +. Random.float 200. -. 100.;
             );
+             *)
 
             let r1 = Float.abs r.vx /. 400. *. 255. |> int_of_float in
             let g1 = Float.abs r.vy /. 400. *. 255. |> int_of_float in

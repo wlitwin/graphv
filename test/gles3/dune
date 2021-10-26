@@ -1,6 +1,6 @@
 (executable
  (name graphv_gles3_tests)
- (ocamlopt_flags (:standard -inline 10000 -O3 -unboxed-types))
+ (ocamlopt_flags (:standard -O3 -unboxed-types))
  (libraries
     graphv_gles3_native
     glfw-ocaml
