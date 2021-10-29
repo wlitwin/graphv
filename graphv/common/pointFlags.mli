@@ -1,4 +1,4 @@
-type t = float
+type t = int
 val no_flags : t
 val corner : t
 val left : t

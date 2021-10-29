@@ -3,3 +3,4 @@ _opam/
 **/*.un
 **/*.*~
 trace.ctf
+trace2.ctf
