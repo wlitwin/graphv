@@ -1247,10 +1247,11 @@ module Make
         let py = py - dy*d in
         let dlx = dy in
         let dly = ~-.dx in
-        VertexBuffer.set verts (dst+.0) (px + dlx*w - dx*aa) (py + dly*w - dy*aa) u0 0.;
-        VertexBuffer.set verts (dst+.1) (px - dlx*w - dx*aa) (py - dly*w - dy*aa) u1 0.;
-        VertexBuffer.set verts (dst+.2) (px + dlx*w) (py + dly*w) u0 1.;
-        VertexBuffer.set verts (dst+.3) (px - dlx*w) (py - dly*w) u1 1.;
+        VertexBuffer.check_size verts (dst+.3);
+        VertexBuffer.unsafe_set verts (dst+.0) (px + dlx*w - dx*aa) (py + dly*w - dy*aa) u0 0.;
+        VertexBuffer.unsafe_set verts (dst+.1) (px - dlx*w - dx*aa) (py - dly*w - dy*aa) u1 0.;
+        VertexBuffer.unsafe_set verts (dst+.2) (px + dlx*w) (py + dly*w) u0 1.;
+        VertexBuffer.unsafe_set verts (dst+.3) (px - dlx*w) (py - dly*w) u1 1.;
         after
     ;;
 
@@ -1261,10 +1262,11 @@ module Make
         let py = py + dy*d in
         let dlx = dy in
         let dly = ~-.dx in
-        VertexBuffer.set verts (dst+.0) (px + dlx*w) (py + dly*w) u0 1.;
-        VertexBuffer.set verts (dst+.1) (px - dlx*w) (py - dly*w) u1 1.;
-        VertexBuffer.set verts (dst+.2) (px + dlx*w + dx*aa) (py + dly*w + dy*aa) u0 0.;
-        VertexBuffer.set verts (dst+.3) (px - dlx*w + dx*aa) (py - dly*w + dy*aa) u1 0.;
+        VertexBuffer.check_size verts (dst+.3);
+        VertexBuffer.unsafe_set verts (dst+.0) (px + dlx*w) (py + dly*w) u0 1.;
+        VertexBuffer.unsafe_set verts (dst+.1) (px - dlx*w) (py - dly*w) u1 1.;
+        VertexBuffer.unsafe_set verts (dst+.2) (px + dlx*w + dx*aa) (py + dly*w + dy*aa) u0 0.;
+        VertexBuffer.unsafe_set verts (dst+.3) (px - dlx*w + dx*aa) (py - dly*w + dy*aa) u1 0.;
         after
     ;;
 
