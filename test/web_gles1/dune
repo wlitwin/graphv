@@ -3,7 +3,7 @@
  (modes byte js)
  (js_of_ocaml (flags (:standard --pretty)))
  (libraries
-    graphv_webgl2
+    graphv_webgl
     js_of_ocaml
     )
  (preprocess (pps ppx_expect js_of_ocaml-ppx))

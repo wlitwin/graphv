@@ -1,5 +1,5 @@
 open Js_of_ocaml
-module Gv = Graphv_webgl2
+module Gv = Graphv_webgl
 
 (* This scales the canvas to match the DPI of the window,
    it prevents blurriness when rendering to the canvas *)
@@ -29,17 +29,17 @@ let _ =
     let canvas = Js.Unsafe.coerce (Dom_html.getElementById_exn "canvas") in
     scale_canvas canvas;
 
-    let webgl_ctx : WebGL.renderingContext Js.t =
-        let open Js.Unsafe in
-        let options = (Js.Unsafe.coerce (object%js
-                val antialias = Js._false
-                val stencil = Js._true
-            end))
-        in
-        let ctx : WebGL.renderingContext Js.t = 
-          meth_call canvas "getContext" [|inject (Js.string "webgl2"); inject options|]
-        in
-        ctx
+    let webgl_ctx = 
+        (* Graphv requires a stencil buffer to work properly *)
+        let attrs = WebGL.defaultContextAttributes in
+        attrs##.stencil := Js._true;
+        match WebGL.getContextWithAttributes canvas attrs 
+              |> Js.Opt.to_option 
+        with
+        | None -> 
+            print_endline "Sorry your browser does not support WebGL";
+            raise Exit
+        | Some ctx -> ctx
     in
 
     webgl_ctx##clearColor 0.3 0.3 0.32 1.;
