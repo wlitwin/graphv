@@ -14,7 +14,7 @@ A client-side web playground can be found [here](https://wlitwin.github.io/demos
 
 ## Demo
 
-A live web demo can be found [here](https://wlitwin.github.io/demos/graphv). If the fonts look wrong the first time, refresh.
+A live web demo can be found [here](https://wlitwin.github.io/demos/graphv).
 
 Performance varies quite a lot between browsers, Chrome tends to be the fastest. The demo supports mouse and touch events. Clicking/tapping will zoom the top-left widget, hovering the text will highlight rows, and two fingers on mobile will allow zooming/panning. Dragging a single finger on mobile will make the eyes follow the finger.
 

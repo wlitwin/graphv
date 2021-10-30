@@ -1124,7 +1124,7 @@ let render_demo (vg : Gv.t) mx my width height t blowup data =
     let open Gv in
     let open FloatOps in
     draw_eyes vg (width - 250.) 50. 150. 100. mx my t;
-    (*draw_paragraph vg (width - 450.) 50. 150. 100. mx my;*)
+    draw_paragraph vg (width - 450.) 50. 150. 100. mx my;
     draw_graph vg 0. (height/2.) width (height/2.) t;
     draw_color_wheel vg (width - 300.) (height - 300.) 250. 250. t;
 
