@@ -3,7 +3,7 @@ module type S = sig
     type glyph
     val invalid_glyph : glyph
 
-    module Buffer : Graphv_core_lib.Buffer.UByteS
+    module Buffer : Graphv_core_lib.Sigs.UByteS
 
     module VMetrics : sig
         type t

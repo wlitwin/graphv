@@ -1,6 +1,4 @@
-module WebGLRenderer = Graphv_webgl_impl
-
-module Gles2 = Graphv_gles2.Make(WebGLRenderer)
+module GLES2 = Graphv_webgl_impl
 
 open Js_of_ocaml
 let font_canvas : Dom_html.canvasElement Js.t =
@@ -24,5 +22,5 @@ end)
 
 module Font = Graphv_font.Fontstash.Make(FontJS)
 
-include Graphv_core.Make(Gles2)(Font)
+include Graphv_core.Make(GLES2)(Font)
 

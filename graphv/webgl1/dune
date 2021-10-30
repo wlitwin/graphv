@@ -5,7 +5,6 @@
    graphv_font
    graphv_font_js
    graphv_webgl_impl
-   graphv_gles2
    graphv_core
  )
 )

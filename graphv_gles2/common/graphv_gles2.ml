@@ -1,26 +1,11 @@
+module Buffer = Buffer
+module Dyn = Dyn
+module Path = Path
+module VertexBuffer = VertexBuffer
+
 open Graphv_core_lib
 
-module Make(Gl : Ogl_intf.S) : Impl.S
-        with type gl = Gl.t
-        and module Buffer = Gl.Buffer
-        and module Dyn = Gl.Dyn
-        and module VertexBuffer = Gl.VertexBuffer
-        and module Path = Gl.Path
-= struct
-
-module Buffer = Gl.Buffer
-module Dyn = Gl.Dyn
-module Path = Gl.Path
-module VertexBuffer = Gl.VertexBuffer
-
 type gl = Gl.t
-
-module FragUniforms = FragUniforms.Make(struct
-    type buffer = Gl.Buffer.Float.t
-    let get = Gl.Buffer.Float.get
-    let set = Gl.Buffer.Float.set
-    let create = Gl.Buffer.Float.create
-end)
 
 module Texture = struct
     type t = {
@@ -179,8 +164,8 @@ module Call = struct
         t.triangle_count <- 0;
         t.uniform_offset <- 0;
         t.blend_func <- Blend.empty;
-        Gl.Buffer.Float.zero t.uniforms;
-        Gl.Buffer.Float.zero t.uniforms2;
+        Buffer.Float.zero t.uniforms;
+        Buffer.Float.zero t.uniforms2;
         DynArray.clear t.paths;
     ;;
 end
@@ -200,7 +185,7 @@ end
         (* stencils *)
         mutable dummy_tex : int;
         (* view *)
-        mutable view : Gl.Buffer.Float.t;
+        mutable view : Buffer.Float.t;
         frag_uniforms : FragUniforms.t;
         
         mutable flags : CreateFlags.t;
@@ -362,7 +347,7 @@ end
                 bound_texture = None;
                 dummy_tex = 0;
 
-                view = Gl.Buffer.Float.create 2;
+                view = Buffer.Float.create 2;
 
                 frag_uniforms = FragUniforms.create();
 
@@ -422,8 +407,8 @@ end
             let x = 0 in
             let w = tex.width in
             (* Should not copy *)
-            let len = Gl.Buffer.UByte.length data - index in
-            let data = Gl.Buffer.UByte.sub data index len in
+            let len = Buffer.UByte.length data - index in
+            let data = Buffer.UByte.sub data index len in
 
             begin match tex.type_ with
             | `RGBA -> 
@@ -459,8 +444,8 @@ end
     ;;
 
     let viewport t ~width ~height ~dpi:_ = 
-        Gl.Buffer.Float.set t.view 0 width;
-        Gl.Buffer.Float.set t.view 1 height;
+        Buffer.Float.set t.view 0 width;
+        Buffer.Float.set t.view 1 height;
     ;;
 
     let cancel t =
@@ -884,4 +869,3 @@ end
     let stroke t ~paint ~composite_op ~scissor ~fringe ~stroke_width ~paths =
         render_stroke t paint composite_op scissor fringe stroke_width paths
     ;;
-end

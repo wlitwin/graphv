@@ -5,7 +5,6 @@
    graphv_font
    graphv_font_stb_truetype
    graphv_gles2_native_impl
-   graphv_gles2
    graphv_core
  )
 )

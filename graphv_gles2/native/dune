@@ -8,3 +8,13 @@
    graphv_core_lib
   )
  )
+
+(rule
+  (target graphv_gles2_native_impl.ml)
+  (deps ../common/graphv_gles2.ml)
+  (action
+    (copy %{deps} %{target}))
+  )
+
+(include ../common/dune.inc)
+(include ../../shared/dune.inc)

@@ -3,3 +3,13 @@
  (preprocess (pps js_of_ocaml-ppx))
  (libraries js_of_ocaml graphv_core_lib)
 )
+
+(rule
+  (target graphv_webgl_impl.ml)
+  (deps ../common/graphv_gles2.ml)
+  (action
+    (copy %{deps} %{target}))
+  )
+
+(include ../common/dune.inc)
+(include ../../shared/dune.inc)

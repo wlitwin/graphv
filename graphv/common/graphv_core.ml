@@ -1218,9 +1218,9 @@ module Make
                 (* Loop it *)
                 VertexBuffer.check_size t.cache.verts (!dst +. 2);
                 let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
-                VertexBuffer.set t.cache.verts !dst v0_x v0_y lu 1.;
+                VertexBuffer.unsafe_set t.cache.verts !dst v0_x v0_y lu 1.;
                 let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
-                VertexBuffer.set t.cache.verts (!dst+.1) v1_x v1_y ru 1.;
+                VertexBuffer.unsafe_set t.cache.verts (!dst+.1) v1_x v1_y ru 1.;
                 dst := !dst +. 2;
 
                 let nstroke = !dst -. !verts in

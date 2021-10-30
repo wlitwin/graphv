@@ -1,7 +1,9 @@
+module type Buffer = Sigs.BufferS
+
 module type S = sig 
     type t
 
-    module Buffer : Buffer.S 
+    module Buffer : Buffer
 
     module Dyn : sig
         type t = private {

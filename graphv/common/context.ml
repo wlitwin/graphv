@@ -4,7 +4,7 @@ module type S = sig
     module Align = Graphv_core_lib.Align
     module BlendFactor = Graphv_core_lib.BlendFactor
     module Bounds = Graphv_core_lib.Bounds
-    module Buffer : Graphv_core_lib.Buffer.S
+    module Buffer : Graphv_core_lib.Sigs.BufferS
     module Color = Graphv_core_lib.Color
     module CreateFlags = Graphv_core_lib.CreateFlags
     module CompositeOperation = Graphv_core_lib.CompositeOperation

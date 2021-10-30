@@ -40,14 +40,19 @@ let copy (t : 'a t) (copy : 'a -> 'a) : 'a t =
     }
 ;;
 
+let [@cold] resize t =
+    let len = Array.length t.arr in
+    let new_arr = Array.init
+        (len * 3 / 2)
+        (fun i -> if i < (*t.size*) len then Array.unsafe_get t.arr i else t.empty_value)
+    in
+    t.arr <- new_arr;
+;;
+
 let add t value =
     let len = Array.length t.arr in
     if t.size >= len then (
-        let new_arr = Array.init
-            (len * 3 / 2)
-            (fun i -> if i < (*t.size*) len then Array.unsafe_get t.arr i else t.empty_value)
-        in
-        t.arr <- new_arr;
+      (resize[@cold]) t
     );
     Array.unsafe_set t.arr t.size value;
     t.size <- t.size + 1;

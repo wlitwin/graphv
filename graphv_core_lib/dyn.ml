@@ -1,4 +1,4 @@
-module Make(B : Buffer.S) = struct
+module Make(B : Sigs.BufferS) = struct
     type underlying = B.Float.t
 
     type t = {
