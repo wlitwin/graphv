@@ -3,17 +3,17 @@ external ( - ) : float -> float -> float = "%subfloat"[@@inline always]
 external ( / ) : float -> float -> float = "%divfloat"[@@inline always]
 external ( * ) : float -> float -> float = "%mulfloat"[@@inline always]
 
-external [@inline always] ( =. ) : int -> int -> bool = "%equal"
-external [@inline always] ( <. ) : int -> int -> bool = "%lessthan"
-external [@inline always] ( >. ) : int -> int -> bool = "%greaterthan" 
-external [@inline always] ( >=. ) : int -> int -> bool = "%greaterequal" 
-external [@inline always] ( <=. ) : int -> int -> bool = "%lessequal"
+external [@inline always] ( =. ) : int -> int -> bool = "%eq"
+external [@inline always] ( <. ) : int -> int -> bool = "%ltint"
+external [@inline always] ( >. ) : int -> int -> bool = "%gtint" 
+external [@inline always] ( >=. ) : int -> int -> bool = "%geint" 
+external [@inline always] ( <=. ) : int -> int -> bool = "%leint"
 
-external [@inline always] ( < ) : float -> float -> bool = "%lessthan"
-external [@inline always] ( > ) : float -> float -> bool = "%greaterthan" 
-external [@inline always] ( >= ) : float -> float -> bool = "%greaterequal" 
-external [@inline always] ( <= ) : float -> float -> bool = "%lessequal"
-external [@inline always] ( = ) : float -> float -> bool = "%equal"
+external [@inline always] ( < ) : float -> float -> bool = "%ltfloat"
+external [@inline always] ( > ) : float -> float -> bool = "%gtfloat" 
+external [@inline always] ( >= ) : float -> float -> bool = "%gefloat" 
+external [@inline always] ( <= ) : float -> float -> bool = "%lefloat"
+external [@inline always] ( = ) : float -> float -> bool = "%eqfloat"
 
 let [@inline always] min (a : float) (b : float) : float =
     if a < b then a else b
