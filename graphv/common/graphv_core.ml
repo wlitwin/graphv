@@ -530,27 +530,16 @@ module Make
             let xform = (get_state t).xform in
             match cmd with
             | Move_to {x;y} ->
-                (*let x, y = Matrix.transform_point xform x y in*)
-                let xn = x*xform.m0 + y*xform.m2 + xform.m4 in
-                let yn = x*xform.m1 + y*xform.m3 + xform.m5 in
-                Move_to {x=xn;y=yn}
+                let x, y = (Matrix.transform_point[@inlined]) xform x y in
+                Move_to {x;y}
             | Line_to {x;y} ->
-                (*let x, y = Matrix.transform_point xform x y in*)
-                let xn = x*xform.m0 + y*xform.m2 + xform.m4 in
-                let yn = x*xform.m1 + y*xform.m3 + xform.m5 in
-                Line_to {x=xn;y=yn}
+                let x, y = (Matrix.transform_point[@inlined]) xform x y in
+                Line_to {x;y}
             | Bezier_to {c1x;c1y;c2x;c2y;x;y} ->
-                (*let x, y = Matrix.transform_point xform x y in
-                let c1x, c1y = Matrix.transform_point xform c1x c1y in
-                let c2x, c2y = Matrix.transform_point xform c2x c2y in
-                *)
-                let xn = x*xform.m0 + y*xform.m2 + xform.m4 in
-                let yn = x*xform.m1 + y*xform.m3 + xform.m5 in
-                let c1xn = c1x*xform.m0 + c1y*xform.m2 + xform.m4 in
-                let c1yn = c1x*xform.m1 + c1y*xform.m3 + xform.m5 in
-                let c2xn = c2x*xform.m0 + c2y*xform.m2 + xform.m4 in
-                let c2yn = c2x*xform.m1 + c2y*xform.m3 + xform.m5 in
-                Bezier_to {c1x=c1xn;c1y=c1yn;c2x=c2xn;c2y=c2yn;x=xn;y=yn}
+                let x, y = (Matrix.transform_point[@inlined]) xform x y in
+                let c1x, c1y = (Matrix.transform_point[@inlined]) xform c1x c1y in
+                let c2x, c2y = (Matrix.transform_point[@inlined]) xform c2x c2y in
+                Bezier_to {c1x;c1y;c2x;c2y;x;y}
             | Close as c -> c
             | Winding _ as w -> w
         ;;
@@ -1978,22 +1967,14 @@ module Make
             (* Transform corners *)
             let qx0 = q.x0*inv_scale in
             let qy0 = q.y0*inv_scale in
-
-            let c0 = qx0*xm.m0 + qy0*xm.m2 + xm.m4 in
-            let c1 = qx0*xm.m1 + qy0*xm.m3 + xm.m5 in
-
             let qx1 = q.x1*inv_scale in
             let qy1 = q.y1*inv_scale in
-            let c4 = qx1*xm.m0 + qy1*xm.m2 + xm.m4 in
-            let c5 = qx1*xm.m1 + qy1*xm.m3 + xm.m5 in
 
-            let c2 = qx1*xm.m0 + qy0*xm.m2 + xm.m4 in
-            let c3 = qx1*xm.m1 + qy0*xm.m3 + xm.m5 in
+            let c0, c1 = (Matrix.transform_point[@inlined]) xm qx0 qy0 in
+            let c4, c5 = (Matrix.transform_point[@inlined]) xm qx1 qy1 in
+            let c2, c3 = (Matrix.transform_point[@inlined]) xm qx1 qy0 in
+            let c6, c7 = (Matrix.transform_point[@inlined]) xm qx0 qy1 in
 
-            let c6 = qx0*xm.m0 + qy1*xm.m2 + xm.m4 in
-            let c7 = qx0*xm.m1 + qy1*xm.m3 + xm.m5 in
-
-            (* Create triangles *)
             VertexBuffer.unsafe_set verts at c0 c1 q.s0 q.t0;
             VertexBuffer.unsafe_set verts (at+.1) c4 c5 q.s1 q.t1;
             VertexBuffer.unsafe_set verts (at+.2) c2 c3 q.s1 q.t0;
