@@ -131,6 +131,7 @@
 (package
   (name graphv_anim)
   (synopsis "A small animation library for graphv")
+  (version 0.1.0)
   (depends
     (ocaml (>= 4.08))
     ))
