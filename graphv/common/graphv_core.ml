@@ -785,40 +785,36 @@ module Make
                 (* Wish we had sub arrays for DynArray *)
                 for i=0 to DynArray.length t.cache.paths -. 1 do
                     let path = DynArray.get t.cache.paths i in
-                    let [@inline always] get i =
-                        (path.first +. i)
-                    in
                     (* If first and last points are the same, remove last, mark as closed *)
-                    let [@inlined] p0 = get (path.count -. 1) |> ref in
-                    let p1 = get 0 in
-                    if Point.equal_index points !p0 p1 t.dist_tol then (
-                        path.count <- path.count -. 1;
-                        p0 := get (path.count -. 1);
-                        path.closed <- true;
-                    );
+                    let p1 = path.first in
+                    let p0 = p1 +. (path.count -. 1) in
+                    let p0 =
+                        if Point.equal_index points p0 p1 t.dist_tol then (
+                            path.count <- path.count -. 1;
+                            path.closed <- true;
+                            p0 -. 1
+                        ) else 
+                          p0
+                    in
 
                     (* Enforce winding *)
                     if path.count >. 2 then (
                         let area = poly_area points path.first path.count in
-                        if Winding.equal path.winding Winding.CCW && area < 0. then (
+                        let reverse = 
+                            match path.winding with
+                            | Winding.CCW -> area < 0.
+                            | CW -> area > 0.
+                        in
+                        if reverse then (
                             poly_reverse points path.first path.count
-                        );
-
-                        if Winding.equal path.winding Winding.CW && area > 0. then (
-                            poly_reverse points path.first path.count
-                        );
+                        )
                     );
 
-                    let [@inlined] p1_off = ref 0 in
-                    p0 := get (path.count -. 1);
+                    let p1 = ref p1 in
+                    let p0 = ref p0 in
                     for _=0 to path.count-.1 do
                         let open FloatOps in
                         (* This calc is good *)
-
-                        let [@inlined] p1 = get !p1_off in
-                        Point.assign_dx_dy points !p0 p1;
-                        Point.normalize_pt points !p0;
-
                         let x, y = Point.get_xy points !p0 in
 
                         (* Update bounds *)
@@ -827,8 +823,11 @@ module Make
                         xmax := max !xmax x;
                         ymax := max !ymax y;
 
-                        p0 := get !p1_off;
-                        incr p1_off;
+                        (Point.assign_dx_dy[@inlined]) points !p0 !p1;
+                        (Point.normalize_pt[@inlined]) points !p0;
+
+                        p0 := !p1;
+                        incr p1;
                     done;
                 done;
 
@@ -1085,12 +1084,10 @@ module Make
         !offset
     ;;
 
-    let expand_fill (t : t) w line_join miter_limit =
+    let expand_fill_aa (t : t) =
         let open FloatOps in
         let aa = t.fringe_width in
-        let fringe = w > 0. in
-
-        calculate_joins t w line_join miter_limit;
+        let w = aa in
 
         let convex =
             DynArray.length t.cache.paths =. 1
@@ -1109,54 +1106,44 @@ module Make
             let [@inline always] get_pt idx =
                 (path.first +. idx)
             in
-            if fringe then (
-                let p0 = get_pt (path.count-.1) |> ref in
-                let p1_off = ref 0 in
+            let p0 = get_pt (path.count-.1) |> ref in
+            let p1_off = ref 0 in
 
-                for _=0 to path.count-.1 do
-                    let p1 = get_pt (!p1_off) in
-                    if Point.has_flag flags p1 PointFlags.bevel then (
-                        if Point.has_flag flags p1 PointFlags.left then (
-                            let lx = (Point.get_x data p1) + (Point.get_dmx data p1)*woff in
-                            let ly = (Point.get_y data p1) + (Point.get_dmy data p1)*woff in
-                            VertexBuffer.set t.cache.verts !dst lx ly 0.5 1.;
-                            incr dst;
-                        ) else (
-                            let dy0 = Point.get_dy  data !p0 in
-                            let dlx0 = dy0 in
-                            let dly0 = ~-.(dy0) in
-                            let dlx1 = (Point.get_dy data p1) in
-                            let dly1 = ~-.(Point.get_dx data p1) in
-                            let p1x = Point.get_x data p1 in
-                            let p1y = Point.get_y data p1 in
-                            let lx0 = p1x + dlx0*woff in
-                            let ly0 = p1y + dly0*woff in
-                            let lx1 = p1x + dlx1*woff in
-                            let ly1 = p1y + dly1*woff in
-                            VertexBuffer.check_size t.cache.verts (!dst+.1);
-                            (VertexBuffer.unsafe_set[@cold]) t.cache.verts !dst lx0 ly0 0.5 1.;
-                            (VertexBuffer.unsafe_set[@cold]) t.cache.verts (!dst+.1) lx1 ly1 0.5 1.;
-                            dst := !dst +. 2;
-                        )
-                    ) else (
-                        (* these are right *)
-                        let x = (Point.get_x data p1) + (Point.get_dmx data p1)*woff in
-                        let y = (Point.get_y data p1) + (Point.get_dmy data p1)*woff in
-                        VertexBuffer.set t.cache.verts !dst x y 0.5 1.;
+            for _=0 to path.count-.1 do
+                let p1 = get_pt (!p1_off) in
+                if Point.has_flag flags p1 PointFlags.bevel then (
+                    if Point.has_flag flags p1 PointFlags.left then (
+                        let lx = (Point.get_x data p1) + (Point.get_dmx data p1)*woff in
+                        let ly = (Point.get_y data p1) + (Point.get_dmy data p1)*woff in
+                        VertexBuffer.set t.cache.verts !dst lx ly 0.5 1.;
                         incr dst;
-                    );
-                    p0 := p1;
-                    incr p1_off;
-                done
-            ) else (
-                VertexBuffer.check_size t.cache.verts (!dst +. path.count);
-                for j=0 to path.count-.1 do
-                    let point = get_pt j in
-                    let x, y = Point.get_xy points point in
-                    VertexBuffer.unsafe_set t.cache.verts (!dst+.j) x y 0.5 1.;
-                done;
-                dst := !dst +. path.count;
-            );
+                    ) else (
+                        let dy0 = Point.get_dy  data !p0 in
+                        let dlx0 = dy0 in
+                        let dly0 = ~-.(dy0) in
+                        let dlx1 = (Point.get_dy data p1) in
+                        let dly1 = ~-.(Point.get_dx data p1) in
+                        let p1x = Point.get_x data p1 in
+                        let p1y = Point.get_y data p1 in
+                        let lx0 = p1x + dlx0*woff in
+                        let ly0 = p1y + dly0*woff in
+                        let lx1 = p1x + dlx1*woff in
+                        let ly1 = p1y + dly1*woff in
+                        VertexBuffer.check_size t.cache.verts (!dst+.1);
+                        (VertexBuffer.unsafe_set[@cold]) t.cache.verts !dst lx0 ly0 0.5 1.;
+                        (VertexBuffer.unsafe_set[@cold]) t.cache.verts (!dst+.1) lx1 ly1 0.5 1.;
+                        dst := !dst +. 2;
+                    )
+                ) else (
+                    (* these are right *)
+                    let x = (Point.get_x data p1) + (Point.get_dmx data p1)*woff in
+                    let y = (Point.get_y data p1) + (Point.get_dmy data p1)*woff in
+                    VertexBuffer.set t.cache.verts !dst x y 0.5 1.;
+                    incr dst;
+                );
+                p0 := p1;
+                incr p1_off;
+            done;
 
             let nfill = (!dst -. !verts) in
             path.fill <- VertexBuffer.Sub.sub t.cache.verts !verts nfill;
@@ -1168,58 +1155,83 @@ module Make
                 |> PointFlags.add ~flag:PointFlags.inner_bevel
             in
 
-            if fringe then (
-                let lw, lu =
-                    if convex then (
-                        woff, 0.5
-                    ) else (
-                        w + woff, 0.
-                    )
-                in
-                let rw = w - woff in
-                let ru = 1. in
-                dst := !verts;
+            let lw, lu =
+                if convex then (
+                    woff, 0.5
+                ) else (
+                    w + woff, 0.
+                )
+            in
+            let rw = w - woff in
+            let ru = 1. in
+            dst := !verts;
 
-                let [@inlined] p1_off = ref 0 in
-                let [@inlined] p0 = ref (get_pt (path.count -. 1)) in
-                for _=0 to path.count-.1 do
-                    let [@inlined] p1 = get_pt !p1_off in
-                    if Point.has_flag flags p1 flag then (
-                        dst := bevel_join t.cache.verts !dst t.cache.points !p0 p1 lw rw lu ru
-                    ) else (
-                        VertexBuffer.check_size t.cache.verts (!dst +. 2);
-                        let p1x = Point.get_x data p1 in
-                        let p1y = Point.get_y data p1 in
-                        let p1dmx = Point.get_dmx data p1 in
-                        let p1dmy = Point.get_dmy data p1 in
-                        let [@inlined] x = p1x + p1dmx*lw in
-                        let [@inlined] y = p1y + p1dmy*lw in
-                        VertexBuffer.unsafe_set t.cache.verts !dst x y lu 1.;
-                        let [@inlined] x = p1x - p1dmx*rw in
-                        let [@inlined] y = p1y - p1dmy*rw in
-                        VertexBuffer.unsafe_set t.cache.verts (!dst+.1) x y ru 1.;
-                        dst := !dst +. 2;
-                    );
-                    p0 := p1;
-                    incr p1_off;
-                done;
+            let [@inlined] p1_off = ref 0 in
+            let [@inlined] p0 = ref (get_pt (path.count -. 1)) in
+            for _=0 to path.count-.1 do
+                let [@inlined] p1 = get_pt !p1_off in
+                if Point.has_flag flags p1 flag then (
+                    dst := bevel_join t.cache.verts !dst t.cache.points !p0 p1 lw rw lu ru
+                ) else (
+                    VertexBuffer.check_size t.cache.verts (!dst +. 2);
+                    let p1x = Point.get_x data p1 in
+                    let p1y = Point.get_y data p1 in
+                    let p1dmx = Point.get_dmx data p1 in
+                    let p1dmy = Point.get_dmy data p1 in
+                    let [@inlined] x = p1x + p1dmx*lw in
+                    let [@inlined] y = p1y + p1dmy*lw in
+                    VertexBuffer.unsafe_set t.cache.verts !dst x y lu 1.;
+                    let [@inlined] x = p1x - p1dmx*rw in
+                    let [@inlined] y = p1y - p1dmy*rw in
+                    VertexBuffer.unsafe_set t.cache.verts (!dst+.1) x y ru 1.;
+                    dst := !dst +. 2;
+                );
+                p0 := p1;
+                incr p1_off;
+            done;
 
-                (* Loop it *)
-                VertexBuffer.check_size t.cache.verts (!dst +. 2);
-                let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
-                VertexBuffer.unsafe_set t.cache.verts !dst v0_x v0_y lu 1.;
-                let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
-                VertexBuffer.unsafe_set t.cache.verts (!dst+.1) v1_x v1_y ru 1.;
-                dst := !dst +. 2;
+            (* Loop it *)
+            VertexBuffer.check_size t.cache.verts (!dst +. 2);
+            let [@inlined] v0_x, v0_y, _, _ = VertexBuffer.get t.cache.verts !verts in
+            VertexBuffer.unsafe_set t.cache.verts !dst v0_x v0_y lu 1.;
+            let [@inlined] v1_x, v1_y, _, _ = VertexBuffer.get t.cache.verts (!verts +. 1) in
+            VertexBuffer.unsafe_set t.cache.verts (!dst+.1) v1_x v1_y ru 1.;
+            dst := !dst +. 2;
 
-                let nstroke = !dst -. !verts in
-                assert (nstroke >. 0);
-                path.stroke <- VertexBuffer.Sub.sub t.cache.verts !verts nstroke;
+            let nstroke = !dst -. !verts in
+            assert (nstroke >. 0);
+            path.stroke <- VertexBuffer.Sub.sub t.cache.verts !verts nstroke;
 
-                verts := !dst
-            ) else (
-                path.stroke <- VertexBuffer.Sub.empty;
-            );
+            verts := !dst
+          done
+    ;;
+
+    let expand_fill_no_aa (t : t) =
+        let open FloatOps in
+
+        let points = t.cache.points in
+        let verts = ref VertexBuffer.(num_verts t.cache.verts) in
+        let dst = ref !verts in
+        for i=0 to DynArray.length t.cache.paths -. 1 do
+            let path = DynArray.get t.cache.paths i in
+            dst := !verts;
+            let [@inline always] get_pt idx =
+                (path.first +. idx)
+            in
+
+            VertexBuffer.check_size t.cache.verts (!dst +. path.count);
+            for j=0 to path.count-.1 do
+                let point = get_pt j in
+                let x, y = Point.get_xy points point in
+                VertexBuffer.unsafe_set t.cache.verts (!dst+.j) x y 0.5 1.;
+            done;
+            dst := !dst +. path.count;
+
+            let nfill = (!dst -. !verts) in
+            path.fill <- VertexBuffer.Sub.sub t.cache.verts !verts nfill;
+            verts := !dst;
+
+            path.stroke <- VertexBuffer.Sub.empty;
           done
     ;;
 
@@ -1558,11 +1570,13 @@ module Make
 
     let fill_prepare (t : t) (state : State.t) =
         Path.flatten t;
-        (* TODO - finish *)
+
         if Impl.edge_antialias t.impl && state.shape_anti_alias then (
-            expand_fill t t.fringe_width LineJoin.Miter 2.4
+            calculate_joins t t.fringe_width LineJoin.Miter 2.4;
+            expand_fill_aa t;
         ) else (
-            expand_fill t 0. LineJoin.Miter 2.4
+            calculate_joins t 0. LineJoin.Miter 2.4;
+            expand_fill_no_aa t;
         );
     ;;
 
@@ -2052,7 +2066,7 @@ module Make
             {
                 ascender = metrics.ascender;
                 descender = metrics.descender;
-                line_height = metrics.line_height
+                line_height = metrics.line_height /. scale;
             }
         ;;
 
@@ -2359,7 +2373,7 @@ module Make
             set_font_attributes t state scale;
 
             let advance, bounds = FontContext.bounds t.fs (x*.scale) (y*.scale) ?off:start ?end_ str in
-            let ymin, ymax = FontContext.line_bounds t.fs (y*.scale) in
+            let ymin, ymax = FontContext.line_bounds t.fs (y *.scale) in
 
             {
                 advance  = advance *. inv_scale;
