@@ -532,6 +532,12 @@ module Make
             | Move_to {x;y} ->
                 let x, y = (Matrix.transform_point[@inlined]) xform x y in
                 Move_to {x;y}
+            | Rect {x0=x_0;y0=y_0;x1=x_1;y1=y_1;_} ->
+                let x0, y0 = (Matrix.transform_point[@inlined]) xform x_0 y_0 in
+                let x1, y1 = (Matrix.transform_point[@inlined]) xform x_0 y_1 in
+                let x2, y2 = (Matrix.transform_point[@inlined]) xform x_1 y_1 in
+                let x3, y3 = (Matrix.transform_point[@inlined]) xform x_1 y_0 in
+                Rect {x0;y0;x1;y1;x2;y2;x3;y3}
             | Line_to {x;y} ->
                 let x, y = (Matrix.transform_point[@inlined]) xform x y in
                 Line_to {x;y}
@@ -570,11 +576,7 @@ module Make
 
         let rect t ~x ~y ~w ~h =
             let open FloatOps in
-            add_command t Command.(Move_to {x; y});
-            add_command t Command.(Line_to {x; y=y+h});
-            add_command t Command.(Line_to {x=x+w; y=y+h});
-            add_command t Command.(Line_to {x=x+w; y});
-            add_command t Command.Close
+            add_command t Command.(Rect {x0=x; y0=y; x1=x+w; y1=y+h; x2=0.; y2=0.; x3=0.; y3=0.;})
         ;;
 
         let cross dx0 dy0 dx1 dy1 =
@@ -761,6 +763,13 @@ module Make
                     | Move_to {x;y} ->
                         add_path t;
                         add_point t x y PointFlags.corner;
+                    | Rect {x0;y0;x1;y1;x2;y2;x3;y3} ->
+                        add_path t;
+                        add_point t x0 y0 PointFlags.corner;
+                        add_point t x1 y1 PointFlags.corner;
+                        add_point t x2 y2 PointFlags.corner;
+                        add_point t x3 y3 PointFlags.corner;
+                        close_path t;
                     | Line_to {x;y} ->
                         add_point t x y PointFlags.corner;
                     | Bezier_to {c1x; c1y; c2x; c2y; x; y} ->
