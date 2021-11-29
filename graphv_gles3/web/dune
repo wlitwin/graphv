@@ -1,5 +1,6 @@
 (library
- (public_name graphv_webgl2_impl)
+ (name graphv_webgl2_impl)
+ (package graphv_webgl2)
  (preprocess (pps js_of_ocaml-ppx))
  (libraries js_of_ocaml graphv_core_lib)
 )

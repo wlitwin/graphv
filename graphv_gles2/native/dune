@@ -1,5 +1,6 @@
 (library
- (public_name graphv_gles2_native_impl)
+ (name graphv_gles2_native_impl)
+ (package graphv_gles2_native)
  (foreign_stubs (language c) 
     (names gles2_stubs)
     (flags :standard -O2)

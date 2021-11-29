@@ -1,5 +1,4 @@
 (lang dune 2.8)
-(name graphv)
 (generate_opam_files true)
 (version 0.2.0)
 (source (github wlitwin/graphv))
@@ -46,40 +45,6 @@
     (graphv_core_lib (= 0.2.0))
     )
   )
-(package
- (name graphv_gles2_native_impl)
- (synopsis
-  "Native GLES2 implementation of the backend renderer for the Graphv library")
- (depends
-  (ppx_expect (and (>= v0.14.1) :with-test))
-  (conf-gles2 (>= 1))
-  (graphv_core_lib (= 0.2.0))))
-(package
- (name graphv_gles3_native_impl)
- (synopsis
-  "Native GLES3 implementation of the backend renderer for the Graphv library")
- (depends
-  (ppx_expect (and (>= v0.14.1) :with-test))
-  (conf-gles2 (>= 1))
-  (graphv_core_lib (= 0.2.0))))
-(package
- (name graphv_webgl_impl)
- (synopsis
-  "WebGL implementation of the backend renderer for the Graphv library")
- (depends
-  (ppx_expect (and (>= v0.14.1) :with-test))
-  (js_of_ocaml-ppx (>= 3.9.0))
-  (js_of_ocaml (>= 3.9.0))
-  (graphv_core_lib (= 0.2.0))))
-(package
- (name graphv_webgl2_impl)
- (synopsis
-  "WebGL implementation of the backend renderer for the Graphv library")
- (depends
-  (ppx_expect (and (>= v0.14.1) :with-test))
-  (js_of_ocaml-ppx (>= 3.9.0))
-  (js_of_ocaml (>= 3.9.0))
-  (graphv_core_lib (= 0.2.0))))
 (package
  (name graphv_gles2_native)
  (synopsis "Full version of the Graphv library based on native GLES2")

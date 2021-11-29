@@ -14,15 +14,11 @@ Provides:
 
 {1 Modules}
 
-Ready to use modules:
-
-- {{:../graphv_gles2_native/Graphv_gles2_native/index.html}Graphv_gles2_native}: Native GLES2 implementation.
-- {{:../graphv_webgl/Graphv_webgl/index.html}Graphv_webgl}: WebGL implementation.
-
-Modules for creating a new backend:
-- {{:../graphv_core/Graphv_core/index.html}Graphv_core}: Functor for making a new Graphv library.
-- {{:../graphv_gles2/Graphv_gles2/index.html}Graphv_gles2}: Functor for creating a new OpenGL ES 2 based library.
-- {{:../graphv_font/Graphv_font/Fontstash/index.html}Graphv_font.Fontstash}: Functor for creating a new Graphv font backend.
+- {{!module:Graphv_gles2_native}Graphv_gles2_native}: Native GLES2 implementation.
+- {{!module:Graphv_gles3_native}Graphv_gles3_native}: Native GLES3 implementation.
+- {{!module:Graphv_webgl}Graphv_webgl}: WebGL implementation.
+- {{!module:Graphv_webgl2}Graphv_webgl2}: WebGL 2 implementation.
+- {{!module:Graphv_anim}Graphv_anim}: A helper module for creating animations.
 
 {1 Getting Started}
 
@@ -310,7 +306,7 @@ Text.text vg ~x:0. ~y:0. "Hello World!";
 ]}
 
 {4 Native}
-Font files must be in the {{:https://en.wikipedia.org/wiki/TrueType} TTF} format. If using the default {{:../graphv_gles2_native/Graphv_gles2_native/index.html}Graphv_gles2_native} library, the font must be loadable by the {{:https://github.com/nothings/stb} STB True Type} library as that is the backend used.
+Font files must be in the {{:https://en.wikipedia.org/wiki/TrueType} TTF} format. If using the default {{!module:Graphv_gles2_native}Graphv_gles2_native} library, the font must be loadable by the {{:https://github.com/nothings/stb} STB True Type} library as that is the backend used.
 
 {4 Web}
 Fonts on the web use the CSS fonts loaded by the browser. This means custom fonts must be loaded using the browsers custom font methods. There are various resources on the web such as {{:https://developer.mozilla.org/en-US/docs/Learn/CSS/Styling_text/Web_fonts} this} for loading in custom fonts. The example demo uses the CSS method:
@@ -371,7 +367,7 @@ The first example will rotate the rectangle by 45 degrees, the second example wi
 Transforms also affect the current font size. So you must be careful about the transform scale otherwise you may use too large a font size and use up the entire font texture atlas.
 
 {2 OpenGL Interop}
-When working with Graphv and custom OpenGL you need to know when Graphv uses OpenGL state. The two times Graphv modifies OpenGL state are during context creation {{:../graphv_core/Graphv_core/Context/module-type-S/index.html#val-create} create}, and {{:../graphv_core/Graphv_core/Context/module-type-S/index.html#val-end_frame} end_frame}.
+When working with Graphv and custom OpenGL you need to know when Graphv uses OpenGL state. The two times Graphv modifies OpenGL state are during context creation {{!val:Graphv_core.Context.S.create} create}, and {{!val:Graphv_core.Context.S.end_frame}end_frame}.
 
 
 
