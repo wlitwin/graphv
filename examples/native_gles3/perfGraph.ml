@@ -1,4 +1,4 @@
-module NVG = Graphv_gles3_native
+module Gv = Graphv_gles3
 
 type style = FPS
            | Ms
@@ -40,12 +40,12 @@ let update t dt =
     *)
 ;;
 
-let render t (vg : NVG.t) x y =
+let render t (vg : Gv.t) x y =
     let avg = average t in
     let w = 200. in
     let h = 35. in
 
-    let open NVG in
+    let open Gv in
     let open FloatOps in
     Path.begin_ vg;
     Path.rect vg ~x ~y ~w ~h;

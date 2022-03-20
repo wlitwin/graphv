@@ -1,7 +1,7 @@
 open Tgles2
 open Tsdl
 
-module NVG = Graphv_gles2_native
+module Gv = Graphv_gles2
 
 let rec check_error str =
     let err = Gl.get_error() in
@@ -12,31 +12,31 @@ let rec check_error str =
 ;;
 
 let load_data vg =
-    let _ = NVG.Text.create vg ~name:"mono" ~file:"./examples/assets/mono.ttf" in
-    let _ = NVG.Text.create vg ~name:"icons" ~file:"./examples/assets/entypo.ttf" in
-    let _ = NVG.Text.create vg ~name:"sans" ~file:"./examples/assets/Roboto-Regular.ttf" in
-    let _ = NVG.Text.create vg ~name:"sans-bold" ~file:"./examples/assets/Roboto-Bold.ttf" in
-    let _ = NVG.Text.create vg ~name:"emoji" ~file:"./examples/assets/NotoEmoji-Regular.ttf" in
-    NVG.Text.add_fallback vg ~name:"sans" ~fallback:"emoji";
-    NVG.Text.add_fallback vg ~name:"sans-bold" ~fallback:"emoji";
-    NVG.Text.set_font_face vg ~name:"mono";
+    let _ = Gv.Text.create vg ~name:"mono" ~file:"./examples/assets/mono.ttf" in
+    let _ = Gv.Text.create vg ~name:"icons" ~file:"./examples/assets/entypo.ttf" in
+    let _ = Gv.Text.create vg ~name:"sans" ~file:"./examples/assets/Roboto-Regular.ttf" in
+    let _ = Gv.Text.create vg ~name:"sans-bold" ~file:"./examples/assets/Roboto-Bold.ttf" in
+    let _ = Gv.Text.create vg ~name:"emoji" ~file:"./examples/assets/NotoEmoji-Regular.ttf" in
+    Gv.Text.add_fallback vg ~name:"sans" ~fallback:"emoji";
+    Gv.Text.add_fallback vg ~name:"sans-bold" ~fallback:"emoji";
+    Gv.Text.set_font_face vg ~name:"mono";
 
-    let images = Array.make 12 NVG.Image.dummy in
+    let images = Array.make 12 Gv.Image.dummy in
     for i=0 to 11 do
         let file = Printf.sprintf "./examples/assets/images/image%d.jpg" (i+1) in
         match Stb_image.load ~channels:3 file with 
         | Error (`Msg e) -> failwith e
         | Ok img -> 
             let len = Bigarray.Array1.dim img.data in
-            let arr = Array.make (len/3) NVG.Color.transparent in
+            let arr = Array.make (len/3) Gv.Color.transparent in
             for i=0 to (len/3) - 1 do
                 let r = Bigarray.Array1.get img.data (i*3+0) in
                 let g = Bigarray.Array1.get img.data (i*3+1) in
                 let b = Bigarray.Array1.get img.data (i*3+2) in
                 let a = 255 in
-                arr.(i) <- NVG.Color.rgba ~r ~g ~b ~a;
+                arr.(i) <- Gv.Color.rgba ~r ~g ~b ~a;
             done;
-            let img = NVG.Image.from_color vg ~data:arr ~flags:NVG.ImageFlags.no_flags 
+            let img = Gv.Image.from_color vg ~data:arr ~flags:Gv.ImageFlags.no_flags 
                 ~width:img.width
                 ~height:img.height
             in
@@ -76,7 +76,7 @@ let _ =
 
             Memtrace.trace_if_requested();
 
-            let ctx = NVG.create ~flags:NVG.CreateFlags.(antialias lor stencil_strokes lor tesselate_afd) () in
+            let ctx = Gv.create ~flags:Gv.CreateFlags.(antialias lor stencil_strokes lor tesselate_afd) () in
 
             let graph = PerfGraph.init PerfGraph.FPS "Frame Time" in
             let t = (Sdl.get_ticks() |> Int32.to_float) /. 1000. |> ref in
@@ -126,14 +126,14 @@ let _ =
 
                 let win_w = float win_w in
                 let win_h = float win_h in
-                NVG.begin_frame ctx ~width:win_w ~height:win_h ~device_ratio:1.;
+                Gv.begin_frame ctx ~width:win_w ~height:win_h ~device_ratio:1.;
 
-                NVG.Transform.scale ctx ~x:(scale *. sw) ~y:(scale *. sh);
+                Gv.Transform.scale ctx ~x:(scale *. sw) ~y:(scale *. sh);
 
                 PerfGraph.render graph ctx 5. 5.;
                 Demo.render_demo ctx 0. 0. ow oh now !blowup data;
 
-                NVG.end_frame ctx;
+                Gv.end_frame ctx;
 
                 let time = (Sdl.get_ticks() |> Int32.to_float) /. 1000. -. update in
                 total := !total +. time;

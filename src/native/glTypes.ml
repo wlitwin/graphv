@@ -1,0 +1,35 @@
+type float_buffer = (float, Bigarray.float32_elt, Bigarray.c_layout) Bigarray.Array1.t
+
+type blending_factor = int
+type texture_target = int
+type pixel_format = int
+type pixel_type = int
+type tex_filter = int
+type wrap_mode = int
+type tex_param_filter = int
+type tex_param_wrap = int
+type tex_param_filter_param = int
+type tex_param_wrap_param = int
+type pixel_store_param = int
+type enable_cap = int
+type depth_function = int
+type stencil_op = int
+type begin_mode = int
+type cull_face_mode = int
+type 'a uniform_location = int
+type front_face_dir = int
+type uniform_type = int
+type buffer_target = int
+type buffer_usage = int
+type error_code = int
+type texture = int
+type data_type = int
+type buffer = int
+type buffer_id = int
+type shader_type = int
+type shader = int
+type shader_param = int
+type program_param = int
+type program = int
+type enum = int
+

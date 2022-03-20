@@ -1,8 +1,0 @@
-(library
- (public_name graphv_font_stb_truetype)
- (libraries 
-    graphv_core_lib
-    stb_truetype
-    graphv_font
- )
- )

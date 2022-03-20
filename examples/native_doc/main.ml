@@ -1,6 +1,6 @@
 open Tgles2
 
-module NVG = Graphv_gles2_native
+module Gv = Graphv_gles2
 
 let _ =
     GLFW.init();
@@ -18,8 +18,8 @@ let _ =
 
     Gl.clear_color 0.3 0.3 0.32 1.;
 
-    let vg = NVG.create
-        ~flags:NVG.CreateFlags.(antialias lor stencil_strokes) 
+    let vg = Gv.create
+        ~flags:Gv.CreateFlags.(antialias lor stencil_strokes) 
         () 
     in
 
@@ -32,19 +32,19 @@ let _ =
             lor Gl.stencil_buffer_bit
         );
 
-        NVG.begin_frame vg
+        Gv.begin_frame vg
             ~width:(float win_w)
             ~height:(float win_h)
             ~device_ratio:1.
             ;
 
-        NVG.Path.begin_ vg;
-        NVG.Path.rect vg ~x:40. ~y:40. ~w:320. ~h:320.;
-        NVG.set_fill_color vg 
-            ~color:NVG.Color.(rgba ~r:154 ~g:203 ~b:255 ~a:200);
-        NVG.fill vg;
+        Gv.Path.begin_ vg;
+        Gv.Path.rect vg ~x:40. ~y:40. ~w:320. ~h:320.;
+        Gv.set_fill_color vg 
+            ~color:Gv.Color.(rgba ~r:154 ~g:203 ~b:255 ~a:200);
+        Gv.fill vg;
 
-        NVG.end_frame vg;
+        Gv.end_frame vg;
 
         GLFW.swapBuffers ~window;
         GLFW.pollEvents();

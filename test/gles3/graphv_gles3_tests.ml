@@ -1,6 +1,6 @@
 open Tgles3
 
-module Gv = Graphv_gles3_native
+module Gv = Graphv_gles3
 
 type rect = {
     mutable x : float;

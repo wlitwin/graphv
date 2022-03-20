@@ -1,6 +1,6 @@
 open Tgles2
 
-module NVG = Graphv_gles2_native
+module NVG = Graphv_gles2
 
 module GLFWExtras = struct
     open Ctypes

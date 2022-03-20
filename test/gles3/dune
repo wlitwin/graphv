@@ -2,7 +2,7 @@
  (name graphv_gles3_tests)
  (ocamlopt_flags (:standard -O3 -unboxed-types))
  (libraries
-    graphv_gles3_native
+    graphv_gles3
     glfw-ocaml
     tgls.tgles2
     tgls.tgles3

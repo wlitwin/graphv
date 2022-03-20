@@ -3,7 +3,7 @@
  (name main)
  (libraries 
     memtrace
-    graphv_gles3_native
+    graphv_gles3
     tgls
     tgls.tgles2
     tgls.tgles3

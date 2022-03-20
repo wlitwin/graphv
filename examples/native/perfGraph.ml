@@ -1,4 +1,4 @@
-module NVG = Graphv_gles2_native
+module NVG = Graphv_gles2
 
 type style = FPS
            | Ms

@@ -1,6 +1,6 @@
 open Tgles2
 
-module Gv = Graphv_gles2_native
+module Gv = Graphv_gles2
 
 type rect = {
     mutable x : float;

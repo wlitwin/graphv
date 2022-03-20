@@ -1,0 +1,13 @@
+(library
+  (name graphv_gles2)
+  (public_name graphv_gles2)
+  (foreign_stubs (language c) 
+    (names gles_stubs)
+    (flags :standard -DGRAPHV_GLES2 -O2)
+  )
+  (libraries 
+    stb_truetype
+    )
+)
+
+(include_subdirs unqualified)

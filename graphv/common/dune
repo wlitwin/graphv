@@ -1,7 +1,0 @@
-(library
- (public_name graphv_core)
- (ocamlopt_flags (:standard -O3 -unboxed-types -unsafe))
- (libraries 
-    graphv_core_lib
- )
-)

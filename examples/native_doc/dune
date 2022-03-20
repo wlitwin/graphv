@@ -1,7 +1,7 @@
 (executable
   (name main)
   (libraries
-      graphv_gles2_native
+      graphv_gles2
       glfw-ocaml
       tgls.tgles2
   )

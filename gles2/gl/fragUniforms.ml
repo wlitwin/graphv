@@ -1,0 +1,94 @@
+type t = Buffer.Float.t
+
+let count = 11
+
+let set = Buffer.Float.set
+let get = Buffer.Float.get
+
+let create () =
+  Buffer.Float.create (count*4)
+
+let set_scissor_mat t a b c d e f g h i j k l =
+    set t 0 a;
+    set t 1 b;
+    set t 2 c;
+    set t 3 d;
+    set t 4 e;
+    set t 5 f;
+    set t 6 g;
+    set t 7 h;
+    set t 8 i;
+    set t 9 j;
+    set t 10 k;
+    set t 11 l;
+;;
+
+let set_paint_mat t a b c d e f g h i j k l =
+    set t 12 a;
+    set t 13 b;
+    set t 14 c;
+    set t 15 d;
+    set t 16 e;
+    set t 17 f;
+    set t 18 g;
+    set t 19 h;
+    set t 20 i;
+    set t 21 j;
+    set t 22 k;
+    set t 23 l;
+;;
+
+let set_inner_color t (color : Color.t) =
+    set t 24 color.r;
+    set t 25 color.g;
+    set t 26 color.b;
+    set t 27 color.a;
+;;
+
+let set_outer_color t (color : Color.t) =
+    set t 28 color.r;
+    set t 29 color.g;
+    set t 30 color.b;
+    set t 31 color.a;
+;;
+
+let set_colors_from_paint (t : t) (paint : Paint.t) =
+    let ia = paint.inner_color_a in
+    set t 24 (paint.inner_color_r*.ia);
+    set t 25 (paint.inner_color_g*.ia);
+    set t 26 (paint.inner_color_b*.ia);
+    set t 27 (paint.inner_color_a);
+
+    let oa = paint.outer_color_a in
+    set t 28 (paint.outer_color_r*.oa);
+    set t 29 (paint.outer_color_g*.oa);
+    set t 30 (paint.outer_color_b*.oa);
+    set t 31 (paint.outer_color_a);
+;;
+    
+let set_scissor_ext t a b =
+    set t 32 a;
+    set t 33 b;
+;;
+
+let set_scissor_scale t a b =
+    set t 34 a;
+    set t 35 b;
+;;
+
+let set_extent t a b =
+    set t 36 a;
+    set t 37 b;
+;;
+
+let get_extent1 t =
+    get t 37
+
+let set_radius t r      = set t 38 r
+let set_feather t f     = set t 39 f
+let set_stroke_mult t s = set t 40 s
+let set_stroke_thr t s  = set t 41 s
+let set_tex_type t typ  = set t 42 typ
+let set_type t typ      = set t 43 typ
+
+let as_array t = t
