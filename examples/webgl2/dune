@@ -1,7 +1,6 @@
 (executable
  (modes byte js)
  (name main)
- (js_of_ocaml (flags (:standard --pretty)))
  (ocamlc_flags (:standard))
  (preprocess (pps js_of_ocaml-ppx))
  (libraries 
