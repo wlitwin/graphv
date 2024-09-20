@@ -18,8 +18,8 @@
  (name graphv_webgl)
  (synopsis "Full version of the Graphv library based on WebGL1")
  (depends
-  (js_of_ocaml-ppx (>= 3.9.0))
-  (js_of_ocaml (>= 3.9.0))
+  (js_of_ocaml-ppx (>= 5.5.0))
+  (js_of_ocaml (>= 5.5.0))
    (ocaml (>= 4.08))
    )
  )
@@ -27,8 +27,8 @@
  (name graphv_webgl2)
  (synopsis "Full version of the Graphv library based on WebGL2")
  (depends
-  (js_of_ocaml-ppx (>= 3.9.0))
-  (js_of_ocaml (>= 3.9.0))
+  (js_of_ocaml-ppx (>= 5.5.0))
+  (js_of_ocaml (>= 5.5.0))
    (ocaml (>= 4.08))
    )
  )

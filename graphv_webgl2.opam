@@ -10,8 +10,8 @@ doc: "https://wlitwin.github.io/docs/graphv/graphv"
 bug-reports: "https://github.com/wlitwin/graphv/issues"
 depends: [
   "dune" {>= "2.8"}
-  "js_of_ocaml-ppx" {>= "3.9.0"}
-  "js_of_ocaml" {>= "3.9.0"}
+  "js_of_ocaml-ppx" {>= "5.5.0"}
+  "js_of_ocaml" {>= "5.5.0"}
   "ocaml" {>= "4.08"}
   "odoc" {with-doc}
 ]
