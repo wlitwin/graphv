@@ -76,14 +76,14 @@ let vmetrics _font =
 let hmetrics font (glyph : glyph) = 
     font.context##.font := Js.string ("12px " ^ font.name);
     let m = font.context##measureText glyph.str in
-    HMetrics.{ width = m##.width *. 175. |> int_of_float; bearing = 0 }
+    HMetrics.{ width = Js.to_float m##.width *. 175. |> int_of_float; bearing = 0 }
 ;;
 
 let get_glyph_bitmap_box font (glyph : glyph) ~scale = 
     let height = Js.number_of_float (scale *. g_scale) in
     let s = height##toString in
     font.context##.font := s##concat_2 (Js.string "px ") (Js.string font.name);
-    let width = (font.context##measureText glyph.str)##.width in
+    let width = Js.to_float (font.context##measureText glyph.str)##.width in
     let width = int_of_float (width*.1.2) in
     (* pixel units based on font height ? *)
     let y = ~-.0.80 *. (scale *. g_scale) |> int_of_float in
@@ -114,8 +114,9 @@ let make_glyph_bitmap font (data : Buffer.t) ~width ~height:_ ~scale (box : Box.
     let w = (box.x1 - box.x0) in
     let h = (box.y1 - box.y0) in
 
-    font.context##clearRect 0. 0. (float w) (float h);
-    font.context##fillText glyph.str 0. 0.;
+    font.context##clearRect
+      (Js.float 0.) (Js.float 0.) (Js.float (float w)) (Js.float (float h));
+    font.context##fillText glyph.str (Js.float 0.) (Js.float 0.);
     (*
     P.context##rect 0. 0. (float w) (float h);
     P.context##.strokeStyle := Js.string "1px solid black";
@@ -123,7 +124,9 @@ let make_glyph_bitmap font (data : Buffer.t) ~width ~height:_ ~scale (box : Box.
     *)
 
     (* Copy the data back out *)
-    let copy = font.context##getImageData 0. 0. (float w) (float h) in
+    let copy =
+      font.context##getImageData
+        (Js.float 0.) (Js.float 0.) (Js.float (float w)) (Js.float (float h)) in
 
     let x_off = box.x0 in
     let y_off = box.y0 in

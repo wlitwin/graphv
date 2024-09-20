@@ -4,10 +4,10 @@ module Gv = Graphv_webgl
 (* This scales the canvas to match the DPI of the window,
    it prevents blurriness when rendering to the canvas *)
 let scale_canvas (canvas : Dom_html.canvasElement Js.t) =
-    let dpr = Dom_html.window##.devicePixelRatio in
+    let dpr = Js.to_float Dom_html.window##.devicePixelRatio in
     let rect = canvas##getBoundingClientRect in
-    let width = rect##.right -. rect##.left in
-    let height = rect##.bottom -. rect##.top in
+    let width = Js.to_float rect##.right -. Js.to_float rect##.left in
+    let height = Js.to_float rect##.bottom -. Js.to_float rect##.top in
     canvas##.width := width *. dpr |> int_of_float;
     canvas##.height := height *. dpr |> int_of_float;
     let width = Printf.sprintf "%dpx" (int_of_float width) |> Js.string in
@@ -42,7 +42,8 @@ let _ =
         | Some ctx -> ctx
     in
 
-    webgl_ctx##clearColor 0.3 0.3 0.32 1.;
+    webgl_ctx##clearColor
+      (Js.float 0.3) (Js.float 0.3) (Js.float 0.32) (Js.float 1.);
 
     let vg = Gv.create
         ~flags:Gv.CreateFlags.(antialias lor stencil_strokes)
@@ -80,15 +81,15 @@ let _ =
 
     Gv.Text.create vg ~name:"sans" ~file:"arial" |> ignore;
 
-    let rec render (now : float) =
-        let device_ratio = Dom_html.window##.devicePixelRatio in
+    let rec render now =
+        let device_ratio = Js.to_float Dom_html.window##.devicePixelRatio in
         webgl_ctx##clear (
             webgl_ctx##._COLOR_BUFFER_BIT_ 
             lor webgl_ctx##._DEPTH_BUFFER_BIT_ 
             lor webgl_ctx##._STENCIL_BUFFER_BIT_
         );
 
-        let now = now /. 1000. in
+        let now = Js.to_float now /. 1000. in
         let dt = now -. !time in
         time := now;
 
@@ -165,5 +166,5 @@ let _ =
         |> ignore;
     in
 
-    render 0.
+    render (Js.float 0.)
 ;;

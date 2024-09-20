@@ -13,7 +13,8 @@ let raf vg data =
     let prev = ref 0. in
     let rec closure vg data now =
         let ctx_webgl = Gv.ctx_webgl in
-        ctx_webgl##clearColor 0.3 0.3 0.32 1.;
+        ctx_webgl##clearColor
+          (Js.float 0.3) (Js.float 0.3) (Js.float 0.32) (Js.float 1.);
         ctx_webgl##clear (ctx_webgl##._COLOR_BUFFER_BIT_ lor ctx_webgl##._DEPTH_BUFFER_BIT_ lor ctx_webgl##._STENCIL_BUFFER_BIT_);
         let w = Gv.canvas##.width in
         let h = Gv.canvas##.height in
@@ -21,7 +22,7 @@ let raf vg data =
 
         Gv.begin_frame vg ~width:(float w) ~height:(float h) ~device_ratio:1.;
 
-        let now = now /. 1000. in
+        let now = Js.to_float now /. 1000. in
         let dt = now -. !prev in
         prev := now;
 
@@ -68,10 +69,13 @@ let load_data (vg : Gv.t) k =
         img##.onload := Dom.handler (fun _ ->
             img_canvas##.width := img##.width;
             img_canvas##.height := img##.height;
-            img_ctx##drawImage img 0. 0.;
+            img_ctx##drawImage img (Js.float 0.) (Js.float 0.);
             let w = img##.width in
             let h = img##.height in
-            add_image idx w h (img_ctx##getImageData 0. 0. (float w) (float h));
+            add_image idx w h
+              (img_ctx##getImageData
+                 (Js.float 0.) (Js.float 0. )
+                 (Js.float(float w)) (Js.float (float h)));
             Js._true
         );
         img##.src := Js.string src
@@ -93,7 +97,7 @@ let load_data (vg : Gv.t) k =
 ;;
 
 let scale_canvas (canvas : Dom_html.canvasElement Js.t) (width : int) (height : int) =
-    let dpr = Dom_html.window##.devicePixelRatio in
+    let dpr = Js.to_float Dom_html.window##.devicePixelRatio in
     canvas##.style##.width := Printf.sprintf "%.2fpx" (float width /. dpr) |> Js.string;
     canvas##.style##.height := Printf.sprintf "%.2fpx" (float height /. dpr) |> Js.string;
     canvas##.width := width;
@@ -102,7 +106,7 @@ let scale_canvas (canvas : Dom_html.canvasElement Js.t) (width : int) (height : 
 
 let scale_canvas_by_body (canvas : Dom_html.canvasElement Js.t) =
     let body = Dom_html.document##.body in
-    let dpr = Dom_html.window##.devicePixelRatio in
+    let dpr = Js.to_float Dom_html.window##.devicePixelRatio in
     let dpr = if dpr > 1.5 then 1.5 else dpr in
     let w = float body##.clientWidth *. dpr |> int_of_float in
     let h = float body##.clientHeight *. dpr |> int_of_float in
@@ -121,11 +125,11 @@ let _ =
         Js._false
     );
     ctx_webgl##viewport 0 0 w h;
-    ctx_webgl##clearColor 1. 0.5 0. 1.;
+    ctx_webgl##clearColor (Js.float 1.) (Js.float 0.5) (Js.float 0.) (Js.float 1.);
     ctx_webgl##clear (ctx_webgl##._COLOR_BUFFER_BIT_ lor ctx_webgl##._DEPTH_BUFFER_BIT_ lor ctx_webgl##._STENCIL_BUFFER_BIT_);
     canvas##.onmousemove := Dom.handler (fun (evt : Dom_html.mouseEvent Js.t) ->
-        mx := float (evt##.clientX) *. Dom_html.window##.devicePixelRatio;
-        my := float (evt##.clientY) *. Dom_html.window##.devicePixelRatio;
+        mx := float (evt##.clientX) *. Js.to_float Dom_html.window##.devicePixelRatio;
+        my := float (evt##.clientY) *. Js.to_float Dom_html.window##.devicePixelRatio;
         Js._false
     );
     let touch = Dom.Event.make "touchmove" in
@@ -134,8 +138,8 @@ let _ =
         begin match Js.array_get lst 0 |> Js.Optdef.to_option with
         | None -> ()
         | Some evt ->
-            mx := float (evt##.clientX) *. Dom_html.window##.devicePixelRatio;
-            my := float (evt##.clientY) *. Dom_html.window##.devicePixelRatio;
+            mx := float (evt##.clientX) *. Js.to_float Dom_html.window##.devicePixelRatio;
+            my := float (evt##.clientY) *. Js.to_float Dom_html.window##.devicePixelRatio;
         end;
         if lst##.length > 1 then Js._true else Js._false
     )) Js._false |> ignore;
@@ -159,6 +163,6 @@ let _ =
 
     load_data vg (fun data ->
         scale_canvas_by_body canvas;
-        raf vg data 0.
+        raf vg data (Js.float 0.)
     );
 ;;
