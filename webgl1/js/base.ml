@@ -128,12 +128,12 @@ let uniform4fv (c : t) loc (values : Buffer.Float.t) =
     c##uniform4fv_typed loc values
 ;;
 
-let temp_array = Js.array [|0.; 0.|]
+let temp_array = Js.array [|Js.float 0.; Js.float 0.|]
 let uniform2fv (c : t) loc values =
     let v1 = Buffer.Float.get values 0 in
     let v2 = Buffer.Float.get values 1 in
-    Js.array_set temp_array 0 v1;
-    Js.array_set temp_array 1 v2;
+    Js.array_set temp_array 0 (Js.float v1);
+    Js.array_set temp_array 1 (Js.float v2);
     c##uniform2fv loc temp_array
 ;;
 

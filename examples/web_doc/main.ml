@@ -4,10 +4,10 @@ module NVG = Graphv_webgl
 (* This scales the canvas to match the DPI of the window,
    it prevents blurriness when rendering to the canvas *)
 let scale_canvas (canvas : Dom_html.canvasElement Js.t) =
-    let dpr = Dom_html.window##.devicePixelRatio in
+    let dpr = Js.to_float Dom_html.window##.devicePixelRatio in
     let rect = canvas##getBoundingClientRect in
-    let width = rect##.right -. rect##.left in
-    let height = rect##.bottom -. rect##.top in
+    let width = Js.to_float rect##.right -. Js.to_float rect##.left in
+    let height = Js.to_float rect##.bottom -. Js.to_float rect##.top in
     canvas##.width := width *. dpr |> int_of_float;
     canvas##.height := height *. dpr |> int_of_float;
     let width = Printf.sprintf "%dpx" (int_of_float width) |> Js.string in
@@ -43,16 +43,17 @@ let _ =
     (* File in this case is actually the CSS font name *)
     Text.create vg ~name:"sans" ~file:"sans" |> ignore;
 
-    webgl_ctx##clearColor 0.3 0.3 0.32 1.;
+    webgl_ctx##clearColor
+      (Js.float 0.3) (Js.float 0.3) (Js.float 0.32) (Js.float 1.);
 
-    let rec render (time : float) =
+    let rec render time =
         webgl_ctx##clear (
             webgl_ctx##._COLOR_BUFFER_BIT_ 
             lor webgl_ctx##._DEPTH_BUFFER_BIT_ 
             lor webgl_ctx##._STENCIL_BUFFER_BIT_
         );
 
-        let device_ratio = Dom_html.window##.devicePixelRatio in
+        let device_ratio = Js.to_float Dom_html.window##.devicePixelRatio in
         begin_frame vg 
             ~width:(canvas##.width) 
             ~height:(canvas##.height) 
@@ -66,7 +67,7 @@ let _ =
         fill vg;
 
         Transform.translate vg ~x:200. ~y:200.;
-        Transform.rotate vg ~angle:(time *. 0.0005);
+        Transform.rotate vg ~angle:(Js.to_float time *. 0.0005);
 
         Text.set_font_face vg ~name:"sans";
         Text.set_size vg ~size:48.;

@@ -1,7 +1,6 @@
 (executable
  (name graphv_webgl_tests)
  (modes byte js)
- (js_of_ocaml (flags (:standard --pretty)))
  (libraries
     graphv_webgl
     js_of_ocaml
